@@ -1,0 +1,57 @@
+{"levels": [
+	{	
+		"player1": {
+			"x": 200,
+			"y": 200,
+			"direction": "right",
+			"display": "right_standing"
+		},
+		"player2": {
+			"x": 900,
+			"y": 200,
+			"direction": "left",
+			"display": "left_standing"
+		},
+		"background": "bg1",
+		"obstacles": [
+			{
+				"x": 400,
+				"y": 600
+			},
+			{
+				"x": 1000,
+				"y": 450
+			}
+		],
+		"enemies": [
+			{
+				"type": "grunt",
+				"x": 70,
+				"y": 60,
+				"direction": "down",
+				"display": "down_standing"
+			},
+			{
+				"type": "grunt",
+				"x": 400,
+				"y": 170,
+				"direction": "down",
+				"display": "down_standing"
+			},
+			{
+				"type": "grunt",
+				"x": 360,
+				"y": 250,
+				"direction": "down",
+				"display": "down_standing"
+			},
+			{
+				"type": "grunt",
+				"x": 50,
+				"y": 280,
+				"direction": "down",
+				"display": "down_standing"
+			}
+		]
+	}
+]}

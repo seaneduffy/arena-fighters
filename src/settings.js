@@ -1,0 +1,36 @@
+let settings = Object.create(null);
+
+settings.player1 = null;
+settings.player2 = null;
+settings.stageWidth = 1334;
+settings.stageHeight = 750;
+settings.bulletSprite = 'bullet';
+settings.UP = 'up';
+settings.LEFT = 'left';
+settings.RIGHT = 'right';
+settings.DOWN = 'down';
+settings.UP_LEFT = 'up_left';
+settings.UP_RIGHT = 'up_right';
+settings.DOWN_LEFT = 'down_left';
+settings.DOWN_RIGHT = 'down_right';
+settings.CENTER = 'center';
+settings.obstacleSprite = 'obstacle';
+settings.wallSprite = 'wall';
+settings.floorSprite = 'floor';
+settings.backgroundInitSprite = 'bg1';
+settings.charactersJsonUri = '/data/characters.json';
+settings.levelsJsonUri = '/data/levels.json';
+settings.fireBtnJsonUri = '/data/fire.json';
+settings.fireBtnImage = '/img/fire.png';
+settings.joystickJsonUri = '/data/joystick.json';
+settings.joystickImage = '/img/joystick.png';
+settings.spriteJsonUri = '/data/sprites.json';
+settings.spritesImage = '/img/sprites.png';
+settings.zBackground = 0;
+settings.zObstacle = 1;
+settings.zCharacter = 2;
+settings.zBullet = 3;
+settings.bulletOffset = 55;
+settings.bulletSpeed = 10;
+
+module.exports = settings;

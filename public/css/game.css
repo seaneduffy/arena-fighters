@@ -1,0 +1,95 @@
+html, body, p, ul, li {
+	margin: 0;
+	padding: 0;
+}
+
+body {
+	font-family: sans-serif;
+	font-size: 12px;
+	width: 100vw;
+	height: 100vh;
+}
+
+input[type='text'],
+input[type='number'],
+textarea {
+  font-size: 16px;
+}
+
+input {
+	border: 1px solid #c2c2c2;
+}
+
+button {
+	border: 1px solid #c2c2c2;
+	border-radius: 3px;
+	background: #fafafa;
+}
+
+li {
+	list-style: none;
+}
+
+.registrationForm {
+	padding: 20px;
+}
+
+.registrationForm label {
+	display: block;
+	font-size: 11px;
+}
+
+.registrationForm p {
+	margin: 2px 0;
+}
+
+.hidden {
+	display: none !important;
+}
+
+#gameRegistration {
+	display: flex;
+	justify-content: center;
+}
+
+#controls {
+	width: 100%;
+	height: 100%;
+	position: absolute;
+	top: 0;
+	left: 0;
+}
+
+#joystick {
+	left: 10px;
+	bottom: 10px;
+	position: absolute;
+	display: block;
+	opacity: .5;
+}
+
+#joystick.active {
+	opacity: 1;
+}
+
+#fire-btn {
+	right: 40px;
+	bottom: 40px;
+	position: absolute;
+	opacity: .5;
+	display: block;
+}
+
+#fire-btn.active {
+	opacity: 1;
+}
+
+#end-game-btn {
+	display: block;
+	background: red;
+	position: absolute;
+	top: 0;
+	right: 0;
+	width: 30px;
+	height: 30px;
+}
