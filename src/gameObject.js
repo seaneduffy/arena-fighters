@@ -3,8 +3,8 @@ let state = require('./state'),
 	Sprite = require('./sprite'),
 	cycle = require('./cycle'),
 	id = require('./id'),
-	gameObjects = [],
-	settings = require('./settings');
+	settings = require('./settings'),
+	gameObjects = [];
 
 function cleanup() {
 	let i = 0, l = gameObjects.length;
@@ -18,35 +18,46 @@ function cleanup() {
 
 cycle.addCleanup(cleanup);
 
-function GameObject(stateLabel) {
-	this.displayLabel = null;
+function GameObject() {
 	this.spriteData = Object.create(null);
 	this.ignoreCollisionObjects = [];
 	this.zPos = 0;
 	this.onStage = false;
-	if(!!stateLabel)
+	this.objectInteracts = false;
+	gameObjects.push(this);
+	/*if(!!stateLabel)
 		this.stateLabel = stateLabel;
 	else 
 		this.stateLabel = id();
-	this.state = Object.create(null);
-	gameObjects.push(this);
+	this.state = Object.create(null);*/
 }
+
+Object.defineProperty(GameObject.prototype, 'interacts', {
+	get: function() {
+		return this.objectInteracts;
+	},
+	set: function(interacts) {
+		this.objectInteracts = interacts;
+	}
+})
 
 Object.defineProperty(GameObject.prototype, 'stage', {
 	get: function(){
 		return this.onStage;
 	},
 	set: function(onStage) {
-		if(onStage && !this.onStage && !!this.displayLabel && !!this.spriteData[this.displayLabel]) {
-			this.onStage = this.state.stage = true;
-			this.spriteData[this.displayLabel].addToStage(this.zPos);
+		let sprite = this.spriteData[this.displayLabel];
+		if(onStage && !this.onStage) {
+			this.onStage = true;
+			if(!!sprite)
+				sprite.stage = true;
 		} else if(!onStage && this.onStage) {
-			this.onStage = this.state.stage = false;
-			if(!!this.displayLabel && !!this.spriteData[this.displayLabel])
-				this.spriteData[this.displayLabel].removeFromStage(this.zPos);
+			this.onStage = false;
+			if(!!sprite)
+				sprite.stage = false;
 		}
 	}
-})
+});
 
 Object.defineProperty(GameObject.prototype, 'direction', {
 	set: function(direction) {
@@ -77,13 +88,21 @@ Object.defineProperty(GameObject.prototype, 'speed', {
 
 Object.defineProperty(GameObject.prototype, 'sprites', {
 	set: function(sprites) {
+		let spriteData = this.spriteData, sprite = null;
 		for(let spriteLabel in sprites) {
-			this.addSprite(spriteLabel, new Sprite(sprites[spriteLabel]));
+			sprite = new Sprite(sprites[spriteLabel]);
+			if(!!this.xPos)
+				sprite.x = this.xPos;
+			if(!!this.yPos)
+				sprite.y = this.yPos;
+			if(!!this.zPos)
+				sprite.z = this.zPos;
+			spriteData[spriteLabel] = sprite;
 		}
 	}
 });
 
-Object.defineProperty(GameObject.prototype, 'state', {
+/*Object.defineProperty(GameObject.prototype, 'state', {
 	set: function(gameState) {
 		this.gameState = gameState;
 		if(gameState.destroyed) {
@@ -104,13 +123,12 @@ Object.defineProperty(GameObject.prototype, 'state', {
 	get: function() {
 		return this.gameState;
 	}
-});
+});*/
 
 Object.defineProperty(GameObject.prototype, 'x', {
 	set: function(x) {
-		this.xPos = this.state.x = x;
-		let label = null,
-			sprites = this.spriteData;
+		this.xPos = x;
+		let sprites = this.spriteData, label = null;
 		for(label in sprites) {
 			sprites[label].x = x;
 		}
@@ -122,9 +140,8 @@ Object.defineProperty(GameObject.prototype, 'x', {
 
 Object.defineProperty(GameObject.prototype, 'y', {
 	set: function(y) {
-		this.yPos = this.state.y = y;
-		let label = null,
-			sprites = this.spriteData;
+		this.yPos = y;
+		let sprites = this.spriteData, label = null;
 		for(label in sprites) {
 			sprites[label].y = y;
 		}
@@ -136,7 +153,11 @@ Object.defineProperty(GameObject.prototype, 'y', {
 
 Object.defineProperty(GameObject.prototype, 'z', {
 	set: function(z) {
-		this.zPos = this.state.z = z;
+		this.zPos = z;
+		let sprites = this.spriteData, label = null;
+		for(label in sprites) {
+			sprites[label].z = z;
+		}
 	},
 	get: function() {
 		return this.zPos;
@@ -146,13 +167,12 @@ Object.defineProperty(GameObject.prototype, 'z', {
 Object.defineProperty(GameObject.prototype, 'display', {
 	set: function(display) {
 		if(this.displayLabel !== display) {
-			let newSprite = this.spriteData[display];
-			if(!!newSprite && this.onStage) {
-				if(!!this.displayLabel)
-					this.spriteData[this.displayLabel].removeFromStage(this.zPos);
-				newSprite.addToStage(this.zPos);	
-			}
-			this.displayLabel = this.state.display = display;
+			let label = null, sprites = this.spriteData, sprite = null;
+			sprite = sprites[this.displayLabel];
+			if(!!sprite) sprite.stage = false;
+			this.displayLabel = display;
+			sprite = sprites[this.displayLabel];
+			sprite.stage = true;
 		}
 	},
 	get: function() {
@@ -160,19 +180,9 @@ Object.defineProperty(GameObject.prototype, 'display', {
 	}
 });
 
-Object.defineProperty(GameObject.prototype, 'sprite', {
-	get: function() {
-		let displayLabel = this.displayLabel,
-			sprites = this.spriteData;
-		if(!!displayLabel && !!sprites && !!sprites[displayLabel])
-			return sprites[displayLabel];
-		return false;
-	}
-});
-
 Object.defineProperty(GameObject.prototype, 'boundingBox', {
 	get: function(){
-		return this.sprite.boundingBox;
+		return this.spriteData[this.displayLabel].boundingBox;
 	}
 });
 
@@ -278,14 +288,9 @@ GameObject.prototype.move = function() {
 	this.x += x;
 }
 
-GameObject.prototype.bounce = function() {
-	let speed = this.speed;
-	this.speed = -3 * speed;
-	this.move();
-	this.speed = speed;
-};
-
 GameObject.prototype.checkCollision = function() {
+	if(!this.interacts) return false;
+	
 	let i = 0,
 		l = gameObjects.length,
 		objectToCheck = null,
@@ -302,7 +307,7 @@ GameObject.prototype.checkCollision = function() {
 	for(i=0; i<l; i++) {
 		objectToCheck = gameObjects[i];
 		if(objectToCheck !== this) {
-			if(this.ignoreCollisionObject !== objectToCheck && objectToCheck.stage) {
+			if(this.ignoreCollisionObject !== objectToCheck && objectToCheck.stage && objectToCheck.interacts) {
 				objectToCheckBoundingBox = objectToCheck.boundingBox;
 				if(objectToCheckBoundingBox) {
 					objectToCheckX = objectToCheckBoundingBox.x;
@@ -323,16 +328,21 @@ GameObject.prototype.checkCollision = function() {
 	return false;
 };
 
-GameObject.prototype.destroy = function() {
-	if(!!this.displayLabel && this.onStage)
-		this.spriteData[this.displayLabel].removeFromStage(this.zPos);
-	this.state.destroyed = true;
-}
+Object.defineProperty(GameObject.prototype, 'destroyed', {
+	get: function() {
+		return this.objectDestroyed;
+	},
+	set: function(destroyed) {
+		if(!this.objectDestroyed && destroyed) {
+			let label = null, sprites = this.spriteData;
+			for(label in sprites) {
+				sprites[label].destroyed = true;
+			}
+		}
+	}
+});
 
-GameObject.prototype.addSprite = function(displayLabel, sprite){
-	this.spriteData[displayLabel] = sprite;
-};
-
+/*
 GameObject.prototype.updateState = function(){
 	state.setProperty(this.stateLabel, this.gameState);
 };
@@ -342,6 +352,6 @@ GameObject.prototype.sendState = function() {
 		label: this.stateLabel,
 		state: this.gameState
 	});
-};
+};*/
 
 module.exports = GameObject;

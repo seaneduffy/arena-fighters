@@ -15,6 +15,7 @@ let Sprite = require('./sprite'),
 
 function Character(stateLabel) {
 	GameObject.prototype.constructor.call(this, stateLabel);
+	this.z = settings.zCharacter;
 }
 
 Character.prototype = Object.create(GameObject.prototype);

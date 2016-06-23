@@ -1,4 +1,4 @@
-{"characters": {
+{"gameobjects": {
 	"player": {
 		"sprites": {
 			"up_standing": "player-up-standing",
@@ -27,5 +27,20 @@
 		"speed": 1,
 		"z": 2,
 		"aggression": 1
+	},
+	"bullet": {
+		"sprites": {
+			"default": "bullet"
+		},
+		"display": "default",
+		"speed": 10,
+		"z": 3
+	},
+	"background1": {
+		"sprites": {
+			"default": "bg1"
+		},
+		"display": "default",
+		"z": 0
 	}
 }}

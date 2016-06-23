@@ -17,8 +17,7 @@ http.listen(3000, function(){
 });
 
 
-//let socketManager = require('socket.io-connection-manager')(http),
-let socketManager = require('./socket')(http),
+let socketManager = require('socket.io-connection-manager')(http),
 	Game = require('./app/game');
 	
 socketManager.onConnection(function(connection){
@@ -66,6 +65,12 @@ socketManager.onRegistration(function(connection){
 				state: game.getState(player.name+'-hero')
 			});
 		}*/
+		socketManager.listenToSession(session, 'joystick', (label)=>{
+			socketManager.sendToConnection(players[0].connection, 'joystick', label, true);
+		});
+		socketManager.listenToSession(session, 'sprite update', (sprites)=>{
+			socketManager.sendToConnection(players[1].connection, 'sprite update', sprites);
+		});
 		socketManager.sendToSession(session, 'game start', game.getState());
 	}
 	socketManager.listenToConnection(connection, 'end game', ()=>{

@@ -1,5 +1,6 @@
-let prepFunctions = [],
-	cycleFunctions = [],
+let clientUpdateFunctions = [],
+	uiFunctions = [],
+	serverUpdateFunctions = [],
 	cleanupFunctions = [],
 	active = false,
 	i = 0,
@@ -7,13 +8,17 @@ let prepFunctions = [],
 
 function cycle() {
 	if(active) {
-		l = prepFunctions.length;
+		l = clientUpdateFunctions.length;
 		for(i=0; i<l; i++) {
-			prepFunctions[i]();
+			clientUpdateFunctions[i]();
 		}
-		l = cycleFunctions.length;
+		l = uiFunctions.length;
 		for(i=0; i<l; i++) {
-			cycleFunctions[i]();
+			uiFunctions[i]();
+		}
+		l = serverUpdateFunctions.length;
+		for(i=0; i<l; i++) {
+			serverUpdateFunctions[i]();
 		}
 		l = cleanupFunctions.length;
 		for(i=0; i<l; i++) {
@@ -33,16 +38,28 @@ module.exports = {
 	stop: function() {
 		active = false;
 	},
-	addPrep: function(func) {
-		prepFunctions.push(func);
+	addUI: function(func) {
+		uiFunctions.push(func);
 	},
-	addCycle: function(func) {
-		cycleFunctions.push(func);
+	removeUI: function(func) {
+		uiFunctions.splice(uiFunctions.indexOf(func), 1);
 	},
-	removeCycle: function(func) {
-		cycleFunctions.splice(cycleFunctions.indexOf(func), 1);
+	addClientUpdate: function(func) {
+		clientUpdateFunctions.push(func);
+	},
+	removeClientUpdate: function(func) {
+		clientUpdateFunctions.splice(clientUpdateFunctions.indexOf(func), 1);
+	},
+	addServerUpdate: function(func) {
+		serverUpdateFunctions.push(func);
+	},
+	removeServerUpdate: function(func) {
+		serverUpdateFunctions.splice(serverUpdateFunctions.indexOf(func), 1);
 	},
 	addCleanup: function(func) {
 		cleanupFunctions.push(func);
-	}
+	},
+	removeCleanup: function(func) {
+		cleanupFunctions.splice(cleanupFunctions.indexOf(func), 1);
+	},
 };

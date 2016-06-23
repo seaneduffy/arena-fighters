@@ -50,17 +50,12 @@ Enemy.prototype.ai = function() {
 			direction = this.getDirectionToObject(angle);
 		this.move(direction);
 		this.checkCollision();
-		this.updateState();
-		this.sendState();
 	}
 };
 
 Enemy.prototype.die = function() {
-	console.log('enemy destroy');
 	this.aiStop();
 	this.destroy();
-	this.updateState();
-	this.sendState();
 };
 
 Enemy.prototype.onCollision = function(collisionObject) {
