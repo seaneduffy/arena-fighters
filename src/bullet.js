@@ -13,8 +13,15 @@ Bullet.prototype.fire = function() {
 	cycle.addGameObjectUpdateFunction(this, this.move.bind(this));
 };
 
+Bullet.prototype.onCollidedWith = function(collidedObject) {
+	if(collidedObject.type === 'bullet')
+		return;
+};
+
+
 Bullet.prototype.onCollision = function(collidedObject) {
-	this.destroyed = true;
+	if(collidedObject.type !== 'bullet')
+		this.destroyed = true;
 };
 
 Bullet.prototype.move = function() {

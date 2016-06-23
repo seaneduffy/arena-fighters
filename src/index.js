@@ -12,7 +12,6 @@
 		state = require('./state'),
 		settings = require('./settings'),
 		GameObject = require('./gameObject'),
-		Background = require('./background'),
 		React = require('react'),
 		ReactDOM = require('react-dom'),
 		cycle = require('./cycle'),
@@ -56,6 +55,8 @@
 			socket.on('fire', this.onServerFire);
 			socket.on('end game', this.onServerEndGame);
 			cycle.addUIUpdateFunction(Sprite.draw);
+			if(this.state.dev1Player)
+				this.handleCreateGame();
 		},
 		_startLevel: function(index) {
 			let levelData = levelsData[index],
@@ -157,10 +158,14 @@
 			socket.emit('games list');
 		},
 		_fire: function(player) {
-			let bullet = this._createGameObject('bullet');
+			let bullet = this._createGameObject('bullet'),
+				point = player.front;
 			bullet.direction = player.direction;
-			bullet.x = player.x;
-			bullet.y = player.y;
+			bullet.x = point.x;
+			bullet.y = point.y;
+			point = bullet.front;
+			bullet.x = point.x;
+			bullet.y = point.y;
 			bullet.ignoreCollision(player);
 			bullet.stage = true;
 			bullet.fire();
@@ -180,7 +185,8 @@
 				gameJoined: false,
 				gameActive: false,
 				hosting: false,
-				playerConnected: false
+				playerConnected: false,
+				dev1Player: true
 			}
 		},
 		handleJoinGame: function() {
@@ -244,6 +250,8 @@
 				gameJoined: true,
 				gameId: id
 			});
+			if(this.state.dev1Player)
+				this.handleStartGame();
 		},
 		onServerStartGame: function() {
 			this._startLevel(0);

@@ -4,8 +4,7 @@ let state = require('./state'),
 	cycle = require('./cycle'),
 	id = require('./id'),
 	settings = require('./settings'),
-	gameObjects = [],
-	cos45 = Math.cos(Math.PI / 4);
+	gameObjects = [];
 
 function cleanup() {
 	let i = 0, l = gameObjects.length;
@@ -23,12 +22,65 @@ cycle.addCleanup(cleanup);
 function GameObject() {
 	this.spriteData = Object.create(null);
 	this.ignoreCollisionObjects = [];
+	this.xPos = null;
+	this.yPos = null;
+	this.prevXPos = null;
+	this.prevYPos = null;
 	this.zPos = 0;
 	this.onStage = false;
 	this.objectInteracts = false;
 	this.objectDestroyed = false;
 	gameObjects.push(this);
 }
+
+Object.defineProperty(GameObject.prototype, 'front', {
+	get: function() {
+		let direction = this.direction,
+			boundingBox = this.boundingBox;
+		if(direction === settings.UP) {
+			return {
+				x: this.xPos,
+				y: this.yPos - boundingBox.height / 2
+			}
+		} else if(direction === settings.DOWN) {
+			return {
+				x: this.xPos,
+				y: this.yPos + boundingBox.height / 2
+			}
+		} else if(direction === settings.LEFT) {
+			return {
+				x: this.xPos - boundingBox.width / 2,
+				y: this.yPos
+			}
+		} else if(direction === settings.RIGHT) {
+			return {
+				x: this.xPos + boundingBox.width / 2,
+				y: this.yPos
+			}
+		} else if(direction === settings.UP_LEFT) {
+			return {
+				x: this.xPos - settings.cos45 * boundingBox.width / 2,
+				y: this.yPos - settings.cos45 * boundingBox.height / 2
+			}
+		} else if(direction === settings.UP_RIGHT) {
+			return {
+				x: this.xPos + settings.cos45 * boundingBox.width / 2,
+				y: this.yPos - settings.cos45 * boundingBox.height / 2
+			}
+		} else if(direction === settings.DOWN_LEFT) {
+			return {
+				x: this.xPos - settings.cos45 * boundingBox.width / 2,
+				y: this.yPos + settings.cos45 * boundingBox.height / 2
+			}
+		} else if(direction === settings.DOWN_RIGHT) {
+			return {
+				x: this.xPos + settings.cos45 * boundingBox.width / 2,
+				y: this.yPos + settings.cos45 * boundingBox.height / 2
+			}
+		}
+		return false;
+	}
+});
 
 Object.defineProperty(GameObject.prototype, 'destroyed', {
 	get: function() {
@@ -94,7 +146,7 @@ Object.defineProperty(GameObject.prototype, 'label', {
 Object.defineProperty(GameObject.prototype, 'speed', {
 	set: function(speed) {
 		this.objectSpeed = speed;
-		this.diagonalSpeed = cos45 * speed;
+		this.diagonalSpeed = settings.cos45 * speed;
 	},
 	get: function() {
 		return this.objectSpeed;
@@ -119,6 +171,7 @@ Object.defineProperty(GameObject.prototype, 'sprites', {
 
 Object.defineProperty(GameObject.prototype, 'x', {
 	set: function(x) {
+		this.prevXPos = this.xPos;
 		this.xPos = x;
 		let sprites = this.spriteData, label = null;
 		for(label in sprites) {
@@ -132,6 +185,7 @@ Object.defineProperty(GameObject.prototype, 'x', {
 
 Object.defineProperty(GameObject.prototype, 'y', {
 	set: function(y) {
+		this.prevYPos = this.yPos;
 		this.yPos = y;
 		let sprites = this.spriteData, label = null;
 		for(label in sprites) {
@@ -248,6 +302,11 @@ GameObject.prototype.ignoreCollision = function(obj) {
 	this.ignoreCollisionObject = obj;
 };
 
+GameObject.prototype.onCollidedWith = function(collidedObject) {
+	this.xPos = this.prevXPos;
+	this.yPos = this.prevYPos;
+}
+
 GameObject.prototype.move = function() {
 	let x = null,
 		y = null;
@@ -298,22 +357,28 @@ GameObject.prototype.checkCollision = function() {
 		objectToCheckBoundingBox = null;
 	for(i=0; i<l; i++) {
 		objectToCheck = gameObjects[i];
-		if(objectToCheck !== this) {
-			if(this.ignoreCollisionObject !== objectToCheck && objectToCheck.ignoreCollisionObject !== this && objectToCheck.stage && objectToCheck.interacts) {
-				objectToCheckBoundingBox = objectToCheck.boundingBox;
-				if(objectToCheckBoundingBox) {
-					objectToCheckX = objectToCheckBoundingBox.x;
-					objectToCheckY = objectToCheckBoundingBox.y;
-					objectToCheckWidth = objectToCheckBoundingBox.width;
-					objectToCheckHeight = objectToCheckBoundingBox.height;
-					if((thisX + thisWidth > objectToCheckX && thisX < objectToCheckX + objectToCheckWidth)
-						&& (thisY + thisHeight > objectToCheckY && thisY < objectToCheckY + objectToCheckHeight)) {
-							if(!!this.onCollision)
-								this.onCollision(objectToCheck);
-							if(!!objectToCheck.onCollision)
-								objectToCheck.onCollision(this);
+		
+		if(this.ignoreCollisionObject === objectToCheck || objectToCheck.ignoreCollisionObject === this) {
+			
+		} else if(
+			objectToCheck !== this && objectToCheck.stage && objectToCheck.interacts
+		) {
+			objectToCheckBoundingBox = objectToCheck.boundingBox;
+			if(objectToCheckBoundingBox) {
+				objectToCheckX = objectToCheckBoundingBox.x;
+				objectToCheckY = objectToCheckBoundingBox.y;
+				objectToCheckWidth = objectToCheckBoundingBox.width;
+				objectToCheckHeight = objectToCheckBoundingBox.height;
+				if((thisX + thisWidth > objectToCheckX && thisX < objectToCheckX + objectToCheckWidth)
+					&& (thisY + thisHeight > objectToCheckY && thisY < objectToCheckY + objectToCheckHeight)) {
+						this.onCollidedWith(objectToCheck);
+						if(!!this.onCollision) {
+							this.onCollision(objectToCheck);
 						}
-				}
+						if(!!objectToCheck.onCollision) {
+							objectToCheck.onCollision(this);
+						}
+					}
 			}
 		}
 	}

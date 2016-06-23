@@ -34,6 +34,7 @@ Connection.prototype.onJoinGame = function(data) {
 	this._host = false;
 	this._game = Game.getGameById(data.gameId);
 	this._socket.join(data.gameId);
+	this._socket.to(data.gameId).emit('player joined');
 };
 
 Connection.prototype.onStartGame = function() {

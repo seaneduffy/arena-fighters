@@ -10,7 +10,7 @@
 			"left_walking": "player-left-walking",
 			"right_walking": "player-right-walking"
 		},
-		"speed": 3,
+		"speed": 6,
 		"z": 2,
 		"interacts": true
 	},

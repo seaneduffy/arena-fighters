@@ -20,12 +20,12 @@
 		"obstacles": [
 			{
 				"x": 500,
-				"y": 700,
+				"y": 600,
 				"sprite": "obstacle"
 			},
 			{
 				"x": 900,
-				"y": 700,
+				"y": 400,
 				"sprite": "obstacle"
 			}
 		],

@@ -21,5 +21,6 @@ settings.joystickJsonUri = '/data/joystick.json';
 settings.joystickImage = '/img/joystick.png';
 settings.spriteJsonUri = '/data/sprites.json';
 settings.spritesImage = '/img/sprites.png';
+settings.cos45 = Math.cos(Math.PI / 4);
 
 module.exports = settings;
