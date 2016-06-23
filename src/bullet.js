@@ -1,34 +1,25 @@
 let Sprite = require('./sprite'),
 	settings = require('./settings'),
-	GameObject = require('./gameObject');
+	GameObject = require('./gameObject'),
+	cycle = require('./cycle');
 
-function Bullet(serverState, stateLabel) {
-	GameObject.prototype.constructor.call(this, settings.zBullet, stateLabel);
-	this.addSprite(settings.bulletSprite, new Sprite(settings.bulletSprite));
-	if(!!serverState)
-		this.state = serverState;
+function Bullet() {
+	GameObject.prototype.constructor.call(this);
 }
 
 Bullet.prototype = Object.create(GameObject.prototype);
 
 Bullet.prototype.fire = function() {
-	window.requestAnimationFrame(()=>{
-		this.move();
-	});
-}
+	cycle.addGameObjectUpdateFunction(this, this.move.bind(this));
+};
+
+Bullet.prototype.onCollision = function(collidedObject) {
+	this.destroyed = true;
+};
 
 Bullet.prototype.move = function() {
 	GameObject.prototype.move.call(this);
-	let collision = this.checkCollision();
-	if(collision) {
-		this.destroy();	
-	} else {
-		window.requestAnimationFrame(()=>{
-			this.move();
-		});
-	}
-	this.updateState();
-	this.sendState();
+	this.checkCollision();
 }
 
 module.exports = Bullet;

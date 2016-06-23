@@ -29,7 +29,7 @@
 		render: function() {
 			let handleClick = this.props.handleClick,
 				createItem = function(item, handleGameListSelect) {
-				return <li key={item.sessionId}><button data-session-id={item.sessionId} onClick={handleClick}>{item.name}</button></li>;
+				return <li key={item.id}><button data-game-id={item.id} onClick={handleClick}>{item.name}</button></li>;
 			};
 			return <ul>{this.props.items.map(createItem)}</ul>;
 		}
@@ -46,42 +46,16 @@
 			settings.resolution = (resScaleWidth < resScaleHeight) ? resScaleWidth : resScaleHeight;
 			gameCanvas.setAttribute('width', windowWidth);
 			gameCanvas.setAttribute('height', windowHeight);
-			
-			/*let stageWidth = settings.stageWidth,
-				stageHeight = settings.stageHeight,
-				leftWall = this._createGameObject(0, stageHeight / 2, settings.zObstacle, 'left-wall', settings.wallSprite),
-				rightWall = this._createGameObject(stageWidth, stageHeight / 2, settings.zObstacle, 'right-wall', settings.wallSprite),
-				ceiling = this._createGameObject(stageWidth / 2, 0, settings.zObstacle, 'ceiling', settings.floorSprite),
-				floor = this._createGameObject(stageWidth / 2, stageHeight, settings.zObstacle, 'floor', settings.floorSprite);
-			*/
 			require('./controls.js')(this.onJoystick, this.onFire);
 			socket = require('./socket');
-			socket.on('games list', this._listGames);
-			socket.on('player joined', this._setPlayerNames);
-			socket.on('game start', this._startGame);
-			socket.on('joystick', this.onJoystickServer);
-			//socket.on('update state', this._updateGameState);
-			socket.on('end game', this._endGame);
-			
-			cycle.addUI(Sprite.draw);
-		},
-		_endGame: function() {
-			cycle.stop();
-			let gameObjects = this.state.gameObjects, i = 0, l = gameObjects.length;
-			for(i=0; i<l; i++) {
-				gameObjects[i].destroy();
-			}
-			this.setState({
-				gameObjects: [],
-				playerName: '',
-				sessionId: '',
-				gameName: '',
-				gameCreated: false,
-				gameActive: false,
-				hosting: false
-			});
-			socket.emit('games list');
-			socket.emit('end game');
+			socket.on('games list', this.onServerListGames);
+			socket.on('game created', this.onServerGameCreated);
+			socket.on('player joined', this.onServerPlayerJoined);
+			socket.on('start game', this.onServerStartGame);
+			socket.on('joystick', this.onServerJoystick);
+			socket.on('fire', this.onServerFire);
+			socket.on('end game', this.onServerEndGame);
+			cycle.addUIUpdateFunction(Sprite.draw);
 		},
 		_startLevel: function(index) {
 			let levelData = levelsData[index],
@@ -89,107 +63,91 @@
 				stageHeight = settings.stageHeight;
 			
 			if(this.state.hosting) {
-				let player1 = settings.player1 = this._createGameObject('player'),
-					player2 = settings.player2 = this._createGameObject('player'),
-					bg = this._createGameObject('background');
+				let stageWidth = settings.stageWidth,
+					stageHeight = settings.stageHeight,
+					i = 0, l = 0,
+					obstacle = null,
+					bg = this._createGameObject('background', {default:levelData.background}),
+					leftWall = this._createGameObject('obstacle', {default:levelData.leftWall}),
+					rightWall = this._createGameObject('obstacle', {default:levelData.rightWall}),
+					topWall = this._createGameObject('obstacle', {default:levelData.topWall}),
+					bottomWall = this._createGameObject('obstacle', {default:levelData.bottomWall});
+				bg.x = stageWidth / 2;
+				bg.y = stageHeight / 2;
 				bg.stage = true;
-				player1.x = levelData.player1.x;
-				player1.y = levelData.player1.y;
-				player1.direction = levelData.player1.direction;
-				player1.display = levelData.player1.display;
-				player2.x = levelData.player2.x;
-				player2.y = levelData.player2.y;
-				player2.direction = levelData.player2.direction;
-				player2.display = levelData.player2.display;
-				player1.stage = true;
-				player2.stage = true;
-			}
-			
-			/*let i = 0, l = levelData.obstacles.length, obstacleData = null;
-			for(i=0; i<l; i++) {
-				obstacleData = levelData.obstacles[i];
-				this._createGameObject(obstacleData.x, obstacleData.y, settings.zObstacle, 'obstacle-'+i, settings.obstacleSprite);
-			}
-			if(playerNames[0] === this.state.playerName) {
+				leftWall.x = 0;
+				leftWall.y = stageHeight / 2;
+				leftWall.stage = true;
+				rightWall.x = stageWidth;
+				rightWall.y = stageHeight / 2;
+				rightWall.stage = true;
+				topWall.x = stageWidth / 2;
+				topWall.y = 0;
+				topWall.stage = true;
+				bottomWall.x = stageWidth / 2;
+				bottomWall.y = stageHeight;
+				bottomWall.stage = true;
+				l = levelData.obstacles.length;
+				for(i=0; i<l; i++) {
+					obstacle = this._createGameObject('obstacle', {default:levelData.obstacles[i].sprite});
+					obstacle.x = levelData.obstacles[i].x;
+					obstacle.y = levelData.obstacles[i].y;
+					obstacle.stage = true;
+				}
 				l = levelData.enemies.length;
 				let enemyData = null, enemy;
 				for(i=0; i<l; i++) {
 					enemyData = levelData.enemies[i];
-					enemy = new Enemy();
-					enemy.sprites = characterData.grunt.sprites;
-					enemy.speed = characterData.grunt.speed;
-					enemy.z = characterData.grunt.z;
-					//enemy.state = enemyData;
+					enemy = this._createGameObject(enemyData.type);
 					enemy.stage = true;
+					enemy.x = enemyData.x;
+					enemy.y = enemyData.y;
+					enemy.direction = enemyData.direction;
+					enemy.display = enemyData.display;
 					enemy.aiStart();
-					this.state.gameObjects[enemy.label] = enemy;
 				}
-			}*/
+				let player1 = settings.player1 = this._createGameObject('player');
+				player1.x = levelData.player1.x;
+				player1.y = levelData.player1.y;
+				player1.direction = levelData.player1.direction;
+				player1.display = levelData.player1.display;
+				player1.stage = true;
+				if(this.state.playerConnected) {
+					let player2 = settings.player2 = this._createGameObject('player');
+					player2.x = levelData.player2.x;
+					player2.y = levelData.player2.y;
+					player2.direction = levelData.player2.direction;
+					player2.display = levelData.player2.display;
+					player2.stage = true;
+				}
+			}
 			this.setState({gameActive:true});
 			cycle.start();
-			setTimeout(()=>{
-				console.log(this.state.gameObjects);
-			}, 100);
 		},
-		_createGameObject: function(type) {
+		_createGameObject: function(type, sprites) {
 			let gameObject = null, property = null, gameObjectData = gameObjectsData[type];
 			if(type === 'player') {
 				gameObject = new Player();
-			} else if(type === 'background') {
-				gameObject = new Background();
+			} else if(type === 'background' || type === 'obstacle') {
+				gameObject = new GameObject();
 			} else if(type === 'bullet') {
 				gameObject = new Bullet();
+			} else if(type === 'grunt') {
+				gameObject = new Enemy();
 			}
 			if(!gameObject)
 				return false;
 			this.state.gameObjects.push(gameObject);
+			if(!!sprites) {
+				gameObject.sprites = sprites;
+			}
 			if(!!gameObjectData) {
 				for(property in gameObjectData) {
 					gameObject[property] = gameObjectData[property];
 				}
 			}
+			gameObject.type = type;
 			return gameObject;
-		},
-		_listGames: function(games) {
-			this.setState({games: games});
-		},
-		_updateGameState: function(data) {
-			let label = data.label,
-				serverState = data.state;
-			if(!!this.state.gameObjects[label]) {
-				this.state.gameObjects[label].state = serverState;
-				if(serverState.destroyed) {
-					delete this.state.gameObjects[label];
-				}
-			} else {
-				let type = serverState.type,
-					gameObject = null;
-				if(type === 'player') {
-					gameObject = new Player(label);
-					gameObject.sprites = gameObjectsData.player.sprites;
-					gameObject.state = serverState;
-				} else if(type === 'bullet') {
-					gameObject = new Bullet(label);
-					gameObject.state = serverState;
-				} else if(type === 'grunt') {
-					gameObject = new Enemy(label);
-					gameObject.sprites = gameObjectsData.grunt.sprites;
-					gameObject.state = serverState;
-				}
-				gameObject.stage = true;
-				this.state.gameObjects[label] = gameObject;	
-			}
-		},
-		_startGame: function() {
-			let playerNames = this.state.playerNames;
-			if(playerNames[0] === this.state.playerName) {
-				this.setState({hosting: true});
-				Sprite.setHosting(true);
-			} else {
-				this.setState({hosting: false});
-				Sprite.setHosting(false);
-			}
-			this._startLevel(0);
 		},
 		_setPlayerNames: function(playerNames) {
 			this.setState({playerNames: playerNames});
@@ -219,9 +177,36 @@
 				games: [],
 				gameCreated: false,
 				playerNameSet: false,
+				gameJoined: false,
 				gameActive: false,
-				hosting: false
+				hosting: false,
+				playerConnected: false
 			}
+		},
+		handleJoinGame: function() {
+			Sprite.setHosting(false);
+			socket.emit('join game', {
+				name: this.state.playerName,
+				gameId: this.state.gameId
+			});
+			this.setState({gameJoined:true});
+		},
+		handleGameListSelect: function(e) {
+			this.setState({gameId: e.target.getAttribute('data-game-id')});
+		},
+		handleCreateGame: function() {
+			this.setState({gameCreated: true});
+			socket.emit('create game', {
+				name: this.state.playerName,
+				gameName: this.state.gameName
+			});
+		},
+		handleEndGame: function(e) {
+			//this._endGame();
+		},
+		handleStartGame: function() {
+			socket.emit('start game');
+			this._startLevel(0);
 		},
 		onPlayerNameChange: function(e) {
 			this.setState({playerName: e.target.value});
@@ -229,34 +214,12 @@
 		onGameNameChange: function(e) {
 			this.setState({gameName: e.target.value});
 		},
-		handleJoinGame: function() {
-			socket.emit('register', {
-				label: this.state.playerName,
-				sessionId: this.state.sessionId
-			});
-		},
-		handleGameListSelect: function(e) {
-			this.setState({sessionId: e.target.getAttribute('data-session-id')});
-		},
-		handleCreateGame: function() {
-			this.setState({gameCreated: true});
-			socket.emit('register', {
-				label: this.state.playerName,
-				name: this.state.gameName
-			});
-		},
-		handleEndGame: function(e) {
-			this._endGame();
-		},
 		onJoystick: function(label, client) {
 			if(!this.state.hosting) {
-				socket.emit('joystick');
+				socket.emit('joystick', label);
 			} else {
 				this._movePlayer(settings.player1, label);
 			}
-		},
-		onJoystickServer: function(label) {
-			this._movePlayer(settings.player2, label);
 		},
 		onFire: function(caller) {
 			if(!this.state.hosting) {
@@ -265,8 +228,38 @@
 				this._fire(settings.player1);
 			}
 		},
-		onFireServer: function() {
+		onServerFire: function() {
 			this._fire(settings.player2);
+		},
+		onServerJoystick: function(label) {
+			this._movePlayer(settings.player2, label);
+		},
+		onServerPlayerJoined: function() {
+			this.setState({playerConnected:true});
+		},
+		onServerGameCreated: function(id) {
+			Sprite.setHosting(true);
+			this.setState({
+				hosting: true,
+				gameJoined: true,
+				gameId: id
+			});
+		},
+		onServerStartGame: function() {
+			this._startLevel(0);
+		},
+		onServerListGames: function(games) {
+			this.setState({games: games});
+		},
+		onServerEndGame: function() {
+			/*cycle.stop();
+			let gameObjects = this.state.gameObjects, i = 0, l = gameObjects.length;
+			for(i=0; i<l; i++) {
+				gameObjects[i].destroy();
+			}
+			this.replaceState(this.getInitialState());
+			socket.emit('games list');
+			socket.emit('end game');*/
 		},
 		render: function() {
 			return (
@@ -289,6 +282,7 @@
 			<GamesList items={this.state.games} handleClick={this.handleGameListSelect}/>
 			<button onClick={this.handleJoinGame}>Join Game</button>
 		</div>
+		<button onClick={this.handleStartGame} className={this.state.gameJoined ? '' : 'hidden'}>Start Game</button>
 	</div>
 	<div id="gameScreen" className={this.state.gameActive ? '' : 'hidden'}>
 		<canvas></canvas>

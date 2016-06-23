@@ -11,7 +11,8 @@
 			"right_walking": "player-right-walking"
 		},
 		"speed": 3,
-		"z": 2
+		"z": 2,
+		"interacts": true
 	},
 	"grunt": {
 		"sprites": {
@@ -24,9 +25,10 @@
 			"left_walking": "grunt-down-standing",
 			"right_walking": "grunt-down-standing"
 		},
-		"speed": 1,
-		"z": 2,
-		"aggression": 1
+		"speed": 0.5,
+		"z": 3,
+		"aggression": 1,
+		"interacts": true
 	},
 	"bullet": {
 		"sprites": {
@@ -34,13 +36,17 @@
 		},
 		"display": "default",
 		"speed": 10,
-		"z": 3
+		"z": 4,
+		"interacts": true
 	},
-	"background1": {
-		"sprites": {
-			"default": "bg1"
-		},
+	"background": {
 		"display": "default",
-		"z": 0
+		"z": 0,
+		"interacts": false
+	},
+	"obstacle": {
+		"display": "default",
+		"z": 1,
+		"interacts": true
 	}
 }}

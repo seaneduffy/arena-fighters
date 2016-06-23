@@ -84,6 +84,13 @@ function onJoystickMove(label) {
 		activeControl = controls[label];
 	}
 }
+
+document.addEventListener('keydown', (e)=>{
+	if(e.keyCode === 32) {
+		if(!!fireCallback)
+			fireCallback();
+	}
+}, false);
 	
 module.exports = function(_joystickCallback, _fireCallback){
 	joystickCallback = _joystickCallback;

@@ -1,20 +1,36 @@
 let clientUpdateFunctions = [],
-	uiFunctions = [],
+	uiUpdateFunctions = [],
+	gameObjectUpdateFunctions = [],
 	serverUpdateFunctions = [],
 	cleanupFunctions = [],
+	toRemove = [],
 	active = false,
 	i = 0,
-	l = 0;
-
+	l = 0,
+	tmpFunc = null,
+	tmpArr = null,
+	tmpGameObject = null;
 function cycle() {
 	if(active) {
 		l = clientUpdateFunctions.length;
 		for(i=0; i<l; i++) {
 			clientUpdateFunctions[i]();
 		}
-		l = uiFunctions.length;
+		l = uiUpdateFunctions.length;
 		for(i=0; i<l; i++) {
-			uiFunctions[i]();
+			uiUpdateFunctions[i]();
+		}
+		l = gameObjectUpdateFunctions.length;
+		for(i=0; i<l; i++) {
+			tmpGameObject = gameObjectUpdateFunctions[i].obj;
+			tmpFunc = gameObjectUpdateFunctions[i].func;
+			if(tmpGameObject.destroyed) {
+				gameObjectUpdateFunctions.splice(i,1);
+				i--;
+				l--;
+			} else {
+				tmpFunc();
+			}
 		}
 		l = serverUpdateFunctions.length;
 		for(i=0; i<l; i++) {
@@ -24,6 +40,15 @@ function cycle() {
 		for(i=0; i<l; i++) {
 			cleanupFunctions[i]();
 		}
+		l = toRemove.length;
+		for(i=0; i<l; i++) {
+			tmpArr = toRemove[i].arr;
+			tmpFunc = toRemove[i].func;
+			tmpArr.splice(tmpArr.indexOf(tmpFunc), 1);
+			i--;
+			l--;
+		}
+		toRemove = [];
 		window.requestAnimationFrame(cycle);
 	}
 }
@@ -38,28 +63,46 @@ module.exports = {
 	stop: function() {
 		active = false;
 	},
-	addUI: function(func) {
-		uiFunctions.push(func);
+	addUIUpdateFunction: function(func) {
+		uiUpdateFunctions.push(func);
 	},
-	removeUI: function(func) {
-		uiFunctions.splice(uiFunctions.indexOf(func), 1);
+	removeUIUpdateFunction: function(func) {
+		toRemove.push({
+			arr: uiUpdateFunctions,
+			func: func
+		});
+	},
+	addGameObjectUpdateFunction: function(obj, func) {
+		gameObjectUpdateFunctions.push({
+			obj: obj,
+			func: func
+		});
 	},
 	addClientUpdate: function(func) {
 		clientUpdateFunctions.push(func);
 	},
 	removeClientUpdate: function(func) {
-		clientUpdateFunctions.splice(clientUpdateFunctions.indexOf(func), 1);
+		toRemove.push({
+			arr: clientUpdateFunctions,
+			func: func
+		});
 	},
 	addServerUpdate: function(func) {
 		serverUpdateFunctions.push(func);
 	},
 	removeServerUpdate: function(func) {
-		serverUpdateFunctions.splice(serverUpdateFunctions.indexOf(func), 1);
+		toRemove.push({
+			arr: serverUpdateFunctions,
+			func: func
+		});
 	},
 	addCleanup: function(func) {
 		cleanupFunctions.push(func);
 	},
 	removeCleanup: function(func) {
-		cleanupFunctions.splice(cleanupFunctions.indexOf(func), 1);
+		toRemove.push({
+			arr: cleanupFunctions,
+			func: func
+		});
 	},
 };

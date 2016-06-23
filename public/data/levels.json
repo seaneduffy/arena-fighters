@@ -13,14 +13,20 @@
 			"display": "left_standing"
 		},
 		"background": "bg1",
+		"leftWall": "wall",
+		"rightWall": "wall",
+		"topWall": "floor",
+		"bottomWall": "floor",
 		"obstacles": [
 			{
-				"x": 400,
-				"y": 600
+				"x": 500,
+				"y": 700,
+				"sprite": "obstacle"
 			},
 			{
-				"x": 1000,
-				"y": 450
+				"x": 900,
+				"y": 700,
+				"sprite": "obstacle"
 			}
 		],
 		"enemies": [
@@ -33,22 +39,22 @@
 			},
 			{
 				"type": "grunt",
-				"x": 400,
+				"x": 1200,
 				"y": 170,
 				"direction": "down",
 				"display": "down_standing"
 			},
 			{
 				"type": "grunt",
-				"x": 360,
-				"y": 250,
+				"x": 1100,
+				"y": 500,
 				"direction": "down",
 				"display": "down_standing"
 			},
 			{
 				"type": "grunt",
-				"x": 50,
-				"y": 280,
+				"x": 90,
+				"y": 400,
 				"direction": "down",
 				"display": "down_standing"
 			}

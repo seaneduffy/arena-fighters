@@ -1,98 +1,71 @@
 'use strict';
 
 let games = [],
-	quicksort = require('./quicksort');
-	
-function guidGenerator() {
-    var S4 = function() {
-       return (((1+Math.random())*0x10000)|0).toString(16).substring(1);
-    };
-    return (S4()+S4()+"-"+S4()+"-"+S4()+"-"+S4()+"-"+S4()+S4()+S4());
-}
+	quicksort = require('./quicksort'),
+	id = require('./id');
 
-function initPlayerCharacterState(name, x, y, display, direction) {
-	let state = Object.create(null);
-	state.name = name;
-	state.x = x;
-	state.y = y;
-	state.display = display;
-	state.direction = direction;
-	state.type = 'hero';
-	return state;
-}
-
-function Game(session) {
-	this.players = [];
-	this.session = session;
-	this.sessionID = parseFloat(session.getId());
-	this.id = guidGenerator();
-	this.state = Object.create(null);
+function Game() {
+	this._players = [];
+	this._id = id();
+	this._open = true;
 	games.push(this);
-	games = quicksort.sort(games, 'sessionID');
 }
 
-Game.prototype.getPlayers = function() {
-	return this.players;
-};
-
-Game.prototype.updateState = function(label, playerState) {
-	let state = this.state;
-	if(state.destroyed)
-		delete state[label];
-	else
-		state[label] = playerState;
-	return state;
-};
-
-Game.prototype.getState = function(label) {
-	return this.state[label];
-}
-
-Game.prototype.getOtherPlayerConnection = function(connection) {
-	let players = this.players,
-		l = players.length;
-	for(let i=0; i<l; i++) {
-		if(players[i].connection !== connection)
-			return players[i].connection;
+Object.defineProperty(Game.prototype, 'name', {
+	get: function() {
+		return this._name;
+	},
+	set: function(name) {
+		this._name = name;
 	}
-}
+});
 
-Game.prototype.addPlayer = function(playerName, connection){
-	let x = null, y = null, display, direction, players = this.players, playerObj = Object.create(null);
-	playerObj.name = playerName;
-	playerObj.connection = connection;
-	players.push(playerObj);
-	if(players.length === 1) {
-		x = 'settings.player1StartingX';
-		y = 'settings.player1StartingY';
-		display = 'right_standing';
-		direction = 'settings.RIGHT';
-	} else {
-		x = 'settings.player2StartingX';
-		y = 'settings.player2StartingY';
-		display = 'left_standing';
-		direction = 'settings.LEFT';
+Object.defineProperty(Game.prototype, 'open', {
+	get: function() {
+		return this._open;
 	}
-	this.state[playerName + '-hero'] = initPlayerCharacterState(playerName, x, y, display, direction);
-};
+});
+
+Object.defineProperty(Game.prototype, 'players', {
+	get: function() {
+		return this._players;
+	}
+});
+
+Object.defineProperty(Game.prototype, 'id', {
+	get: function() {
+		return this._id;
+	}
+});
 
 Game.prototype.end = function() {
 	games.splice(games.indexOf(this), 1);
+};
+
+Game.prototype.addPlayer = function(name) {
+	this._players.push(name);
 }
-
-Game.prototype.sessionID = '';
-
-Game.prototype.id = null;
 
 Game.getGames = function() {
 	return games;
 };
 
-Game.getGameBySession = function(session) {
-	if(games.length > 0) {
-		return quicksort.find(session.getId(), games, 'sessionID');
+Game.getGamesList = function(id) {
+	return games.map(function(game) {
+		if(game.open)
+			return {
+				id: game.id,
+				name: game.name
+			}
+	});
+};
+
+Game.getGameById = function(id) {
+	let i=0, l=games.length;
+	for(i=0; i<l; i++) {
+		if(games[i].id === id)
+			return games[i];
 	}
-	return false;
 };
 
 module.exports = Game

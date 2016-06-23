@@ -1,4 +1,5 @@
-let socket = io();
+let socket = io(),
+	room = null;
 
 module.exports = {
 	emit: function(label, data) {
