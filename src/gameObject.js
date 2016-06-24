@@ -1,252 +1,186 @@
-let state = require('./state'),
-	socket = require('./socket'),
-	Sprite = require('./sprite'),
-	cycle = require('./cycle'),
-	id = require('./id'),
+let Sprite = require('./sprite'),
 	settings = require('./settings'),
 	gameObjects = [];
 
-function cleanup() {
-	let i = 0, l = gameObjects.length;
-	for(i=0; i<l; i++) {
-		if(gameObjects[i].destroyed) {
-			gameObjects.splice(i, 1);
-			i--;
-			l--;
-		}
-	}
-}
-
-cycle.addCleanup(cleanup);
-
 function GameObject() {
-	this.spriteData = Object.create(null);
-	this.ignoreCollisionObjects = [];
-	this.xPos = null;
-	this.yPos = null;
-	this.prevXPos = null;
-	this.prevYPos = null;
-	this.zPos = 0;
-	this.onStage = false;
-	this.objectInteracts = false;
-	this.objectDestroyed = false;
+	this._sprites = Object.create(null);
+	this._stage = false;
+	this._interacts = false;
+	this._destroyed = false;
 	gameObjects.push(this);
 }
 
-Object.defineProperty(GameObject.prototype, 'front', {
-	get: function() {
-		let direction = this.direction,
-			boundingBox = this.boundingBox;
-		if(direction === settings.UP) {
-			return {
-				x: this.xPos,
-				y: this.yPos - boundingBox.height / 2
-			}
-		} else if(direction === settings.DOWN) {
-			return {
-				x: this.xPos,
-				y: this.yPos + boundingBox.height / 2
-			}
-		} else if(direction === settings.LEFT) {
-			return {
-				x: this.xPos - boundingBox.width / 2,
-				y: this.yPos
-			}
-		} else if(direction === settings.RIGHT) {
-			return {
-				x: this.xPos + boundingBox.width / 2,
-				y: this.yPos
-			}
-		} else if(direction === settings.UP_LEFT) {
-			return {
-				x: this.xPos - settings.cos45 * boundingBox.width / 2,
-				y: this.yPos - settings.cos45 * boundingBox.height / 2
-			}
-		} else if(direction === settings.UP_RIGHT) {
-			return {
-				x: this.xPos + settings.cos45 * boundingBox.width / 2,
-				y: this.yPos - settings.cos45 * boundingBox.height / 2
-			}
-		} else if(direction === settings.DOWN_LEFT) {
-			return {
-				x: this.xPos - settings.cos45 * boundingBox.width / 2,
-				y: this.yPos + settings.cos45 * boundingBox.height / 2
-			}
-		} else if(direction === settings.DOWN_RIGHT) {
-			return {
-				x: this.xPos + settings.cos45 * boundingBox.width / 2,
-				y: this.yPos + settings.cos45 * boundingBox.height / 2
+GameObject.cleanup = cleanup;
+
+Object.defineProperties(GameObject.prototype, {
+	'move': {
+		value: move
+	},
+	'onCollidedWith': {
+		value: onCollidedWith
+	},
+	'front': {
+		get: getFrontPoint
+	},
+	'destroyed': {
+		get: function() {
+			return this._destroyed;
+		},
+		set: function(destroyed) {
+			if(!this._destroyed && destroyed) {
+				let label = null, sprites = this._sprites;
+				this.stage = false;
+				for(label in sprites) {
+					sprites[label].destroyed = true;
+				}
+				this._destroyed = true;
 			}
 		}
-		return false;
-	}
-});
-
-Object.defineProperty(GameObject.prototype, 'destroyed', {
-	get: function() {
-		return this.objectDestroyed;
 	},
-	set: function(destroyed) {
-		if(!this.objectDestroyed && destroyed) {
-			let label = null, sprites = this.spriteData;
-			this.stage = false;
+	'ignoreCollision': {
+		get: function() {
+			return this._ignoreCollision;
+		},
+		set: function(obj) {
+			this._ignoreCollision = obj;
+		}
+	},
+	'interacts': {
+		get: function() {
+			return this._interacts;
+		},
+		set: function(interacts) {
+			this._interacts = interacts;
+		}
+	},
+	'stage': {
+		get: function() {
+			return this._stage;
+		},
+		set: function(onStage) {
+			let sprite = this._sprites[this._display];
+			if(onStage && !this._stage) {
+				this._stage = true;
+				if(!!sprite)
+					sprite.stage = true;
+			} else if(!onStage && this._stage) {
+				this._stage = false;
+				if(!!sprite)
+					sprite.stage = false;
+			}
+		}
+	},
+	'direction': {
+		set: function(direction) {
+			this._direction = direction;
+		},
+		get: function() {
+			return this._direction;
+		}
+	},
+	'speed': {
+		set: function(speed) {
+			this._speed = speed;
+			this._diagonalSpeed = settings.cos45 * speed;
+		},
+		get: function() {
+			return this._speed;
+		}
+	},
+	'sprites': {
+		set: function(spritesToAdd) {
+			let sprite = null,
+				sprites = this._sprites;
+			for(let label in spritesToAdd) {
+				sprite = new Sprite(spritesToAdd[label]);
+				if(!!this._x)
+					sprite.x = this._x;
+				if(!!this._y)
+					sprite.y = this._y;
+				if(!!this._z)
+					sprite.z = this._z;
+				sprites[label] = sprite;
+			}
+		}
+	},
+	'x': {
+		set: function(x) {
+			this._prevX = this._x;
+			this._x = x;
+			let label = null,
+				sprites = this._sprites;
 			for(label in sprites) {
-				sprites[label].destroyed = true;
+				sprites[label].x = x;
 			}
-			this.objectDestroyed = true;
-		}
-	}
-});
-
-Object.defineProperty(GameObject.prototype, 'interacts', {
-	get: function() {
-		return this.objectInteracts;
-	},
-	set: function(interacts) {
-		this.objectInteracts = interacts;
-	}
-});
-
-Object.defineProperty(GameObject.prototype, 'stage', {
-	get: function(){
-		return this.onStage;
-	},
-	set: function(onStage) {
-		let sprite = this.spriteData[this.displayLabel];
-		if(onStage && !this.onStage) {
-			this.onStage = true;
-			if(!!sprite)
-				sprite.stage = true;
-		} else if(!onStage && this.onStage) {
-			this.onStage = false;
-			if(!!sprite)
-				sprite.stage = false;
-		}
-	}
-});
-
-Object.defineProperty(GameObject.prototype, 'direction', {
-	set: function(direction) {
-		this.directionLabel = direction;
-	},
-	get: function() {
-		return this.directionLabel;
-	}
-});
-
-Object.defineProperty(GameObject.prototype, 'label', {
-	set: function(label) {
-		this.stateLabel = label;
-	},
-	get: function() {
-		return this.stateLabel;
-	}
-})
-
-Object.defineProperty(GameObject.prototype, 'speed', {
-	set: function(speed) {
-		this.objectSpeed = speed;
-		this.diagonalSpeed = settings.cos45 * speed;
-	},
-	get: function() {
-		return this.objectSpeed;
-	}
-});
-
-Object.defineProperty(GameObject.prototype, 'sprites', {
-	set: function(sprites) {
-		let spriteData = this.spriteData, sprite = null;
-		for(let spriteLabel in sprites) {
-			sprite = new Sprite(sprites[spriteLabel]);
-			if(!!this.xPos)
-				sprite.x = this.xPos;
-			if(!!this.yPos)
-				sprite.y = this.yPos;
-			if(!!this.zPos)
-				sprite.z = this.zPos;
-			spriteData[spriteLabel] = sprite;
-		}
-	}
-});
-
-Object.defineProperty(GameObject.prototype, 'x', {
-	set: function(x) {
-		this.prevXPos = this.xPos;
-		this.xPos = x;
-		let sprites = this.spriteData, label = null;
-		for(label in sprites) {
-			sprites[label].x = x;
+		},
+		get: function() {
+			return this._x;
 		}
 	},
-	get: function() {
-		return this.xPos;
-	}
-});
-
-Object.defineProperty(GameObject.prototype, 'y', {
-	set: function(y) {
-		this.prevYPos = this.yPos;
-		this.yPos = y;
-		let sprites = this.spriteData, label = null;
-		for(label in sprites) {
-			sprites[label].y = y;
-		}
-	},
-	get: function() {
-		return this.yPos;
-	}
-});
-
-Object.defineProperty(GameObject.prototype, 'z', {
-	set: function(z) {
-		this.zPos = z;
-		let sprites = this.spriteData, label = null;
-		for(label in sprites) {
-			sprites[label].z = z;
-		}
-	},
-	get: function() {
-		return this.zPos;
-	}
-});
-
-Object.defineProperty(GameObject.prototype, 'display', {
-	set: function(display) {
-		if(this.displayLabel !== display) {
-			let label = null, sprites = this.spriteData, sprite = null;
-			sprite = sprites[this.displayLabel];
-			if(!!sprite) sprite.stage = false;
-			this.displayLabel = display;
-			if(this.onStage) {
-				sprite = sprites[this.displayLabel];
-				sprite.stage = true;
+	'y': {
+		set: function(y) {
+			this._prevY = this._y;
+			this._y = y;
+			let sprites = this._sprites, label = null;
+			for(label in sprites) {
+				sprites[label].y = y;
 			}
+		},
+		get: function() {
+			return this._y;
 		}
 	},
-	get: function() {
-		return this.displayLabel;
+	'z': {
+		set: function(z) {
+			this._z = z;
+			let sprites = this._sprites, label = null;
+			for(label in sprites) {
+				sprites[label].z = z;
+			}
+		},
+		get: function() {
+			return this._z;
+		}
+	},
+	'display': {
+		set: function(display) {
+			if(this._display !== display) {
+				let label = null, sprites = this._sprites, sprite = null;
+				sprite = sprites[this._display];
+				if(!!sprite) sprite.stage = false;
+				this._display = display;
+				if(this._stage) {
+					sprite = sprites[display];
+					sprite.stage = true;
+				}
+			}
+		},
+		get: function() {
+			return this._display;
+		}
+	},
+	'boundingBox': {
+		get: function(){
+			return this._sprites[this._display].boundingBox;
+		}
+	},
+	'getDistanceToObject': {
+		value: getDistanceToObject
+	},
+	'getAngleToObject': {
+		value: getAngleToObject
+	},
+	'getDirectionToObject': {
+		value: getDirectionToObject
+	},
+	'checkCollision': {
+		value: checkCollision
 	}
 });
 
-Object.defineProperty(GameObject.prototype, 'boundingBox', {
-	get: function(){
-		return this.spriteData[this.displayLabel].boundingBox;
-	}
-});
-
-GameObject.prototype.getDistanceToObject = function(obj) {
-	let thisX = this.x,
-		thisY = this.y,
-		objX = obj.x,
-		objY = obj.y,
-		deltaX = objX - thisX,
-		deltaY = objY - thisY;
-	return Math.sqrt(deltaX * deltaX + deltaY * deltaY);
-};
-
-GameObject.prototype.getAngleToObject = function(obj) {
-	let thisX = this.x,
-		thisY = this.y,
+function getAngleToObject(obj) {
+	let thisX = this._x,
+		thisY = this._y,
 		objX = obj.x,
 		objY = obj.y,
 		deltaX = objX - thisX,
@@ -277,7 +211,7 @@ GameObject.prototype.getAngleToObject = function(obj) {
 	return angle;
 };
 
-GameObject.prototype.getDirectionToObject = function(angle) {
+function getDirectionToObject(angle) {
 	if(angle <= 22 || angle > 337)
 		return settings.UP;
 	else if(angle <= 67)
@@ -298,49 +232,8 @@ GameObject.prototype.getDirectionToObject = function(angle) {
 		return settings.CENTER;
 };
 
-GameObject.prototype.ignoreCollision = function(obj) {
-	this.ignoreCollisionObject = obj;
-};
-
-GameObject.prototype.onCollidedWith = function(collidedObject) {
-	this.xPos = this.prevXPos;
-	this.yPos = this.prevYPos;
-}
-
-GameObject.prototype.move = function() {
-	let x = null,
-		y = null;
-	if(this.direction === settings.UP) {
-		x = 0;
-		y = -this.objectSpeed;
-	} else if(this.direction === settings.DOWN) {
-		x = 0;
-		y = this.objectSpeed;
-	} else if(this.direction === settings.LEFT) {
-		x = -this.objectSpeed;
-		y = 0;
-	} else if(this.direction === settings.RIGHT) {
-		x = this.objectSpeed;
-		y = 0;
-	} else if(this.direction === settings.UP_LEFT) {
-		x = -this.diagonalSpeed;
-		y = -this.diagonalSpeed;
-	} else if(this.direction === settings.UP_RIGHT) {
-		x = this.diagonalSpeed;
-		y = -this.diagonalSpeed;
-	} else if(this.direction === settings.DOWN_LEFT) {
-		x = -this.diagonalSpeed;
-		y = this.diagonalSpeed;
-	} else if(this.direction === settings.DOWN_RIGHT) {
-		x = this.diagonalSpeed;
-		y = this.diagonalSpeed;
-	}
-	this.y += y;
-	this.x += x;
-}
-
-GameObject.prototype.checkCollision = function() {
-	if(!this.interacts || !this.stage) return false;
+function checkCollision() {
+	if(!this._interacts || !this._stage) return false;
 	
 	let i = 0,
 		l = gameObjects.length,
@@ -358,7 +251,7 @@ GameObject.prototype.checkCollision = function() {
 	for(i=0; i<l; i++) {
 		objectToCheck = gameObjects[i];
 		
-		if(this.ignoreCollisionObject === objectToCheck || objectToCheck.ignoreCollisionObject === this) {
+		if(this._ignoreCollision === objectToCheck || objectToCheck.ignoreCollision === this) {
 			
 		} else if(
 			objectToCheck !== this && objectToCheck.stage && objectToCheck.interacts
@@ -371,12 +264,12 @@ GameObject.prototype.checkCollision = function() {
 				objectToCheckHeight = objectToCheckBoundingBox.height;
 				if((thisX + thisWidth > objectToCheckX && thisX < objectToCheckX + objectToCheckWidth)
 					&& (thisY + thisHeight > objectToCheckY && thisY < objectToCheckY + objectToCheckHeight)) {
-						this.onCollidedWith(objectToCheck);
-						if(!!this.onCollision) {
-							this.onCollision(objectToCheck);
+						GameObject.prototype.onCollidedWith.call(this, objectToCheck);
+						if(this.__proto__.hasOwnProperty('onCollidedWith')) {
+							this.onCollidedWith(objectToCheck);
 						}
-						if(!!objectToCheck.onCollision) {
-							objectToCheck.onCollision(this);
+						if(objectToCheck.__proto__.hasOwnProperty('onCollidedBy')) {
+							objectToCheck.onCollidedBy(this);
 						}
 					}
 			}
@@ -384,5 +277,110 @@ GameObject.prototype.checkCollision = function() {
 	}
 	return false;
 };
+
+function getDistanceToObject(obj) {
+	let thisX = this._x,
+		thisY = this._y,
+		objX = obj.x,
+		objY = obj.y,
+		deltaX = objX - thisX,
+		deltaY = objY - thisY;
+	return Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+};
+
+function move() {
+	let x = null,
+		y = null;
+	if(this._direction === settings.UP) {
+		x = 0;
+		y = -this._speed;
+	} else if(this._direction === settings.DOWN) {
+		x = 0;
+		y = this._speed;
+	} else if(this._direction === settings.LEFT) {
+		x = -this._speed;
+		y = 0;
+	} else if(this._direction === settings.RIGHT) {
+		x = this._speed;
+		y = 0;
+	} else if(this._direction === settings.UP_LEFT) {
+		x = -this._diagonalSpeed;
+		y = -this._diagonalSpeed;
+	} else if(this._direction === settings.UP_RIGHT) {
+		x = this._diagonalSpeed;
+		y = -this._diagonalSpeed;
+	} else if(this._direction === settings.DOWN_LEFT) {
+		x = -this._diagonalSpeed;
+		y = this._diagonalSpeed;
+	} else if(this._direction === settings.DOWN_RIGHT) {
+		x = this._diagonalSpeed;
+		y = this._diagonalSpeed;
+	}
+	this.y += y;
+	this.x += x;
+}
+
+function getFrontPoint() {
+	let direction = this._direction,
+		boundingBox = this.boundingBox;
+	if(direction === settings.UP) {
+		return {
+			x: this._x,
+			y: this._y - boundingBox.height / 2
+		}
+	} else if(direction === settings.DOWN) {
+		return {
+			x: this._x,
+			y: this._y + boundingBox.height / 2
+		}
+	} else if(direction === settings.LEFT) {
+		return {
+			x: this._x - boundingBox.width / 2,
+			y: this._y
+		}
+	} else if(direction === settings.RIGHT) {
+		return {
+			x: this._x + boundingBox.width / 2,
+			y: this._y
+		}
+	} else if(direction === settings.UP_LEFT) {
+		return {
+			x: this._x - settings.cos45 * boundingBox.width / 2,
+			y: this._y - settings.cos45 * boundingBox.height / 2
+		}
+	} else if(direction === settings.UP_RIGHT) {
+		return {
+			x: this._x + settings.cos45 * boundingBox.width / 2,
+			y: this._y - settings.cos45 * boundingBox.height / 2
+		}
+	} else if(direction === settings.DOWN_LEFT) {
+		return {
+			x: this._x - settings.cos45 * boundingBox.width / 2,
+			y: this._y + settings.cos45 * boundingBox.height / 2
+		}
+	} else if(direction === settings.DOWN_RIGHT) {
+		return {
+			x: this._x + settings.cos45 * boundingBox.width / 2,
+			y: this._y + settings.cos45 * boundingBox.height / 2
+		}
+	}
+	return false;
+}
+
+function onCollidedWith(collidedObject) {
+	this.x = this._prevX;
+	this.y = this._prevY;
+}
+
+function cleanup() {
+	let i = 0, l = gameObjects.length;
+	for(i=0; i<l; i++) {
+		if(gameObjects[i].destroyed) {
+			gameObjects.splice(i, 1);
+			i--;
+			l--;
+		}
+	}
+}
 
 module.exports = GameObject;

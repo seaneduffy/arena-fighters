@@ -10,15 +10,12 @@ let clientUpdateFunctions = [],
 	tmpFunc = null,
 	tmpArr = null,
 	tmpGameObject = null;
+	
 function cycle() {
 	if(active) {
 		l = clientUpdateFunctions.length;
 		for(i=0; i<l; i++) {
 			clientUpdateFunctions[i]();
-		}
-		l = uiUpdateFunctions.length;
-		for(i=0; i<l; i++) {
-			uiUpdateFunctions[i]();
 		}
 		l = gameObjectUpdateFunctions.length;
 		for(i=0; i<l; i++) {
@@ -31,6 +28,10 @@ function cycle() {
 			} else {
 				tmpFunc();
 			}
+		}
+		l = uiUpdateFunctions.length;
+		for(i=0; i<l; i++) {
+			uiUpdateFunctions[i]();
 		}
 		l = serverUpdateFunctions.length;
 		for(i=0; i<l; i++) {

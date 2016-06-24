@@ -4,37 +4,36 @@ let Character = require('./character'),
 
 function Enemy() {
 	Character.prototype.constructor.call(this);
-	this.isDead = false;
 }
 
-Enemy.prototype = Object.create(Character.prototype);
-
-Object.defineProperty(Enemy.prototype, 'dead', {
-	set: function(dead) {
-		this.isDead = dead;
-		if(dead) {
-			this.destroyed = true;
+Enemy.prototype = Object.create(Character.prototype, {
+	'aggression': {
+		set: function(aggression) {
+			this._aggression = aggression;
+		},
+		get: function() {
+			return this._aggression;
 		}
-	}, 
-	get: function() {
-		return this.isDead;
-	}
-});
-
-Object.defineProperty(Enemy.prototype, 'aggression', {
-	set: function(aggression) {
-		this.enemyAggression = aggression;
 	},
-	get: function() {
-		return this.enemyAggression;
+	'ai': {
+		value: ai
+	},
+	'aiStart': {
+		value: aiStart
+	},
+	'onCollidedWith': {
+		value: onCollision
+	},
+	'onCollidedBy': {
+		value: onCollision
 	}
 });
 
-Enemy.prototype.aiStart = function() {
+function aiStart() {
 	cycle.addGameObjectUpdateFunction(this, this.ai.bind(this));
 };
 
-Enemy.prototype.ai = function() {
+function ai() {
 	let distancePlayer1 = null,
 		distancePlayer2 = null,
 		player1 = settings.player1,
@@ -66,14 +65,13 @@ Enemy.prototype.ai = function() {
 		let angle = this.getAngleToObject(closestPlayer),
 			direction = this.getDirectionToObject(angle);
 		this.move(direction);
-		this.checkCollision();
 	}
 };
 
-Enemy.prototype.onCollision = function(collisionObject) {
-	if(collisionObject.type === 'bullet' && this.onStage) {
+function onCollision(collisionObject) {
+	if(collisionObject.type === 'bullet' && this._stage) {
 		this.dead = true;
 	}
-};
+}
 
 module.exports = Enemy;

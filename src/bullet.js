@@ -7,26 +7,33 @@ function Bullet() {
 	GameObject.prototype.constructor.call(this);
 }
 
-Bullet.prototype = Object.create(GameObject.prototype);
+Bullet.prototype = Object.create(GameObject.prototype, {
+	'fire': {
+		value: fire
+	},
+	'move': {
+		value: move
+	},
+	'onCollidedWith': {
+		value: onCollision
+	},
+	'onCollidedBy': {
+		value: onCollision
+	}
+});
 
-Bullet.prototype.fire = function() {
+function fire() {
 	cycle.addGameObjectUpdateFunction(this, this.move.bind(this));
 };
 
-Bullet.prototype.onCollidedWith = function(collidedObject) {
-	if(collidedObject.type === 'bullet')
-		return;
-};
-
-
-Bullet.prototype.onCollision = function(collidedObject) {
-	if(collidedObject.type !== 'bullet')
-		this.destroyed = true;
-};
-
-Bullet.prototype.move = function() {
+function move() {
 	GameObject.prototype.move.call(this);
 	this.checkCollision();
 }
+
+function onCollision(collidedObject) {
+	if(collidedObject.type !== 'bullet')
+		this.destroyed = true;
+};
 
 module.exports = Bullet;

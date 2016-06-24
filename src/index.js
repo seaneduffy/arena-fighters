@@ -4,12 +4,10 @@
 	
 	let id = require('./id'),
 		Sprite = require('./sprite'),
-		Character = require('./character'),
 		Player = require('./player'),
 		Enemy = require('./enemy'),
 		Bullet = require('./bullet'),
 		resources = require('./resources.js'),
-		state = require('./state'),
 		settings = require('./settings'),
 		GameObject = require('./gameObject'),
 		React = require('react'),
@@ -55,6 +53,7 @@
 			socket.on('fire', this.onServerFire);
 			socket.on('end game', this.onServerEndGame);
 			cycle.addUIUpdateFunction(Sprite.draw);
+			cycle.addCleanup(GameObject.cleanup);
 			if(this.state.dev1Player)
 				this.handleCreateGame();
 		},
@@ -166,7 +165,7 @@
 			point = bullet.front;
 			bullet.x = point.x;
 			bullet.y = point.y;
-			bullet.ignoreCollision(player);
+			bullet.ignoreCollision = player;
 			bullet.stage = true;
 			bullet.fire();
 		},
@@ -222,15 +221,23 @@
 		},
 		onJoystick: function(label, client) {
 			if(!this.state.hosting) {
+				if(settings.player2.dead)
+					return
 				socket.emit('joystick', label);
 			} else {
+				if(settings.player1.dead)
+					return
 				this._movePlayer(settings.player1, label);
 			}
 		},
-		onFire: function(caller) {
+		onFire: function() {
 			if(!this.state.hosting) {
+				if(settings.player2.dead)
+					return
 				socket.emit('fire');
 			} else {
+				if(settings.player1.dead)
+					return
 				this._fire(settings.player1);
 			}
 		},

@@ -1,26 +1,24 @@
-let settings = Object.create(null);
-
-settings.player1 = null;
-settings.player2 = null;
-settings.stageWidth = 1334;
-settings.stageHeight = 750;
-settings.UP = 'up';
-settings.LEFT = 'left';
-settings.RIGHT = 'right';
-settings.DOWN = 'down';
-settings.UP_LEFT = 'up_left';
-settings.UP_RIGHT = 'up_right';
-settings.DOWN_LEFT = 'down_left';
-settings.DOWN_RIGHT = 'down_right';
-settings.CENTER = 'center';
-settings.gameObjectsJsonUri = '/data/gameobjects.json';
-settings.levelsJsonUri = '/data/levels.json';
-settings.fireBtnJsonUri = '/data/fire.json';
-settings.fireBtnImage = '/img/fire.png';
-settings.joystickJsonUri = '/data/joystick.json';
-settings.joystickImage = '/img/joystick.png';
-settings.spriteJsonUri = '/data/sprites.json';
-settings.spritesImage = '/img/sprites.png';
-settings.cos45 = Math.cos(Math.PI / 4);
-
-module.exports = settings;
+module.exports = {
+	'player1': null,
+	'player2': null,
+	'stageWidth': 1334,
+	'stageHeight': 750,
+	'UP': 'up',
+	'LEFT': 'left',
+	'RIGHT': 'right',
+	'DOWN': 'down',
+	'UP_LEFT': 'up_left',
+	'UP_RIGHT': 'up_right',
+	'DOWN_LEFT': 'down_left',
+	'DOWN_RIGHT': 'down_right',
+	'CENTER': 'center',
+	'gameObjectsJsonUri': '/data/gameobjects.json',
+	'levelsJsonUri': '/data/levels.json',
+	'fireBtnJsonUri': '/data/fire.json',
+	'fireBtnImage': '/img/fire.png',
+	'joystickJsonUri': '/data/joystick.json',
+	'joystickImage': '/img/joystick.png',
+	'spriteJsonUri': '/data/sprites.json',
+	'spritesImage': '/img/sprites.png',
+	'cos45': Math.cos(Math.PI / 4)
+}
