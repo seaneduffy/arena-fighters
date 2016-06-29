@@ -6,10 +6,10 @@
 		Sprite = require('./sprite'),
 		Player = require('./player'),
 		Enemy = require('./enemy'),
-		Bullet = require('./bullet'),
+		Projectile = require('./projectile'),
 		resources = require('./resources.js'),
 		settings = require('./settings'),
-		GameObject = require('./gameObject'),
+		GameObject = requirprojectilemeObject'),
 		React = require('react'),
 		ReactDOM = require('react-dom'),
 		cycle = require('./cycle'),
@@ -87,13 +87,13 @@
 				bottomWall.x = stageWidth / 2;
 				bottomWall.y = stageHeight;
 				bottomWall.stage = true;
-				l = levelData.obstacles.length;
+				/*l = levelData.obstacles.length;
 				for(i=0; i<l; i++) {
 					obstacle = this._createGameObject('obstacle', {default:levelData.obstacles[i].sprite});
 					obstacle.x = levelData.obstacles[i].x;
 					obstacle.y = levelData.obstacles[i].y;
 					obstacle.stage = true;
-				}
+				}*/
 				l = levelData.enemies.length;
 				let enemyData = null, enemy;
 				for(i=0; i<l; i++) {
@@ -130,8 +130,8 @@
 				gameObject = new Player();
 			} else if(type === 'background' || type === 'obstacle') {
 				gameObject = new GameObject();
-			} else if(type === 'bullet') {
-				gameObject = new Bullet();
+			} else if(type === 'projectile') {
+				gameObject = new Projectile();
 			} else if(type === 'grunt') {
 				gameObject = new Enemy();
 			}
@@ -157,17 +157,17 @@
 			socket.emit('games list');
 		},
 		_fire: function(player) {
-			let bullet = this._createGameObject('bullet'),
+			let projectile = this._createGameObject('projectile'),
 				point = player.front;
-			bullet.direction = player.direction;
-			bullet.x = point.x;
-			bullet.y = point.y;
-			point = bullet.front;
-			bullet.x = point.x;
-			bullet.y = point.y;
-			bullet.ignoreCollision = player;
-			bullet.stage = true;
-			bullet.fire();
+			projectile.direction = player.direction;
+			projectile.x = point.x;
+			projectile.y = point.y;
+			point = projectile.front;
+			projectile.x = point.x;
+			projectile.y = point.y;
+			projectile.ignoreCollision = player;
+			projectile.stage = true;
+			projectile.fire();
 		},
 		_movePlayer: function(player, label) {
 			player.move(label);

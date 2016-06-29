@@ -1,6 +1,8 @@
 let Character = require('./character'),
+	GameObject = require('./gameObject'),
 	settings = require('./settings'),
-	cycle = require('./cycle');
+	cycle = require('./cycle'),
+	geom = require('./geom');
 
 function Enemy() {
 	Character.prototype.constructor.call(this);
@@ -22,7 +24,7 @@ Enemy.prototype = Object.create(Character.prototype, {
 		value: aiStart
 	},
 	'onCollidedWith': {
-		value: onCollision
+		value: onCollidedWith
 	},
 	'onCollidedBy': {
 		value: onCollision
@@ -31,7 +33,7 @@ Enemy.prototype = Object.create(Character.prototype, {
 
 function aiStart() {
 	cycle.addGameObjectUpdateFunction(this, this.ai.bind(this));
-};
+}
 
 function ai() {
 	let distancePlayer1 = null,
@@ -56,8 +58,8 @@ function ai() {
 		} else if(!player2OnStage) {
 			closestPlayer = player1;
 		} else {
-			distancePlayer1 = this.getDistanceToObject(player1);
-			distancePlayer2 = this.getDistanceToObject(player2);
+			distancePlayer1 = geom.getDistance(this._x, this._y, player1.x, player1.y);
+			distancePlayer2 = geom.getDistance(this._x, this._y, player2.x, player2.y);
 			closestPlayer = distancePlayer2 < distancePlayer1 ? settings.player2 : settings.player1;
 		}
 	}
@@ -66,10 +68,15 @@ function ai() {
 			direction = this.getDirectionToObject(angle);
 		this.move(direction);
 	}
-};
+}
+
+function onCollidedWith(collisionObject) {
+	GameObject.prototype.onCollidedWith.call(this, collisionObject);
+	onCollision(collisionObject);
+}
 
 function onCollision(collisionObject) {
-	if(collisionObject.type === 'bullet' && this._stage) {
+	if(collisionObject.type === 'projectile' && this._stage) {
 		this.dead = true;
 	}
 }

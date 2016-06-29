@@ -1,4 +1,4 @@
-let Sprite = require('./sprite'),
+let Sprite = require(projectilete'),
 	settings = require('./settings'),
 	gameObjects = [];
 
@@ -164,9 +164,6 @@ Object.defineProperties(GameObject.prototype, {
 			return this._sprites[this._display].boundingBox;
 		}
 	},
-	'getDistanceToObject': {
-		value: getDistanceToObject
-	},
 	'getAngleToObject': {
 		value: getAngleToObject
 	},
@@ -264,7 +261,6 @@ function checkCollision() {
 				objectToCheckHeight = objectToCheckBoundingBox.height;
 				if((thisX + thisWidth > objectToCheckX && thisX < objectToCheckX + objectToCheckWidth)
 					&& (thisY + thisHeight > objectToCheckY && thisY < objectToCheckY + objectToCheckHeight)) {
-						GameObject.prototype.onCollidedWith.call(this, objectToCheck);
 						if(this.__proto__.hasOwnProperty('onCollidedWith')) {
 							this.onCollidedWith(objectToCheck);
 						}
@@ -276,16 +272,6 @@ function checkCollision() {
 		}
 	}
 	return false;
-};
-
-function getDistanceToObject(obj) {
-	let thisX = this._x,
-		thisY = this._y,
-		objX = obj.x,
-		objY = obj.y,
-		deltaX = objX - thisX,
-		deltaY = objY - thisY;
-	return Math.sqrt(deltaX * deltaX + deltaY * deltaY);
 };
 
 function move() {

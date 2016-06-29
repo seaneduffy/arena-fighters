@@ -1,34 +1,52 @@
 {"gameobjects": {
 	"player": {
 		"sprites": {
-			"up_standing": "player-up-standing",
-			"down_standing": "player-down-standing",
-			"left_standing": "player-left-standing",
-			"right_standing": "player-right-standing",
-			"up_walking": "player-up-walking",
-			"down_walking": "player-down-walking",
-			"left_walking": "player-left-walking",
-			"right_walking": "player-right-walking"
+			"up_standing": "player-up_standing",
+			"up_walking": "player-up_walking",
+			"up_left_standing": "player-up_left_standing",
+			"up_left_walking": "player-up_left_walking",
+			"up_right_standing": "player-up_standing",
+			"up_right_walking": "player-up_right_walking",
+			"down_standing": "player-down_standing",
+			"down_walking": "player-down_walking",
+			"down_left_standing": "player-down_left_standing",
+			"down_left_walking": "player-down_left_walking",
+			"down_right_walking": "player-down_right_walking",
+			"down_right_standing": "player-down_right_standing",
+			"left_standing": "player-left_standing",
+			"left_walking": "player-left_walking",
+			"right_standing": "player-right_standing",
+			"right_walking": "player-right_walking"
 		},
 		"speed": 6,
 		"z": 2,
-		"interacts": true
+		"interacts": true,
+		"health": 15
 	},
 	"grunt": {
 		"sprites": {
 			"up_standing": "grunt-down-standing",
-			"down_standing": "grunt-down-standing",
-			"left_standing": "grunt-down-standing",
-			"right_standing": "grunt-down-standing",
 			"up_walking": "grunt-down-standing",
+			"up_left_standing": "grunt-down-standing",
+			"up_left_walking": "grunt-down-standing",
+			"up_right_standing": "grunt-down-standing",
+			"up_right_walking": "grunt-down-standing",
+			"down_standing": "grunt-down-standing",
 			"down_walking": "grunt-down-standing",
+			"down_left_standing": "grunt-down-standing",
+			"down_left_walking": "grunt-down-standing",
+			"down_right_standing": "grunt-down-standing",
+			"down_right_walking": "grunt-down-standing",
+			"left_standing": "grunt-down-standing",
 			"left_walking": "grunt-down-standing",
+			"right_standing": "grunt-down-standing",
 			"right_walking": "grunt-down-standing"
 		},
 		"speed": 0.5,
 		"z": 3,
 		"aggression": 1,
-		"interacts": true
+		"interacts": true,
+		"health": 1
 	},
 	"bullet": {
 		"sprites": {

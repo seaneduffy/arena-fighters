@@ -21,13 +21,14 @@ Character.prototype = Object.create(GameObject.prototype, {
 	"health": {
 		set: function(health) {
 			this._health = health;
-			if(health === 0)
+			if(health <= 0)
 				this.dead = true;
 		},
 		get: function() {
 			return this._health;
 		}
 	},
+	"damage": damage,
 	"move": {
 		value: move
 	}
@@ -38,15 +39,7 @@ function move(direction) {
 		x = this.x,
 		y = this.y;
 	if(direction === settings.CENTER) {
-		if(display === 'up_walking') {
-			this.display = 'up_standing';
-		} else if(display === 'left_walking') {
-			this.display = 'left_standing';
-		} else if(display === 'right_walking') {
-			this.display = 'right_standing';
-		} else if(display === 'down_walking') {
-			this.display = 'down_standing';
-		}
+		this.display = display.replace('walking', 'standing');
 	}
 	else {
 		this.direction = direction;
@@ -59,17 +52,21 @@ function move(direction) {
 		} else if(direction === settings.RIGHT) {
 			this.display = 'right_walking';
 		} else if(direction === settings.UP_LEFT) {
-			this.display = 'left_walking';
+			this.display = 'up_left_walking';
 		} else if(direction === settings.UP_RIGHT) {
-			this.display = 'right_walking';
+			this.display = 'up_right_walking';
 		} else if(direction === settings.DOWN_LEFT) {
-			this.display = 'left_walking';
+			this.display = 'down_left_walking';
 		} else if(direction === settings.DOWN_RIGHT) {
-			this.display = 'right_walking';
+			this.display = 'down_right_walking';
 		}
 		GameObject.prototype.move.call(this);
 	}
 	this.checkCollision();
+}
+
+function damage(amount) {
+	this.health -= amount;
 }
 
 module.exports = Character;

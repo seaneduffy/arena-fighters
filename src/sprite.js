@@ -58,7 +58,6 @@ function Sprite(label, spriteId) {
 	this.imageHeight = images[0].frame.h;
 	this.width = this.imageWidth * settings.resolution;
 	this.height = this.imageHeight * settings.resolution;
-	//sprites[id] = this;
 }
 
 Object.defineProperty(Sprite.prototype, 'label', {

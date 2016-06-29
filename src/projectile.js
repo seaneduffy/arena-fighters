@@ -3,11 +3,11 @@ let Sprite = require('./sprite'),
 	GameObject = require('./gameObject'),
 	cycle = require('./cycle');
 
-function Bullet() {
+function Projectile() {
 	GameObject.prototype.constructor.call(this);
 }
 
-Bullet.prototype = Object.create(GameObject.prototype, {
+Projectile.prototype = Object.create(GameObject.prototype, {
 	'fire': {
 		value: fire
 	},
@@ -32,8 +32,8 @@ function move() {
 }
 
 function onCollision(collidedObject) {
-	if(collidedObject.type !== 'bullet')
+	if(collidedObject.type !== 'projectile')
 		this.destroyed = true;
 };
 
-module.exports = Bullet;
+module.exports = Projectile;
