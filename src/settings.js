@@ -1,16 +1,16 @@
 module.exports = {
 	'player1': null,
 	'player2': null,
-	'stageWidth': 1334,
-	'stageHeight': 750,
+	'stageWidth': 2846,
+	'stageHeight': 1600,
 	'UP': 'up',
 	'LEFT': 'left',
 	'RIGHT': 'right',
 	'DOWN': 'down',
-	'UP_LEFT': 'up_left',
-	'UP_RIGHT': 'up_right',
-	'DOWN_LEFT': 'down_left',
-	'DOWN_RIGHT': 'down_right',
+	'UP_LEFT': 'upleft',
+	'UP_RIGHT': 'upright',
+	'DOWN_LEFT': 'downleft',
+	'DOWN_RIGHT': 'downright',
 	'CENTER': 'center',
 	'gameObjectsJsonUri': '/data/gameobjects.json',
 	'levelsJsonUri': '/data/levels.json',
@@ -18,7 +18,5 @@ module.exports = {
 	'fireBtnImage': '/img/fire.png',
 	'joystickJsonUri': '/data/joystick.json',
 	'joystickImage': '/img/joystick.png',
-	'spriteJsonUri': '/data/sprites.json',
-	'spritesImage': '/img/sprites.png',
-	'cos45': Math.cos(Math.PI / 4)
+	'spritesJsonUri': '/data/sprites.json'
 }

@@ -1,16 +1,14 @@
 {"levels": [
 	{	
 		"player1": {
-			"x": 200,
+			"x": 500,
 			"y": 200,
-			"direction": "right",
-			"display": "right_standing"
+			"display": "_right_standing"
 		},
 		"player2": {
 			"x": 900,
 			"y": 200,
-			"direction": "left",
-			"display": "left_standing"
+			"display": "_left_standing"
 		},
 		"background": "bg1",
 		"leftWall": "wall",
@@ -30,34 +28,7 @@
 			}
 		],
 		"enemies": [
-			{
-				"type": "grunt",
-				"x": 70,
-				"y": 60,
-				"direction": "down",
-				"display": "down_standing"
-			},
-			{
-				"type": "grunt",
-				"x": 1200,
-				"y": 170,
-				"direction": "down",
-				"display": "down_standing"
-			},
-			{
-				"type": "grunt",
-				"x": 1100,
-				"y": 500,
-				"direction": "down",
-				"display": "down_standing"
-			},
-			{
-				"type": "grunt",
-				"x": 90,
-				"y": 400,
-				"direction": "down",
-				"display": "down_standing"
-			}
+			
 		]
 	}
 ]}

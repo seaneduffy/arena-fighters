@@ -3,16 +3,11 @@ let settings = require('./settings'),
 	socket = require('./socket'),
 	cycle = require('./cycle'),
 	id = require('./id'),
-	spriteJson = null,
 	sprites = Object.create(null),
 	stage = Object.create(null),
 	spritesToUpdate = [],
 	rotation = 0,
 	hosting = false;
-
-require('./data')(settings.spriteJsonUri, (data)=>{
-	spriteJson = data.frames;
-});
 
 function receiveUpdate(serverSprites) {
 	let i = 0, l = serverSprites.length, spriteData = null, sprite = null, property;
@@ -43,19 +38,28 @@ function sendUpdate() {
 		socket.emit('sprite update', arr);
 }
 
-function Sprite(label, spriteId) {
-	let images = this.images = [];
-	this.spriteId = spriteId || id();
+function Sprite(gameObjectType, label, defaultImageSrc) {
+	if(label === 'default') {
+		this.spriteSheet = resources.get(defaultImageSrc);
+		this.imageWidth = this.spriteSheet.width;
+		this.imageHeight = this.spriteSheet.height;
+	} else {
+		let images = this.images = [],
+			spriteData = settings.spritesData[gameObjectType],
+			frames = spriteData.frames;
+		this.spriteSheet = resources.get(spriteData.img);
+		for(let key in frames) {
+			if(key.indexOf(label) != -1) {
+				images.push(frames[key]);
+			}
+		}
+		this.currFrame = 0;
+		this.imageWidth = images[0].frame.w;
+		this.imageHeight = images[0].frame.h;
+	}
+	this.spriteId = id();
 	this.spriteLabel = label;
 	this.onStage = false;
-	for(let key in spriteJson) {
-		if(key.indexOf(label) != -1) {
-			images.push(spriteJson[key])
-		}
-	}
-	this.currFrame = 0;
-	this.imageWidth = images[0].frame.w;
-	this.imageHeight = images[0].frame.h;
 	this.width = this.imageWidth * settings.resolution;
 	this.height = this.imageHeight * settings.resolution;
 }
@@ -193,16 +197,27 @@ Object.defineProperty(Sprite.prototype, 'boundingBox', {
 
 Sprite.prototype.draw = function() {
 	let boundingBox = this.boundingBox,
-		currFrame = this.currFrame,
-		imageInfo = this.images[currFrame],
-		resolution = settings.resolution;
-	this.currFrame = currFrame >= this.images.length-1 ? 0 : currFrame + 1;
+		resolution = settings.resolution,
+		imageX = null,
+		imageY = null;
+	
+	if(!!this.images) {
+		let currFrame = this.currFrame,
+			imageInfo = this.images[currFrame];
+		this.currFrame = currFrame >= this.images.length-1 ? 0 : currFrame + 1;
+		imageX = imageInfo.frame.x;
+		imageY = imageInfo.frame.y;
+	} else {
+		imageX = 0;
+		imageY = 0;
+	}
+	
 	settings.canvasContext.drawImage(
-		resources.get(settings.spritesImage),
-		imageInfo.frame.x, 
-		imageInfo.frame.y, 
-		imageInfo.frame.w, 
-		imageInfo.frame.h, 
+		this.spriteSheet,
+		imageX,
+		imageY, 
+		this.imageWidth, 
+		this.imageHeight, 
 		boundingBox.x * resolution, 
 		boundingBox.y * resolution, 
 		boundingBox.width * resolution, 

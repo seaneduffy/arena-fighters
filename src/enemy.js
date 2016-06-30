@@ -64,9 +64,7 @@ function ai() {
 		}
 	}
 	if(!!closestPlayer) {
-		let angle = this.getAngleToObject(closestPlayer),
-			direction = this.getDirectionToObject(angle);
-		this.move(direction);
+		this.move(geom.getAngle(this.x, this.y, closestPlayer.x, closestPlayer.y));
 	}
 }
 

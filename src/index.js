@@ -2,17 +2,18 @@
 
 (function(){
 	
-	let id = require('./id'),
-		Sprite = require('./sprite'),
+	let Sprite = require('./sprite'),
 		Player = require('./player'),
 		Enemy = require('./enemy'),
 		Projectile = require('./projectile'),
 		resources = require('./resources.js'),
 		settings = require('./settings'),
-		GameObject = requirprojectilemeObject'),
+		GameObject = require('./gameObject'),
+		projectile = require('./projectile'),
 		React = require('react'),
 		ReactDOM = require('react-dom'),
 		cycle = require('./cycle'),
+		data = require('./data'),
 		gameCanvas = null,
 		windowWidth = null,
 		windowHeight = null,
@@ -67,15 +68,15 @@
 					stageHeight = settings.stageHeight,
 					i = 0, l = 0,
 					obstacle = null,
-					bg = this._createGameObject('background', {default:levelData.background}),
-					leftWall = this._createGameObject('obstacle', {default:levelData.leftWall}),
-					rightWall = this._createGameObject('obstacle', {default:levelData.rightWall}),
-					topWall = this._createGameObject('obstacle', {default:levelData.topWall}),
-					bottomWall = this._createGameObject('obstacle', {default:levelData.bottomWall});
+				bg = this._createGameObject('background', settings.spritesData[levelData.background].img);
+					//leftWall = this._createGameObject('obstacle', {default:levelData.leftWall}),
+					//rightWall = this._createGameObject('obstacle', {default:levelData.rightWall}),
+					//topWall = this._createGameObject('obstacle', {default:levelData.topWall}),
+					//bottomWall = this._createGameObject('obstacle', {default:levelData.bottomWall});
 				bg.x = stageWidth / 2;
 				bg.y = stageHeight / 2;
 				bg.stage = true;
-				leftWall.x = 0;
+				/*leftWall.x = 0;
 				leftWall.y = stageHeight / 2;
 				leftWall.stage = true;
 				rightWall.x = stageWidth;
@@ -87,13 +88,13 @@
 				bottomWall.x = stageWidth / 2;
 				bottomWall.y = stageHeight;
 				bottomWall.stage = true;
-				/*l = levelData.obstacles.length;
+				l = levelData.obstacles.length;
 				for(i=0; i<l; i++) {
 					obstacle = this._createGameObject('obstacle', {default:levelData.obstacles[i].sprite});
 					obstacle.x = levelData.obstacles[i].x;
 					obstacle.y = levelData.obstacles[i].y;
 					obstacle.stage = true;
-				}*/
+				}
 				l = levelData.enemies.length;
 				let enemyData = null, enemy;
 				for(i=0; i<l; i++) {
@@ -102,21 +103,21 @@
 					enemy.stage = true;
 					enemy.x = enemyData.x;
 					enemy.y = enemyData.y;
-					enemy.direction = enemyData.direction;
+					enemy.direction = -1;
 					enemy.display = enemyData.display;
 					enemy.aiStart();
-				}
-				let player1 = settings.player1 = this._createGameObject('player');
+				}*/
+				let player1 = settings.player1 = this._createGameObject('player1');
 				player1.x = levelData.player1.x;
 				player1.y = levelData.player1.y;
-				player1.direction = levelData.player1.direction;
+				player1.direction = -1;
 				player1.display = levelData.player1.display;
 				player1.stage = true;
 				if(this.state.playerConnected) {
-					let player2 = settings.player2 = this._createGameObject('player');
+					let player2 = settings.player2 = this._createGameObject('player2');
 					player2.x = levelData.player2.x;
 					player2.y = levelData.player2.y;
-					player2.direction = levelData.player2.direction;
+					player2.directionLabel = levelData.player2.direction;
 					player2.display = levelData.player2.display;
 					player2.stage = true;
 				}
@@ -124,9 +125,10 @@
 			this.setState({gameActive:true});
 			cycle.start();
 		},
-		_createGameObject: function(type, sprites) {
+		_createGameObject: function(type, sprite) {
 			let gameObject = null, property = null, gameObjectData = gameObjectsData[type];
-			if(type === 'player') {
+			
+			if(type === 'player1' || type === 'player2') {
 				gameObject = new Player();
 			} else if(type === 'background' || type === 'obstacle') {
 				gameObject = new GameObject();
@@ -135,18 +137,17 @@
 			} else if(type === 'grunt') {
 				gameObject = new Enemy();
 			}
+			gameObject.type = type;
 			if(!gameObject)
 				return false;
+			if(!!sprite)
+				gameObject.sprite = sprite;
 			this.state.gameObjects.push(gameObject);
-			if(!!sprites) {
-				gameObject.sprites = sprites;
-			}
 			if(!!gameObjectData) {
 				for(property in gameObjectData) {
 					gameObject[property] = gameObjectData[property];
 				}
 			}
-			gameObject.type = type;
 			return gameObject;
 		},
 		_setPlayerNames: function(playerNames) {
@@ -169,8 +170,8 @@
 			projectile.stage = true;
 			projectile.fire();
 		},
-		_movePlayer: function(player, label) {
-			player.move(label);
+		_movePlayer: function(player, angle) {
+			player.move(angle);
 		},
 		getInitialState: function() {
 			return {
@@ -219,15 +220,15 @@
 		onGameNameChange: function(e) {
 			this.setState({gameName: e.target.value});
 		},
-		onJoystick: function(label, client) {
+		onJoystick: function(angle) {
 			if(!this.state.hosting) {
 				if(settings.player2.dead)
 					return
-				socket.emit('joystick', label);
+				socket.emit('joystick', angle);
 			} else {
 				if(settings.player1.dead)
 					return
-				this._movePlayer(settings.player1, label);
+				this._movePlayer(settings.player1, angle);
 			}
 		},
 		onFire: function() {
@@ -244,8 +245,8 @@
 		onServerFire: function() {
 			this._fire(settings.player2);
 		},
-		onServerJoystick: function(label) {
-			this._movePlayer(settings.player2, label);
+		onServerJoystick: function(angle) {
+			this._movePlayer(settings.player2, angle);
 		},
 		onServerPlayerJoined: function() {
 			this.setState({playerConnected:true});
@@ -309,19 +310,35 @@
 	</div>
 </div>
 )}});
-	
-	resources.onReady(function(){
-		require('./data')(settings.levelsJsonUri, (data)=>{
-			levelsData = data.levels;
-			require('./data')(settings.gameObjectsJsonUri, (data)=>{
-				gameObjectsData = data.gameobjects;
-				ReactDOM.render(<Game/>, document.getElementById('game'));
+
+	data(settings.levelsJsonUri, (json)=>{
+		levelsData = json.levels;
+		data(settings.gameObjectsJsonUri, (json)=>{
+			gameObjectsData = json.gameobjects;
+			data(settings.spritesJsonUri, (json)=>{
+				let spritesData = settings.spritesData = json.sprites,
+					imagesToLoad = [
+						settings.fireBtnImage,
+						settings.joystickImage,
+						'/img/bullet.png'
+					];
+				for(let key in spritesData) {
+					let spriteData = spritesData[key];
+					imagesToLoad.push(spriteData.img);
+					if(!!spriteData.data) {
+						data(spriteData.data, (json)=>{
+							spriteData.frames = json.frames;
+						});
+					}
+				}
+				resources.load(imagesToLoad);
 			});
 		});
 	});
-	resources.load([
-		settings.spritesImage,
-		settings.fireBtnImage,
-		settings.joystickImage
-	]);
+	
+	resources.onReady(function(){
+		ReactDOM.render(<Game/>, document.getElementById('game'));
+	});
+	
+
 }());

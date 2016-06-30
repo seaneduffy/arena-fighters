@@ -1,4 +1,5 @@
 let settings = require('./settings'),
+	geom = require('./geom'),
 	element = null,
 	callbacks = [],
 	isTouch = checkTouch(),
@@ -8,7 +9,7 @@ let settings = require('./settings'),
 	touchY = null,
 	deltaX = null,
 	deltaY = null,
-	sensitivity = 40,
+	sensitivity = 10,
 	directions = Object.create(null),
 	spriteJson = null,
 	xobj = new XMLHttpRequest();
@@ -34,10 +35,10 @@ function init() {
 		element.addEventListener('touchend', endTouch, false);
 	}
 	element.style.background = 'url('+settings.joystickImage+')';
-	let imageInfo = spriteJson[directions.center+'.png'].frame;
+	let imageInfo = spriteJson[settings.CENTER+'.png'].frame;
 	element.style.width = imageInfo.w + 'px';
 	element.style.height = imageInfo.h + 'px';
-	updateDisplay(directions.center);
+	updateDisplay(settings.CENTER);
 }
 
 function startTouch(e) {
@@ -46,12 +47,29 @@ function startTouch(e) {
 	centerY = e.touches[0].pageY;
 }
 
-function callback(label) {
-	updateDisplay(label);
+function callback(angle) {
+	let pi = Math.PI, l = callbacks.length;
 	element.className = 'active';
-	let l = callbacks.length;
+	if(angle === -1){
+		updateDisplay(settings.CENTER);
+	} else if(angle <= pi / 8 || angle > 15 * pi / 8)
+		updateDisplay(settings.UP);
+	else if(angle <= 3 * pi / 8)
+		updateDisplay(settings.UP_RIGHT);
+	else if(angle <= 5 * pi / 8)
+		updateDisplay(settings.RIGHT);
+	else if(angle <= 7 * pi / 8)
+		updateDisplay(settings.DOWN_RIGHT);
+	else if(angle <= 9 * pi / 8)
+		updateDisplay(settings.DOWN);
+	else if(angle <= 11 * pi / 8)
+		updateDisplay(settings.DOWN_LEFT);
+	else if(angle <= 13 * pi / 8)
+		updateDisplay(settings.LEFT);
+	else if(angle <= 15 * pi / 8)
+		updateDisplay(settings.UP_LEFT);
 	for(let i=0; i<l; i++)
-		callbacks[i](label);
+		callbacks[i](angle);
 }
 
 function touchMove(e) {
@@ -59,44 +77,22 @@ function touchMove(e) {
 	touchY = e.touches[0].pageY;
 	deltaX = touchX - centerX;
 	deltaY = touchY - centerY;
-	if(deltaX < -sensitivity && deltaY > sensitivity) {
-		callback(directions.downLeft);
-	} else if(deltaX > sensitivity && deltaY > sensitivity) {
-		callback(directions.downRight);
-	} else if(deltaX < -sensitivity && deltaY < -sensitivity) {
-		callback(directions.upLeft);
-	} else if(deltaX > sensitivity && deltaY < -sensitivity) {
-		callback(directions.upRight);
-	} else if(deltaX < -sensitivity) {
-		callback(directions.left);
-	} else if(deltaX > sensitivity) {
-		callback(directions.right);
-	} else if(deltaY > sensitivity) {
-		callback(directions.down);
-	} else if(deltaY < -sensitivity) {
-		callback(directions.up);
+	if(Math.abs(deltaX) > sensitivity || Math.abs(deltaY) > sensitivity){
+		let angle = geom.getAngle(centerX, centerY, touchX, touchY);
+		callback(angle);
 	} else {
-		callback(directions.center);
+		callback(-1);
 	}
 }
 
 function endTouch(e) {
-	callback(directions.center);
+	callback(-1);
 	element.className = '';
 }
 
 module.exports = {
-	init: function(_element, data, up, down, left, right, upLeft, upRight, downLeft, downRight, center){
+	init: function(_element, data){
 		element = _element;
-		directions.up = up;
-		directions.down = down;
-		directions.left = left;
-		directions.right = right;
-		directions.upLeft = upLeft;
-		directions.upRight = upRight;
-		directions.downLeft = downLeft;
-		directions.downRight = downRight;
-		directions.center = center;
 		spriteJson = data.frames;
 		init();
 	},

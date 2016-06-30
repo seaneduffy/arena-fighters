@@ -1,57 +1,61 @@
 {"gameobjects": {
-	"player": {
-		"sprites": {
-			"up_standing": "player-up_standing",
-			"up_walking": "player-up_walking",
-			"up_left_standing": "player-up_left_standing",
-			"up_left_walking": "player-up_left_walking",
-			"up_right_standing": "player-up_standing",
-			"up_right_walking": "player-up_right_walking",
-			"down_standing": "player-down_standing",
-			"down_walking": "player-down_walking",
-			"down_left_standing": "player-down_left_standing",
-			"down_left_walking": "player-down_left_walking",
-			"down_right_walking": "player-down_right_walking",
-			"down_right_standing": "player-down_right_standing",
-			"left_standing": "player-left_standing",
-			"left_walking": "player-left_walking",
-			"right_standing": "player-right_standing",
-			"right_walking": "player-right_walking"
-		},
+	"player1": {
+		"sprites": [
+			"_up_standing",
+			"_up_walking",
+			"_upleft_standing",
+			"_upleft_walking",
+			"_upright_standing",
+			"_upright_walking",
+			"_down_standing",
+			"_down_walking",
+			"_downleft_standing",
+			"_downleft_walking",
+			"_downright_standing",
+			"_downright_walking",
+			"_left_standing",
+			"_left_walking",
+			"_right_standing",
+			"_right_walking"
+		],
+		"speed": 6,
+		"z": 2,
+		"interacts": true,
+		"health": 15
+	},
+	"player2": {
 		"speed": 6,
 		"z": 2,
 		"interacts": true,
 		"health": 15
 	},
 	"grunt": {
-		"sprites": {
-			"up_standing": "grunt-down-standing",
-			"up_walking": "grunt-down-standing",
-			"up_left_standing": "grunt-down-standing",
-			"up_left_walking": "grunt-down-standing",
-			"up_right_standing": "grunt-down-standing",
-			"up_right_walking": "grunt-down-standing",
-			"down_standing": "grunt-down-standing",
-			"down_walking": "grunt-down-standing",
-			"down_left_standing": "grunt-down-standing",
-			"down_left_walking": "grunt-down-standing",
-			"down_right_standing": "grunt-down-standing",
-			"down_right_walking": "grunt-down-standing",
-			"left_standing": "grunt-down-standing",
-			"left_walking": "grunt-down-standing",
-			"right_standing": "grunt-down-standing",
-			"right_walking": "grunt-down-standing"
-		},
+		"sprites": [
+			"up_standing",
+			"up_walking",
+			"upleft_standing",
+			"upleft_walking",
+			"upright_standing",
+			"upright_walking",
+			"down_standing",
+			"down_walking",
+			"downleft_standing",
+			"downleft_walking",
+			"downright_standing",
+			"downright_walking",
+			"left_standing",
+			"left_walking",
+			"right_standing",
+			"right_walking"
+		],
 		"speed": 0.5,
 		"z": 3,
 		"aggression": 1,
 		"interacts": true,
 		"health": 1
 	},
-	"bullet": {
-		"sprites": {
-			"default": "bullet"
-		},
+	"projectile": {
+		"sprite": "/img/bullet.png",
 		"display": "default",
 		"speed": 10,
 		"z": 4,

@@ -35,30 +35,29 @@ Character.prototype = Object.create(GameObject.prototype, {
 });
 
 function move(direction) {
-	let display = this.display,
-		x = this.x,
-		y = this.y;
-	if(direction === settings.CENTER) {
+	let display = this.display;
+	this.direction = direction;
+	if(direction === -1) {
 		this.display = display.replace('walking', 'standing');
 	}
 	else {
-		this.direction = direction;
-		if(direction === settings.UP) {
-			this.display = 'up_walking';
-		} else if(direction === settings.DOWN) {
-			this.display = 'down_walking';
-		} else if(direction === settings.LEFT) {
-			this.display = 'left_walking';
-		} else if(direction === settings.RIGHT) {
-			this.display = 'right_walking';
-		} else if(direction === settings.UP_LEFT) {
-			this.display = 'up_left_walking';
-		} else if(direction === settings.UP_RIGHT) {
-			this.display = 'up_right_walking';
-		} else if(direction === settings.DOWN_LEFT) {
-			this.display = 'down_left_walking';
-		} else if(direction === settings.DOWN_RIGHT) {
-			this.display = 'down_right_walking';
+		let directionLabel = this.directionLabel;
+		if(directionLabel === settings.UP) {
+			this.display = '_up_walking';
+		} else if(directionLabel === settings.DOWN) {
+			this.display = '_down_walking';
+		} else if(directionLabel === settings.LEFT) {
+			this.display = '_left_walking';
+		} else if(directionLabel === settings.RIGHT) {
+			this.display = '_right_walking';
+		} else if(directionLabel === settings.UP_LEFT) {
+			this.display = '_upleft_walking';
+		} else if(directionLabel === settings.UP_RIGHT) {
+			this.display = '_upright_walking';
+		} else if(directionLabel === settings.DOWN_LEFT) {
+			this.display = '_downleft_walking';
+		} else if(directionLabel === settings.DOWN_RIGHT) {
+			this.display = '_downright_walking';
 		}
 		GameObject.prototype.move.call(this);
 	}

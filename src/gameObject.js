@@ -1,6 +1,8 @@
-let Sprite = require(projectilete'),
+let Sprite = require('./sprite'),
 	settings = require('./settings'),
-	gameObjects = [];
+	geom = require('./geom'),
+	gameObjects = [],
+	id = require('./id');
 
 function GameObject() {
 	this._sprites = Object.create(null);
@@ -8,6 +10,7 @@ function GameObject() {
 	this._interacts = false;
 	this._destroyed = false;
 	gameObjects.push(this);
+	this.id = id();
 }
 
 GameObject.cleanup = cleanup;
@@ -71,36 +74,76 @@ Object.defineProperties(GameObject.prototype, {
 		}
 	},
 	'direction': {
-		set: function(direction) {
-			this._direction = direction;
+		set: function(angle) {
+			if(angle < 0)
+				return;
+			this._direction = angle;
+			let pi = Math.PI;
+			if(angle <= pi / 8 || angle > 15 * pi / 8)
+				this._directionLabel = settings.UP;
+			else if(angle <= 3 * pi / 8)
+				this._directionLabel = settings.UP_RIGHT;
+			else if(angle <= 5 * pi / 8)
+				this._directionLabel = settings.RIGHT;
+			else if(angle <= 7 * pi / 8)
+				this._directionLabel = settings.DOWN_RIGHT;
+			else if(angle <= 9 * pi / 8)
+				this._directionLabel = settings.DOWN;
+			else if(angle <= 11 * pi / 8)
+				this._directionLabel = settings.DOWN_LEFT;
+			else if(angle <= 13 * pi / 8)
+				this._directionLabel = settings.LEFT;
+			else if(angle <= 15 * pi / 8)
+				this._directionLabel = settings.UP_LEFT;
+			if(!!this._speed) {
+				let point = geom.getXYFromVector(this._x, this._y, this._direction, this._speed);
+				this._speedX = point.x;
+				this._speedY = point.y;
+			}
 		},
 		get: function() {
 			return this._direction;
 		}
 	},
+	'directionLabel': {
+		set: function(label) {
+			this._directionLabel = label;
+		},
+		get: function() {
+			return this._directionLabel;
+		} 
+	},
 	'speed': {
 		set: function(speed) {
 			this._speed = speed;
-			this._diagonalSpeed = settings.cos45 * speed;
+			if(!!this._direction) {
+				let point = geom.getXYFromVector(this._x, this._y, this._direction, speed);
+				this._speedX = point.x;
+				this._speedY = point.y;
+			}
 		},
 		get: function() {
 			return this._speed;
 		}
 	},
+	'sprite': {
+		set: function(src) {
+			this._sprites.default = new Sprite(this.type, 'default', src);
+		}
+	},
 	'sprites': {
-		set: function(spritesToAdd) {
-			let sprite = null,
-				sprites = this._sprites;
-			for(let label in spritesToAdd) {
-				sprite = new Sprite(spritesToAdd[label]);
+		set: function(spriteLabels) {
+			let sprites = this._sprites;
+			spriteLabels.forEach((spriteLabel)=>{
+				let sprite = new Sprite(this.type, spriteLabel);
 				if(!!this._x)
 					sprite.x = this._x;
 				if(!!this._y)
 					sprite.y = this._y;
 				if(!!this._z)
 					sprite.z = this._z;
-				sprites[label] = sprite;
-			}
+				sprites[spriteLabel] = sprite;
+			});
 		}
 	},
 	'x': {
@@ -164,70 +207,10 @@ Object.defineProperties(GameObject.prototype, {
 			return this._sprites[this._display].boundingBox;
 		}
 	},
-	'getAngleToObject': {
-		value: getAngleToObject
-	},
-	'getDirectionToObject': {
-		value: getDirectionToObject
-	},
 	'checkCollision': {
 		value: checkCollision
 	}
 });
-
-function getAngleToObject(obj) {
-	let thisX = this._x,
-		thisY = this._y,
-		objX = obj.x,
-		objY = obj.y,
-		deltaX = objX - thisX,
-		deltaY = objY - thisY,
-		angle = null,
-		rad;
-	if(deltaX === 0 && deltaY === 0)
-		angle = 0;
-	else if(deltaX === 0 && deltaY < 0)
-		angle = 0;
-	else if(deltaX === 0 && deltaY > 0)
-		angle = 180;
-	else if(deltaX < 0 && deltaY === 0)
-		angle = 270;
-	else if(deltaX > 0 && deltaY === 0)
-		angle = 90;
-	else {
-		rad = Math.atan2(Math.abs(deltaY), Math.abs(deltaX));
-		if(deltaX > 0 && deltaY > 0)
-			angle = rad * 180 / Math.PI + 90;
-		if(deltaX > 0 && deltaY < 0)
-			angle = 90 - rad * 180 / Math.PI;
-		if(deltaX < 0 && deltaY > 0)
-			angle = 270 - rad * 180 / Math.PI;
-		if(deltaX < 0 && deltaY < 0)
-			angle = rad * 180 / Math.PI + 270;
-	}
-	return angle;
-};
-
-function getDirectionToObject(angle) {
-	if(angle <= 22 || angle > 337)
-		return settings.UP;
-	else if(angle <= 67)
-		return settings.UP_RIGHT;
-	else if(angle <= 112)
-		return settings.RIGHT;
-	else if(angle <= 157)
-		return settings.DOWN_RIGHT;
-	else if(angle <= 202)
-		return settings.DOWN;
-	else if(angle <= 247)
-		return settings.DOWN_LEFT;
-	else if(angle <= 292)
-		return settings.LEFT;
-	else if(angle <= 337)
-		return settings.UP_LEFT;
-	else
-		return settings.CENTER;
-};
 
 function checkCollision() {
 	if(!this._interacts || !this._stage) return false;
@@ -275,82 +258,18 @@ function checkCollision() {
 };
 
 function move() {
-	let x = null,
-		y = null;
-	if(this._direction === settings.UP) {
-		x = 0;
-		y = -this._speed;
-	} else if(this._direction === settings.DOWN) {
-		x = 0;
-		y = this._speed;
-	} else if(this._direction === settings.LEFT) {
-		x = -this._speed;
-		y = 0;
-	} else if(this._direction === settings.RIGHT) {
-		x = this._speed;
-		y = 0;
-	} else if(this._direction === settings.UP_LEFT) {
-		x = -this._diagonalSpeed;
-		y = -this._diagonalSpeed;
-	} else if(this._direction === settings.UP_RIGHT) {
-		x = this._diagonalSpeed;
-		y = -this._diagonalSpeed;
-	} else if(this._direction === settings.DOWN_LEFT) {
-		x = -this._diagonalSpeed;
-		y = this._diagonalSpeed;
-	} else if(this._direction === settings.DOWN_RIGHT) {
-		x = this._diagonalSpeed;
-		y = this._diagonalSpeed;
-	}
-	this.y += y;
-	this.x += x;
+	this.y += this._speedY;
+	this.x += this._speedX;
 }
 
 function getFrontPoint() {
 	let direction = this._direction,
-		boundingBox = this.boundingBox;
-	if(direction === settings.UP) {
-		return {
-			x: this._x,
-			y: this._y - boundingBox.height / 2
-		}
-	} else if(direction === settings.DOWN) {
-		return {
-			x: this._x,
-			y: this._y + boundingBox.height / 2
-		}
-	} else if(direction === settings.LEFT) {
-		return {
-			x: this._x - boundingBox.width / 2,
-			y: this._y
-		}
-	} else if(direction === settings.RIGHT) {
-		return {
-			x: this._x + boundingBox.width / 2,
-			y: this._y
-		}
-	} else if(direction === settings.UP_LEFT) {
-		return {
-			x: this._x - settings.cos45 * boundingBox.width / 2,
-			y: this._y - settings.cos45 * boundingBox.height / 2
-		}
-	} else if(direction === settings.UP_RIGHT) {
-		return {
-			x: this._x + settings.cos45 * boundingBox.width / 2,
-			y: this._y - settings.cos45 * boundingBox.height / 2
-		}
-	} else if(direction === settings.DOWN_LEFT) {
-		return {
-			x: this._x - settings.cos45 * boundingBox.width / 2,
-			y: this._y + settings.cos45 * boundingBox.height / 2
-		}
-	} else if(direction === settings.DOWN_RIGHT) {
-		return {
-			x: this._x + settings.cos45 * boundingBox.width / 2,
-			y: this._y + settings.cos45 * boundingBox.height / 2
-		}
-	}
-	return false;
+		boundingBox = this.boundingBox,
+		delta = geom.getVectorFromXYAngle(boundingBox.width / 2, boundingBox.height / 2, direction);
+	return {
+		x: this._x + delta.x,
+		y: this._y + delta.y
+	};
 }
 
 function onCollidedWith(collidedObject) {
