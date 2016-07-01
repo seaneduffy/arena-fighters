@@ -1,14 +1,18 @@
+'use strict';
+
+let Projectile = require('./projectile')
+
 function Ammunition() {
 	Projectile.prototype.constructor.call(this);
 }
 
 Ammunition.prototype = Object.create(Projectile.prototype, {
-	'damage': {
-		set: function(damage) {
-			this._damage = damage;
+	'impact': {
+		set: function(impact) {
+			this._impact = impact;
 		},
 		get: function() {
-			return this._damage;
+			return this._impact;
 		}
 	}
 });

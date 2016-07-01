@@ -14,11 +14,12 @@ module.exports = {
 	'DOWN_LEFT': 'downleft',
 	'DOWN_RIGHT': 'downright',
 	'CENTER': 'center',
-	'gameObjectsJsonUri': '/data/gameobjects.json',
+	'settingsJsonUri': '/data/settings.json',
 	'levelsJsonUri': '/data/levels.json',
 	'fireBtnJsonUri': '/data/fire.json',
 	'fireBtnImage': '/img/fire.png',
 	'joystickJsonUri': '/data/joystick.json',
 	'joystickImage': '/img/joystick.png',
-	'spritesJsonUri': '/data/sprites.json'
+	'spritesJsonUri': '/data/sprites.json',
+	'settings': null
 }

@@ -1,4 +1,4 @@
-{"gameobjects": {
+{"settings": {
 	"player1": {
 		"properties": {
 			"sprites": [
@@ -24,12 +24,13 @@
 				"img": "/img/sprites/player1.png"
 			},
 			"speed": 6,
-			"z": 2,
+			"z": 3,
 			"interacts": true,
 			"health": 15,
 			"enemies": [
 				"grunt"
-			]
+			],
+			"firearm": "pistol"
 		},
 		"className": "Character"
 	},
@@ -58,12 +59,13 @@
 				"img": "/img/sprites/player2.png"
 			},
 			"speed": 6,
-			"z": 2,
+			"z": 3,
 			"interacts": true,
 			"health": 15,
 			"enemies": [
 				"grunt"
-			]
+			],
+			"firearm": "pistol"
 		},
 		"className": "Character"
 	},
@@ -92,7 +94,7 @@
 				"data": "/data/sprites/grunt.json"
 			},
 			"speed": 2,
-			"z": 3,
+			"z": 6,
 			"ai": "grunt",
 			"interacts": true,
 			"health": 1,
@@ -109,11 +111,31 @@
 			"sprite": "/img/sprites/bullet.png",
 			"display": "default",
 			"speed": 10,
-			"z": 4,
+			"z": 8,
 			"interacts": true,
 			"impact": 1
 		},
-		"className": "Projectile"
+		"className": "Ammunition"
+	},
+	"pistol": {
+		"properties": {
+			"sprites": [
+				"$up",
+				"$upright",
+				"$upleft",
+				"$right",
+				"$left",
+				"$down",
+				"$downright",
+				"$downleft"
+			],
+			"spriteMeta": {
+				"img": "/img/sprites/pistol.png",
+				"data": "/data/sprites/pistol.json"
+			},
+			"ammunition": "bullet",
+			"className": "Firearm"
+		}
 	},
 	"background1": {
 		"properties": {
@@ -132,7 +154,7 @@
 			"display": "default",
 			"x": 0,
 			"y": "global.stageCenterY",
-			"z": 0,
+			"z": 1,
 			"interacts": true 
 		},
 		"className": "GameObject"
@@ -143,7 +165,7 @@
 			"display": "default",
 			"x": "global.stageWidth",
 			"y": "global.stageCenterY",
-			"z": 0,
+			"z": 1,
 			"interacts": true 
 		},
 		"className": "GameObject"
@@ -154,7 +176,7 @@
 			"display": "default",
 			"x": "global.stageCenterX",
 			"y": "global.stageHeight",
-			"z": 0,
+			"z": 1,
 			"interacts": true 
 		},
 		"className": "GameObject"
@@ -165,7 +187,7 @@
 			"display": "default",
 			"x": "global.stageCenterX",
 			"y": 0,
-			"z": 0,
+			"z": 1,
 			"interacts": true 
 		},
 		"className": "GameObject"

@@ -29,7 +29,7 @@ function move() {
 }
 
 function onCollidedWith(collidedObject) {
-	if(collidedObject.type !== 'projectile')
+	if(collidedObject.type !== 'projectile' && collidedObject !== this.origin)
 		this.destroyed = true;
 };
 

@@ -40,14 +40,6 @@ Object.defineProperties(GameObject.prototype, {
 			}
 		}
 	},
-	'ignoreCollision': {
-		get: function() {
-			return this._ignoreCollision;
-		},
-		set: function(obj) {
-			this._ignoreCollision = obj;
-		}
-	},
 	'interacts': {
 		get: function() {
 			return this._interacts;
@@ -237,14 +229,12 @@ function checkCollision() {
 		objectToCheckWidth = null,
 		objectToCheckHeight = null,
 		objectToCheckBoundingBox = null;
+		
 	for(i=0; i<l; i++) {
+		
 		objectToCheck = gameObjects[i];
 		
-		if(this._ignoreCollision === objectToCheck || objectToCheck.ignoreCollision === this) {
-			
-		} else if(
-			objectToCheck !== this && objectToCheck.stage && objectToCheck.interacts
-		) {
+		if(objectToCheck !== this && objectToCheck.stage && objectToCheck.interacts) {
 			objectToCheckBoundingBox = objectToCheck.boundingBox;
 			if(objectToCheckBoundingBox) {
 				objectToCheckX = objectToCheckBoundingBox.x;
@@ -301,7 +291,7 @@ function initSprites() {
 	let sprites = this._sprites,
 		frames = this._spriteMeta.frames,
 		spriteSheetPath = this._spriteMeta.img;
-	this._spriteLabels.forEach((spriteLabel)=>{
+	this._spriteLabels.forEach( spriteLabel => {
 		let images = [];
 		for(let key in frames) {
 			if(key.indexOf(spriteLabel) != -1) {

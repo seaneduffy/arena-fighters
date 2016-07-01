@@ -1,7 +1,10 @@
+'use strict';
+
 let global = require('./global'),
 	GameObject = require('./gameObject'),
 	aiFunctions = require('./ai'),
-	cycle = require('./cycle');
+	cycle = require('./cycle'),
+	utils = require('./utils');
 
 function Character() {
 	GameObject.prototype.constructor.call(this);
@@ -20,7 +23,7 @@ Character.prototype = Object.create(GameObject.prototype, {
 			return this._dead;
 		}
 	},
-	"health": {
+	'health': {
 		set: function(health) {
 			this._health = health;
 			if(health <= 0)
@@ -30,27 +33,65 @@ Character.prototype = Object.create(GameObject.prototype, {
 			return this._health;
 		}
 	},
-	"damage": {
+	'damage': {
 		value: damage
 	},
-	"move": {
+	'move': {
 		value: move
 	},
-	"onCollidedWith": {
+	'onCollidedWith': {
 		value: onCollidedWith
 	},
-	"ai": {
+	'ai': {
 		set: function(ai) {
 			this._ai = aiFunctions[ai];
 			cycle.addGameObjectUpdateFunction(this, this._ai.bind(this));
 		}
 	},
-	"melee": {
+	'melee': {
 		set: function(melee) {
 			this._melee = melee;
 		},
 		get: function() {
 			return this._melee;
+		}
+	},
+	'firearm': {
+		set: function(firearm) {
+			let z = null,
+				directionLabel = this.directionLabel,
+				display = null;
+			if(directionLabel === global.UP 
+				|| directionLabel === global.UP_LEFT
+				|| directionLabel === global.UP_RIGHT
+			) {
+				z = this.z - 1;
+			} else {
+				z = this.z + 1;
+			}
+			if(directionLabel === global.UP) {
+				display = '$up';
+			} else if(directionLabel === global.DOWN) {
+				display = '$down';
+			} else if(directionLabel === global.LEFT) {
+				display = '$left';
+			} else if(directionLabel === global.RIGHT) {
+				display = '$right';
+			} else if(directionLabel === global.UP_LEFT) {
+				display = '$upleft';
+			} else if(directionLabel === global.UP_RIGHT) {
+				display = '$upright';
+			} else if(directionLabel === global.DOWN_LEFT) {
+				display = '$downleft';
+			} else if(directionLabel === global.DOWN_RIGHT) {
+				display = '$downright';
+			}
+			this._firearm = utils.createGameObject(firearm, {
+				x: this.x,
+				y: this.y,
+				z: z,
+				display: display
+			});
 		}
 	}
 });
