@@ -3,6 +3,8 @@ module.exports = {
 	'player2': null,
 	'stageWidth': 2846,
 	'stageHeight': 1600,
+	'stageCenterX': 1423,
+	'stageCenterY': 800,
 	'UP': 'up',
 	'LEFT': 'left',
 	'RIGHT': 'right',

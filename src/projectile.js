@@ -1,5 +1,5 @@
 let Sprite = require('./sprite'),
-	settings = require('./settings'),
+	global = require('./global'),
 	GameObject = require('./gameObject'),
 	cycle = require('./cycle');
 

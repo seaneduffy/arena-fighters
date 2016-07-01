@@ -1,92 +1,182 @@
 {"gameobjects": {
 	"player1": {
-		"sprites": [
-			"$up_standing",
-			"$up_walking",
-			"$upleft_standing",
-			"$upleft_walking",
-			"$upright_standing",
-			"$upright_walking",
-			"$down_standing",
-			"$down_walking",
-			"$downleft_standing",
-			"$downleft_walking",
-			"$downright_standing",
-			"$downright_walking",
-			"$left_standing",
-			"$left_walking",
-			"$right_standing",
-			"$right_walking"
-		],
-		"speed": 6,
-		"z": 2,
-		"interacts": true,
-		"health": 15
+		"properties": {
+			"sprites": [
+				"$up_standing",
+				"$up_walking",
+				"$upleft_standing",
+				"$upleft_walking",
+				"$upright_standing",
+				"$upright_walking",
+				"$down_standing",
+				"$down_walking",
+				"$downleft_standing",
+				"$downleft_walking",
+				"$downright_standing",
+				"$downright_walking",
+				"$left_standing",
+				"$left_walking",
+				"$right_standing",
+				"$right_walking"
+			],
+			"spriteMeta": {
+				"data": "/data/sprites/player1.json",
+				"img": "/img/sprites/player1.png"
+			},
+			"speed": 6,
+			"z": 2,
+			"interacts": true,
+			"health": 15,
+			"enemies": [
+				"grunt"
+			]
+		},
+		"className": "Character"
 	},
 	"player2": {
-		"sprites": [
-			"$up_standing",
-			"$up_walking",
-			"$upleft_standing",
-			"$upleft_walking",
-			"$upright_standing",
-			"$upright_walking",
-			"$down_standing",
-			"$down_walking",
-			"$downleft_standing",
-			"$downleft_walking",
-			"$downright_standing",
-			"$downright_walking",
-			"$left_standing",
-			"$left_walking",
-			"$right_standing",
-			"$right_walking"
-		],
-		"speed": 6,
-		"z": 2,
-		"interacts": true,
-		"health": 15
+		"properties": {
+			"sprites": [
+				"$up_standing",
+				"$up_walking",
+				"$upleft_standing",
+				"$upleft_walking",
+				"$upright_standing",
+				"$upright_walking",
+				"$down_standing",
+				"$down_walking",
+				"$downleft_standing",
+				"$downleft_walking",
+				"$downright_standing",
+				"$downright_walking",
+				"$left_standing",
+				"$left_walking",
+				"$right_standing",
+				"$right_walking"
+			],
+			"spriteMeta": {
+				"data": "/data/sprites/player2.json",
+				"img": "/img/sprites/player2.png"
+			},
+			"speed": 6,
+			"z": 2,
+			"interacts": true,
+			"health": 15,
+			"enemies": [
+				"grunt"
+			]
+		},
+		"className": "Character"
 	},
 	"grunt": {
-		"sprites": [
-			"$up_standing",
-			"$up_walking",
-			"$upleft_standing",
-			"$upleft_walking",
-			"$upright_standing",
-			"$upright_walking",
-			"$down_standing",
-			"$down_walking",
-			"$downleft_standing",
-			"$downleft_walking",
-			"$downright_standing",
-			"$downright_walking",
-			"$left_standing",
-			"$left_walking",
-			"$right_standing",
-			"$right_walking"
-		],
-		"speed": 2,
-		"z": 3,
-		"aggression": 1,
-		"interacts": true,
-		"health": 1
+		"properties": {
+			"sprites": [
+				"$up_standing",
+				"$up_walking",
+				"$upleft_standing",
+				"$upleft_walking",
+				"$upright_standing",
+				"$upright_walking",
+				"$down_standing",
+				"$down_walking",
+				"$downleft_standing",
+				"$downleft_walking",
+				"$downright_standing",
+				"$downright_walking",
+				"$left_standing",
+				"$left_walking",
+				"$right_standing",
+				"$right_walking"
+			],
+			"spriteMeta": {
+				"img": "/img/sprites/grunt.png",
+				"data": "/data/sprites/grunt.json"
+			},
+			"speed": 2,
+			"z": 3,
+			"ai": "grunt",
+			"interacts": true,
+			"health": 1,
+			"melee": 1,
+			"enemies": [
+				"player1",
+				"player2"
+			]
+		},
+		"className": "Character"
 	},
-	"projectile": {
-		"sprite": "/img/bullet.png",
-		"display": "default",
-		"speed": 10,
-		"z": 4,
-		"interacts": true
+	"bullet": {
+		"properties": {
+			"sprite": "/img/sprites/bullet.png",
+			"display": "default",
+			"speed": 10,
+			"z": 4,
+			"interacts": true,
+			"impact": 1
+		},
+		"className": "Projectile"
 	},
-	"background": {
-		"display": "default",
-		"z": 0,
-		"interacts": false
+	"background1": {
+		"properties": {
+			"sprite": "img/sprites/bg1.png",
+			"display": "default",
+			"x": "global.stageCenterX",
+			"y": "global.stageCenterY",
+			"z": 0,
+			"interacts": false
+		},
+		"className": "GameObject"
+	},
+	"leftWall1": {
+		"properties": {
+			"sprite": "img/sprites/sideWall.png",
+			"display": "default",
+			"x": 0,
+			"y": "global.stageCenterY",
+			"z": 0,
+			"interacts": true 
+		},
+		"className": "GameObject"
+	},
+	"rightWall1": {
+		"properties": {
+			"sprite": "img/sprites/sideWall.png",
+			"display": "default",
+			"x": "global.stageWidth",
+			"y": "global.stageCenterY",
+			"z": 0,
+			"interacts": true 
+		},
+		"className": "GameObject"
+	},
+	"bottomWall1": {
+		"properties": {
+			"sprite": "img/sprites/baseWall.png",
+			"display": "default",
+			"x": "global.stageCenterX",
+			"y": "global.stageHeight",
+			"z": 0,
+			"interacts": true 
+		},
+		"className": "GameObject"
+	},
+	"topWall1": {
+		"properties": {
+			"sprite": "img/sprites/baseWall.png",
+			"display": "default",
+			"x": "global.stageCenterX",
+			"y": 0,
+			"z": 0,
+			"interacts": true 
+		},
+		"className": "GameObject"
 	},
 	"obstacle": {
-		"display": "default",
-		"z": 1,
-		"interacts": true
+		"properties": {
+			"sprite": "img/sprites/obstacle.png",
+			"display": "default",
+			"z": 1,
+			"interacts": true
+		},
+		"className": "GameObject"
 	}
 }}

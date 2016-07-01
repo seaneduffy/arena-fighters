@@ -1,4 +1,4 @@
-let settings = require('./settings'),
+let global = require('./global'),
 	geom = require('./geom'),
 	element = null,
 	callbacks = [],
@@ -34,11 +34,11 @@ function init() {
 		element.addEventListener('touchmove', touchMove, false);
 		element.addEventListener('touchend', endTouch, false);
 	}
-	element.style.background = 'url('+settings.joystickImage+')';
-	let imageInfo = spriteJson[settings.CENTER+'.png'].frame;
+	element.style.background = 'url('+global.joystickImage+')';
+	let imageInfo = spriteJson[global.CENTER+'.png'].frame;
 	element.style.width = imageInfo.w + 'px';
 	element.style.height = imageInfo.h + 'px';
-	updateDisplay(settings.CENTER);
+	updateDisplay(global.CENTER);
 }
 
 function startTouch(e) {
@@ -51,23 +51,23 @@ function callback(angle) {
 	let pi = Math.PI, l = callbacks.length;
 	element.className = 'active';
 	if(angle === -1){
-		updateDisplay(settings.CENTER);
+		updateDisplay(global.CENTER);
 	} else if(angle <= pi / 8 || angle > 15 * pi / 8)
-		updateDisplay(settings.UP);
+		updateDisplay(global.UP);
 	else if(angle <= 3 * pi / 8)
-		updateDisplay(settings.UP_RIGHT);
+		updateDisplay(global.UP_RIGHT);
 	else if(angle <= 5 * pi / 8)
-		updateDisplay(settings.RIGHT);
+		updateDisplay(global.RIGHT);
 	else if(angle <= 7 * pi / 8)
-		updateDisplay(settings.DOWN_RIGHT);
+		updateDisplay(global.DOWN_RIGHT);
 	else if(angle <= 9 * pi / 8)
-		updateDisplay(settings.DOWN);
+		updateDisplay(global.DOWN);
 	else if(angle <= 11 * pi / 8)
-		updateDisplay(settings.DOWN_LEFT);
+		updateDisplay(global.DOWN_LEFT);
 	else if(angle <= 13 * pi / 8)
-		updateDisplay(settings.LEFT);
+		updateDisplay(global.LEFT);
 	else if(angle <= 15 * pi / 8)
-		updateDisplay(settings.UP_LEFT);
+		updateDisplay(global.UP_LEFT);
 	for(let i=0; i<l; i++)
 		callbacks[i](angle);
 }

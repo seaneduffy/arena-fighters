@@ -1,5 +1,5 @@
 let Sprite = require('./sprite'),
-	settings = require('./settings'),
+	global = require('./global'),
 	geom = require('./geom'),
 	gameObjects = [],
 	id = require('./id');
@@ -80,21 +80,21 @@ Object.defineProperties(GameObject.prototype, {
 			this._direction = angle;
 			let pi = Math.PI;
 			if(angle <= pi / 8 || angle > 15 * pi / 8)
-				this._directionLabel = settings.UP;
+				this._directionLabel = global.UP;
 			else if(angle <= 3 * pi / 8)
-				this._directionLabel = settings.UP_RIGHT;
+				this._directionLabel = global.UP_RIGHT;
 			else if(angle <= 5 * pi / 8)
-				this._directionLabel = settings.RIGHT;
+				this._directionLabel = global.RIGHT;
 			else if(angle <= 7 * pi / 8)
-				this._directionLabel = settings.DOWN_RIGHT;
+				this._directionLabel = global.DOWN_RIGHT;
 			else if(angle <= 9 * pi / 8)
-				this._directionLabel = settings.DOWN;
+				this._directionLabel = global.DOWN;
 			else if(angle <= 11 * pi / 8)
-				this._directionLabel = settings.DOWN_LEFT;
+				this._directionLabel = global.DOWN_LEFT;
 			else if(angle <= 13 * pi / 8)
-				this._directionLabel = settings.LEFT;
+				this._directionLabel = global.LEFT;
 			else if(angle <= 15 * pi / 8)
-				this._directionLabel = settings.UP_LEFT;
+				this._directionLabel = global.UP_LEFT;
 			if(!!this._speed) {
 				let point = geom.getXYFromVector(this._x, this._y, this._direction, this._speed);
 				this._speedX = point.x;
@@ -128,22 +128,28 @@ Object.defineProperties(GameObject.prototype, {
 	},
 	'sprite': {
 		set: function(src) {
-			this._sprites.default = new Sprite(this.type, 'default', null, src);
+			let sprite = new Sprite(src);
+			if(!!this._x)
+				sprite.x = this._x;
+			if(!!this._y)
+				sprite.y = this._y;
+			if(!!this._z)
+				sprite.z = this._z;
+			this._sprites.default = sprite;
 		}
 	},
 	'sprites': {
 		set: function(spriteLabels) {
-			let sprites = this._sprites;
-			spriteLabels.forEach((spriteLabel)=>{
-				let sprite = new Sprite(this.type, spriteLabel);
-				if(!!this._x)
-					sprite.x = this._x;
-				if(!!this._y)
-					sprite.y = this._y;
-				if(!!this._z)
-					sprite.z = this._z;
-				sprites[spriteLabel] = sprite;
-			});
+			this._spriteLabels = spriteLabels;
+			if(!!this._spriteMeta)
+				this.initSprites();
+		}
+	},
+	'spriteMeta': {
+		set: function(spriteMeta) {
+			this._spriteMeta = spriteMeta;
+			if(!!this._spriteLabels)
+				this.initSprites();
 		}
 	},
 	'x': {
@@ -209,6 +215,9 @@ Object.defineProperties(GameObject.prototype, {
 	},
 	'checkCollision': {
 		value: checkCollision
+	},
+	'initSprites': {
+		value: initSprites
 	}
 });
 
@@ -286,6 +295,28 @@ function cleanup() {
 			l--;
 		}
 	}
+}
+
+function initSprites() {
+	let sprites = this._sprites,
+		frames = this._spriteMeta.frames,
+		spriteSheetPath = this._spriteMeta.img;
+	this._spriteLabels.forEach((spriteLabel)=>{
+		let images = [];
+		for(let key in frames) {
+			if(key.indexOf(spriteLabel) != -1) {
+				images.push(frames[key]);
+			}
+		}
+		let sprite = new Sprite(spriteSheetPath, images);
+		if(!!this._x)
+			sprite.x = this._x;
+		if(!!this._y)
+			sprite.y = this._y;
+		if(!!this._z)
+			sprite.z = this._z;
+		sprites[spriteLabel] = sprite;
+	});
 }
 
 module.exports = GameObject;

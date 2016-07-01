@@ -3,11 +3,12 @@
 (function(){
 	
 	let Sprite = require('./sprite'),
+		Character = require('./character'),
 		Player = require('./player'),
 		Enemy = require('./enemy'),
 		Projectile = require('./projectile'),
 		resources = require('./resources.js'),
-		settings = require('./settings'),
+		global = require('./global'),
 		GameObject = require('./gameObject'),
 		projectile = require('./projectile'),
 		React = require('react'),
@@ -36,12 +37,12 @@
 	let Game = React.createClass({
 		componentDidMount: function() {
 			gameCanvas = document.getElementById('gameScreen').querySelector('canvas');
-			settings.canvasContext = gameCanvas.getContext('2d');
+			global.canvasContext = gameCanvas.getContext('2d');
 			windowWidth = window.innerWidth;
 			windowHeight = window.innerHeight;
-			resScaleWidth = windowWidth / settings.stageWidth;
-			resScaleHeight = windowHeight / settings.stageHeight;
-			settings.resolution = (resScaleWidth < resScaleHeight) ? resScaleWidth : resScaleHeight;
+			resScaleWidth = windowWidth / global.stageWidth;
+			resScaleHeight = windowHeight / global.stageHeight;
+			global.resolution = (resScaleWidth < resScaleHeight) ? resScaleWidth : resScaleHeight;
 			gameCanvas.setAttribute('width', windowWidth);
 			gameCanvas.setAttribute('height', windowHeight);
 			require('./controls.js')(this.onJoystick, this.onFire);
@@ -59,94 +60,57 @@
 				this.handleCreateGame();
 		},
 		_startLevel: function(index) {
-			let levelData = levelsData[index],
-				stageWidth = settings.stageWidth,
-				stageHeight = settings.stageHeight;
+			let levelData = levelsData[index];
 			
 			if(this.state.hosting) {
-				let stageWidth = settings.stageWidth,
-					stageHeight = settings.stageHeight,
-					i = 0, l = 0,
-					obstacle = null,
-				bg = this._createGameObject('background', settings.spritesData[levelData.background].img);
-					//leftWall = this._createGameObject('obstacle', {default:levelData.leftWall}),
-					//rightWall = this._createGameObject('obstacle', {default:levelData.rightWall}),
-					//topWall = this._createGameObject('obstacle', {default:levelData.topWall}),
-					//bottomWall = this._createGameObject('obstacle', {default:levelData.bottomWall});
-				bg.x = stageWidth / 2;
-				bg.y = stageHeight / 2;
-				bg.stage = true;
-				/*leftWall.x = 0;
-				leftWall.y = stageHeight / 2;
-				leftWall.stage = true;
-				rightWall.x = stageWidth;
-				rightWall.y = stageHeight / 2;
-				rightWall.stage = true;
-				topWall.x = stageWidth / 2;
-				topWall.y = 0;
-				topWall.stage = true;
-				bottomWall.x = stageWidth / 2;
-				bottomWall.y = stageHeight;
-				bottomWall.stage = true;
-				l = levelData.obstacles.length;
-				for(i=0; i<l; i++) {
-					obstacle = this._createGameObject('obstacle', {default:levelData.obstacles[i].sprite});
-					obstacle.x = levelData.obstacles[i].x;
-					obstacle.y = levelData.obstacles[i].y;
-					obstacle.stage = true;
-				}*/
-				l = levelData.enemies.length;
-				let enemyData = null, enemy;
-				for(i=0; i<l; i++) {
-					enemyData = levelData.enemies[i];
-					enemy = this._createGameObject(enemyData.type);
-					enemy.stage = true;
-					enemy.x = enemyData.x;
-					enemy.y = enemyData.y;
-					enemy.direction = -1;
-					enemy.display = enemyData.display;
-					enemy.aiStart();
+				let i = 0, l = levelData.length, gameObject;
+				for(i; i<l; i++) {
+					gameObject = this._createGameObject(levelData[i].type, levelData[i].properties);
+					if(!!gameObject)
+						gameObject.stage = true;
 				}
-				let player1 = settings.player1 = this._createGameObject('player1');
-				player1.x = levelData.player1.x;
-				player1.y = levelData.player1.y;
-				player1.direction = -1;
-				player1.display = levelData.player1.display;
-				player1.stage = true;
-				if(this.state.playerConnected) {
-					let player2 = settings.player2 = this._createGameObject('player2');
-					player2.x = levelData.player2.x;
-					player2.y = levelData.player2.y;
-					player2.direction = -1;
-					player2.display = levelData.player2.display;
-					player2.stage = true;
-				}
+				this.setState({gameActive:true});
+				cycle.start();
 			}
-			this.setState({gameActive:true});
-			cycle.start();
 		},
-		_createGameObject: function(type, sprite) {
-			let gameObject = null, property = null, gameObjectData = gameObjectsData[type];
+		_createGameObject: function(type, additionalProperties) {
+			if(type === 'player2' && !this.state.playerJoined)
+				return;
 			
-			if(type === 'player1' || type === 'player2') {
-				gameObject = new Player();
-			} else if(type === 'background' || type === 'obstacle') {
+			let gameObject = null,
+				property = null, 
+				value = null,
+				gameObjectData = gameObjectsData[type], 
+				properties = gameObjectData.properties,
+				className = gameObjectData.className;
+			if(className === 'Character') {
+				gameObject = new Character();
+			} else if(className === 'GameObject') {
 				gameObject = new GameObject();
-			} else if(type === 'projectile') {
+			} else if(className === 'Projectile') {
 				gameObject = new Projectile();
-			} else if(type === 'grunt') {
-				gameObject = new Enemy();
+			} else {
+				return false;
 			}
 			gameObject.type = type;
-			if(!gameObject)
-				return false;
-			if(!!sprite)
-				gameObject.sprite = sprite;
-			if(!!gameObjectData) {
-				for(property in gameObjectData) {
-					gameObject[property] = gameObjectData[property];
+			for(property in properties) {
+				value = properties[property];				
+				if(typeof value === 'string' && value.indexOf('global.') !== -1) {
+					value = global[value.replace('global.','')];
 				}
+				gameObject[property] = value;
 			}
+			for(property in additionalProperties) {
+				value = additionalProperties[property];
+				if(typeof value === 'string' && value.indexOf('global.') !== -1) {
+					value = global[value.replace('global.','')];
+				}
+				gameObject[property] = value;
+			}
+			if(type === 'player1')
+				global.player1 = gameObject;
+			else if(type === 'player2')
+				global.player2 = gameObject;
 			return gameObject;
 		},
 		_setPlayerNames: function(playerNames) {
@@ -159,7 +123,7 @@
 		_fire: function(player) {
 			if(player.dead)
 				return;
-			let projectile = this._createGameObject('projectile'),
+			let projectile = this._createGameObject('bullet'),
 				point = player.front;
 			projectile.direction = player.direction;
 			projectile.x = point.x;
@@ -188,7 +152,7 @@
 				gameActive: false,
 				hosting: false,
 				playerConnected: false,
-				dev1Player: false
+				dev1Player: true
 			}
 		},
 		handleJoinGame: function() {
@@ -226,21 +190,21 @@
 			if(!this.state.hosting) {
 				socket.emit('joystick', angle);
 			} else {
-				this._movePlayer(settings.player1, angle);
+				this._movePlayer(global.player1, angle);
 			}
 		},
 		onFire: function() {
 			if(!this.state.hosting) {
 				socket.emit('fire');
 			} else {
-				this._fire(settings.player1);
+				this._fire(global.player1);
 			}
 		},
 		onServerFire: function() {
-			this._fire(settings.player2);
+			this._fire(global.player2);
 		},
 		onServerJoystick: function(angle) {
-			this._movePlayer(settings.player2, angle);
+			this._movePlayer(global.player2, angle);
 		},
 		onServerPlayerJoined: function() {
 			this.setState({playerConnected:true});
@@ -305,28 +269,29 @@
 </div>
 )}});
 
-	data(settings.levelsJsonUri, (json)=>{
+	data(global.levelsJsonUri, (json)=>{
 		levelsData = json.levels;
-		data(settings.gameObjectsJsonUri, (json)=>{
+		data(global.gameObjectsJsonUri, (json)=>{
 			gameObjectsData = json.gameobjects;
-			data(settings.spritesJsonUri, (json)=>{
-				let spritesData = settings.spritesData = json.sprites,
-					imagesToLoad = [
-						settings.fireBtnImage,
-						settings.joystickImage,
-						'/img/bullet.png'
-					];
-				for(let key in spritesData) {
-					let spriteData = spritesData[key];
-					imagesToLoad.push(spriteData.img);
-					if(!!spriteData.data) {
-						data(spriteData.data, (json)=>{
-							spriteData.frames = json.frames;
+			let imagesToLoad = [
+				global.fireBtnImage,
+				global.joystickImage
+			];
+			for(let type in gameObjectsData) {
+				if(!!gameObjectsData[type].properties.spriteMeta) {
+					let spriteMeta = gameObjectsData[type].properties.spriteMeta;
+					imagesToLoad.push(spriteMeta.img);
+					if(!!spriteMeta.data) {
+						data(spriteMeta.data, (json)=>{
+							spriteMeta.frames = json.frames;
 						});
 					}
 				}
-				resources.load(imagesToLoad);
-			});
+				if(!!gameObjectsData[type].properties.sprite) {
+					imagesToLoad.push(gameObjectsData[type].properties.sprite);
+				}
+			}
+			resources.load(imagesToLoad);
 		});
 	});
 	

@@ -1,6 +1,6 @@
 'use strict';
 
-let settings = require('./settings'),
+let global = require('./global'),
 	joystickCallback = null,
 	fireCallback = null,
 	activeControl = null,
@@ -9,15 +9,15 @@ let settings = require('./settings'),
 document.getElementById('controls').addEventListener('touchstart', function(e){e.preventDefault()});
 
 let joystick = require('./joystick');
-require('./data')(settings.joystickJsonUri, (data)=>{
+require('./data')(global.joystickJsonUri, (data)=>{
 	joystick.init(document.getElementById('joystick'), data);
 	joystick.addCallback(onJoystickMove);
 });
 
 let fireBtn = document.getElementById('fire-btn');
-require('./data')(settings.fireBtnJsonUri, (data)=>{
+require('./data')(global.fireBtnJsonUri, (data)=>{
 	fireBtnJson = data.frames;
-	fireBtn.style.background = 'url('+settings.fireBtnImage+')';
+	fireBtn.style.background = 'url('+global.fireBtnImage+')';
 	let imageInfo = fireBtnJson['fire_up.png'].frame;
 	fireBtn.style.width = imageInfo.w + 'px';
 	fireBtn.style.height = imageInfo.h + 'px';

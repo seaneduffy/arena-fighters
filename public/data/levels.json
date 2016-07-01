@@ -1,51 +1,65 @@
 {"levels": [
-	{	
-		"player1": {
-			"x": 500,
-			"y": 200,
-			"display": "$right_standing"
-		},
-		"player2": {
-			"x": 900,
-			"y": 200,
-			"display": "$left_standing"
-		},
-		"background": "bg1",
-		"leftWall": "wall",
-		"rightWall": "wall",
-		"topWall": "floor",
-		"bottomWall": "floor",
-		"obstacles": [
-			{
+	[
+		{
+			"type": "player1",
+			"properties": {
 				"x": 500,
-				"y": 600,
-				"sprite": "obstacle"
-			},
-			{
-				"x": 900,
-				"y": 400,
-				"sprite": "obstacle"
+				"y": 200,
+				"display": "$right_standing"
 			}
-		],
-		"enemies": [
-			{
-				"type": "grunt",
+		},
+		{
+			"type": "player2",
+			"properties": {
+				"x": 900,
+				"y": 200,
+				"display": "$left_standing"
+			}
+		},
+		{
+			"type": "background1"
+		},
+		{
+			"type": "leftWall1"
+		},
+		{
+			"type": "rightWall1"
+		},
+		{
+			"type": "topWall1"
+		},
+		{
+			"type": "bottomWall1"
+		},
+		{
+			"type": "obstacle",
+			"properties": {
+				"x": 800,
+				"y": 450
+			}
+		},
+		{
+			"type": "obstacle",
+			"properties": {
+				"x": 1300,
+				"y": 800
+			}
+		},
+		{
+			"type": "grunt",
+			"properties": {
 				"x": 2000,
 				"y": 500,
 				"display": "$down_standing"
-			},
-			{
-				"type": "grunt",
-				"x": 2000,
-				"y": 900,
-				"display": "$down_standing"
-			},
-			{
-				"type": "grunt",
+			}
+		},
+		{
+			"type": "grunt",
+			"properties": {
 				"x": 1500,
 				"y": 800,
 				"display": "$down_standing"
 			}
-		]
-	}
+		}
+	]
 ]}

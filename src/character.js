@@ -1,5 +1,7 @@
-let settings = require('./settings'),
-	GameObject = require('./gameObject');
+let global = require('./global'),
+	GameObject = require('./gameObject'),
+	aiFunctions = require('./ai'),
+	cycle = require('./cycle');
 
 function Character() {
 	GameObject.prototype.constructor.call(this);
@@ -28,35 +30,62 @@ Character.prototype = Object.create(GameObject.prototype, {
 			return this._health;
 		}
 	},
-	"damage": damage,
+	"damage": {
+		value: damage
+	},
 	"move": {
 		value: move
+	},
+	"onCollidedWith": {
+		value: onCollidedWith
+	},
+	"ai": {
+		set: function(ai) {
+			this._ai = aiFunctions[ai];
+			cycle.addGameObjectUpdateFunction(this, this._ai.bind(this));
+		}
+	},
+	"melee": {
+		set: function(melee) {
+			this._melee = melee;
+		},
+		get: function() {
+			return this._melee;
+		}
 	}
 });
+
+function onCollidedWith(collidedObject) {
+	if(!!this.melee && this.enemies.find(type=>{ return type === collidedObject.type; })) {
+		collidedObject.damage(this.melee);
+	}	
+	GameObject.prototype.onCollidedWith.call(this);
+}
 
 function move(direction) {
 	let display = this.display;
 	this.direction = direction;
 	if(direction < 0) {
 		this.display = display.replace('walking', 'standing');
+		console.log(this.display);
 	}
 	else {
 		let directionLabel = this.directionLabel;
-		if(directionLabel === settings.UP) {
+		if(directionLabel === global.UP) {
 			this.display = '$up_walking';
-		} else if(directionLabel === settings.DOWN) {
+		} else if(directionLabel === global.DOWN) {
 			this.display = '$down_walking';
-		} else if(directionLabel === settings.LEFT) {
+		} else if(directionLabel === global.LEFT) {
 			this.display = '$left_walking';
-		} else if(directionLabel === settings.RIGHT) {
+		} else if(directionLabel === global.RIGHT) {
 			this.display = '$right_walking';
-		} else if(directionLabel === settings.UP_LEFT) {
+		} else if(directionLabel === global.UP_LEFT) {
 			this.display = '$upleft_walking';
-		} else if(directionLabel === settings.UP_RIGHT) {
+		} else if(directionLabel === global.UP_RIGHT) {
 			this.display = '$upright_walking';
-		} else if(directionLabel === settings.DOWN_LEFT) {
+		} else if(directionLabel === global.DOWN_LEFT) {
 			this.display = '$downleft_walking';
-		} else if(directionLabel === settings.DOWN_RIGHT) {
+		} else if(directionLabel === global.DOWN_RIGHT) {
 			this.display = '$downright_walking';
 		}
 		GameObject.prototype.move.call(this);
