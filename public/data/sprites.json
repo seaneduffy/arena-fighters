@@ -3,7 +3,15 @@
 		"data": "/data/sprites/player1.json",
 		"img": "/img/sprites/player1.png"
 	},
+	"player2": {
+		"data": "/data/sprites/player2.json",
+		"img": "/img/sprites/player2.png"
+	},
 	"bg1": {
 		"img": "/img/sprites/bg1.png"
+	},
+	"grunt": {
+		"img": "/img/sprites/grunt.png",
+		"data": "/data/sprites/grunt.json"
 	}
 }}

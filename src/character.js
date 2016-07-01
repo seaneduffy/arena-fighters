@@ -37,27 +37,27 @@ Character.prototype = Object.create(GameObject.prototype, {
 function move(direction) {
 	let display = this.display;
 	this.direction = direction;
-	if(direction === -1) {
+	if(direction < 0) {
 		this.display = display.replace('walking', 'standing');
 	}
 	else {
 		let directionLabel = this.directionLabel;
 		if(directionLabel === settings.UP) {
-			this.display = '_up_walking';
+			this.display = '$up_walking';
 		} else if(directionLabel === settings.DOWN) {
-			this.display = '_down_walking';
+			this.display = '$down_walking';
 		} else if(directionLabel === settings.LEFT) {
-			this.display = '_left_walking';
+			this.display = '$left_walking';
 		} else if(directionLabel === settings.RIGHT) {
-			this.display = '_right_walking';
+			this.display = '$right_walking';
 		} else if(directionLabel === settings.UP_LEFT) {
-			this.display = '_upleft_walking';
+			this.display = '$upleft_walking';
 		} else if(directionLabel === settings.UP_RIGHT) {
-			this.display = '_upright_walking';
+			this.display = '$upright_walking';
 		} else if(directionLabel === settings.DOWN_LEFT) {
-			this.display = '_downleft_walking';
+			this.display = '$downleft_walking';
 		} else if(directionLabel === settings.DOWN_RIGHT) {
-			this.display = '_downright_walking';
+			this.display = '$downright_walking';
 		}
 		GameObject.prototype.move.call(this);
 	}

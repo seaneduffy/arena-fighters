@@ -8,7 +8,8 @@ let pi = Math.PI,
 	a225 = 5 * pi / 4,
 	a270 = 3 * pi / 2,
 	a315 = 7 * pi / 4,
-	a360 = 2 * pi;
+	a360 = 2 * pi,
+	deg = 180/pi;
 
 module.exports = {
 	getAngle: function(x1, y1, x2, y2) {
@@ -78,7 +79,7 @@ module.exports = {
 			xModifier = 1;
 			yModifier = 1;
 		} else if(angle < a270) {
-			tmpAngle = angle - a180;
+			tmpAngle = a270 - angle;
 			xModifier = -1;
 			yModifier = 1;
 		} else {
@@ -86,7 +87,6 @@ module.exports = {
 			xModifier = -1;
 			yModifier = -1;
 		}
-		
 		point.x = Math.cos(tmpAngle) * distance * xModifier; 
 		point.y = Math.sin(tmpAngle) * distance * yModifier;
 		return point;
@@ -111,14 +111,14 @@ module.exports = {
 			return point;
 		} else if(angle === a180) {
 			point.x = 0;
-			point.y = distance;
+			point.y = y;
 			return point;
 		} else if(angle === a225) {
 			point.x = -x;
 			point.y = y;
 			return point;
 		} else if(angle === a270) {
-			point.x = -distance;
+			point.x = -x;
 			point.y = 0;
 			return point;
 		} else if(angle === a315) {

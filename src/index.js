@@ -94,7 +94,7 @@
 					obstacle.x = levelData.obstacles[i].x;
 					obstacle.y = levelData.obstacles[i].y;
 					obstacle.stage = true;
-				}
+				}*/
 				l = levelData.enemies.length;
 				let enemyData = null, enemy;
 				for(i=0; i<l; i++) {
@@ -106,7 +106,7 @@
 					enemy.direction = -1;
 					enemy.display = enemyData.display;
 					enemy.aiStart();
-				}*/
+				}
 				let player1 = settings.player1 = this._createGameObject('player1');
 				player1.x = levelData.player1.x;
 				player1.y = levelData.player1.y;
@@ -117,7 +117,7 @@
 					let player2 = settings.player2 = this._createGameObject('player2');
 					player2.x = levelData.player2.x;
 					player2.y = levelData.player2.y;
-					player2.directionLabel = levelData.player2.direction;
+					player2.direction = -1;
 					player2.display = levelData.player2.display;
 					player2.stage = true;
 				}
@@ -142,7 +142,6 @@
 				return false;
 			if(!!sprite)
 				gameObject.sprite = sprite;
-			this.state.gameObjects.push(gameObject);
 			if(!!gameObjectData) {
 				for(property in gameObjectData) {
 					gameObject[property] = gameObjectData[property];
@@ -158,6 +157,8 @@
 			socket.emit('games list');
 		},
 		_fire: function(player) {
+			if(player.dead)
+				return;
 			let projectile = this._createGameObject('projectile'),
 				point = player.front;
 			projectile.direction = player.direction;
@@ -168,10 +169,11 @@
 			projectile.y = point.y;
 			projectile.ignoreCollision = player;
 			projectile.stage = true;
-			projectile.fire();
+			projectile.emit();
 		},
 		_movePlayer: function(player, angle) {
-			player.move(angle);
+			if(!player.dead)
+				player.move(angle);
 		},
 		getInitialState: function() {
 			return {
@@ -186,7 +188,7 @@
 				gameActive: false,
 				hosting: false,
 				playerConnected: false,
-				dev1Player: true
+				dev1Player: false
 			}
 		},
 		handleJoinGame: function() {
@@ -222,23 +224,15 @@
 		},
 		onJoystick: function(angle) {
 			if(!this.state.hosting) {
-				if(settings.player2.dead)
-					return
 				socket.emit('joystick', angle);
 			} else {
-				if(settings.player1.dead)
-					return
 				this._movePlayer(settings.player1, angle);
 			}
 		},
 		onFire: function() {
 			if(!this.state.hosting) {
-				if(settings.player2.dead)
-					return
 				socket.emit('fire');
 			} else {
-				if(settings.player1.dead)
-					return
 				this._fire(settings.player1);
 			}
 		},

@@ -13,9 +13,14 @@ function receiveUpdate(serverSprites) {
 	let i = 0, l = serverSprites.length, spriteData = null, sprite = null, property;
 	for(i=0; i<l; i++) {
 		spriteData = serverSprites[i];
-		sprite = sprites[spriteData.id] || new Sprite(spriteData.label, spriteData.id);
+		sprite = sprites[spriteData.id] || new Sprite(spriteData.gameObjectType, spriteData.label, spriteData.id, spriteData.defaultImageSrc);
 		for(property in spriteData) {
-			sprite[property] = spriteData[property];
+			if(property !== 'gameObjectType' 
+				&& property !== 'label' 
+				&& property !== 'id' 
+				&& property !== 'defaultImageSrc')
+				
+				sprite[property] = spriteData[property];
 		}
 	}
 }
@@ -28,6 +33,9 @@ function sendUpdate() {
 		spriteData.x = sprite.x;
 		spriteData.y = sprite.y;
 		spriteData.id = sprite.id;
+		spriteData.gameObjectType = sprite.gameObjectType;
+		if(!!sprite.defaultImageSrc)
+			spriteData.defaultImageSrc = sprite.defaultImageSrc;
 		spriteData.label = sprite.label;
 		spriteData.stage = sprite.stage;
 		arr.push(spriteData);
@@ -38,9 +46,10 @@ function sendUpdate() {
 		socket.emit('sprite update', arr);
 }
 
-function Sprite(gameObjectType, label, defaultImageSrc) {
+function Sprite(gameObjectType, label, spriteId, defaultImageSrc) {
 	if(label === 'default') {
 		this.spriteSheet = resources.get(defaultImageSrc);
+		this.defaultImageSrc = defaultImageSrc;
 		this.imageWidth = this.spriteSheet.width;
 		this.imageHeight = this.spriteSheet.height;
 	} else {
@@ -49,27 +58,32 @@ function Sprite(gameObjectType, label, defaultImageSrc) {
 			frames = spriteData.frames;
 		this.spriteSheet = resources.get(spriteData.img);
 		for(let key in frames) {
+			
 			if(key.indexOf(label) != -1) {
 				images.push(frames[key]);
 			}
 		}
 		this.currFrame = 0;
+		if(!images[0]) {
+			console.log(label, frames);
+		}
 		this.imageWidth = images[0].frame.w;
 		this.imageHeight = images[0].frame.h;
 	}
-	this.spriteId = id();
-	this.spriteLabel = label;
-	this.onStage = false;
+	this._id = spriteId || id();
+	this.gameObjectType = gameObjectType;
+	this._label = label;
+	this._stage = false;
 	this.width = this.imageWidth * settings.resolution;
 	this.height = this.imageHeight * settings.resolution;
 }
 
 Object.defineProperty(Sprite.prototype, 'label', {
 	get: function() {
-		return this.spriteLabel;
+		return this._label;
 	},
 	set: function(label) {
-		this.spriteLabel = label;
+		this._label = label;
 	}
 });
 
@@ -93,21 +107,21 @@ Object.defineProperty(Sprite.prototype, 'updating', {
 
 Object.defineProperty(Sprite.prototype, 'id', {
 	get: function() {
-		return this.spriteId;
+		return this._id;
 	},
 	set: function(id) {
-		this.spriteId = id;
+		this._id = id;
 	}
 });
 
 Object.defineProperty(Sprite.prototype, 'stage', {
 	get: function() {
-		return this.onStage;
+		return this._stage;
 	},
-	set: function(onStage) {
+	set: function(_stage) {
 		let z = this.zPos;
-		if(!this.onStage && onStage) {
-			this.onStage = true;
+		if(!this._stage && _stage) {
+			this._stage = true;
 			sprites[this.id] = this;
 			if(!!stage[z])
 				stage[z].push(this);
@@ -119,10 +133,10 @@ Object.defineProperty(Sprite.prototype, 'stage', {
 				this.updating = true;
 				spritesToUpdate.push(this);
 			}	
-		} else if(this.onStage && !onStage) {
+		} else if(this._stage && !_stage) {
 			let arr = stage[z],
 				index = arr.indexOf(this);
-			this.onStage = false;
+			this._stage = false;
 			delete sprites[this.id];
 			if(index !== -1) {
 				arr.splice(index, 1);
@@ -142,7 +156,7 @@ Object.defineProperty(Sprite.prototype, 'destroyed', {
 	set: function(destroyed) {
 		if(!this.spriteDestroyed && destroyed) {
 			delete sprites[this.id];
-			if(this.onStage) {
+			if(this._stage) {
 				this.stage = false;
 			}
 			if(hosting && !this.updating) {

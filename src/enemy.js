@@ -74,7 +74,7 @@ function onCollidedWith(collisionObject) {
 }
 
 function onCollision(collisionObject) {
-	if(collisionObject.type === 'projectile' && this._stage) {
+	if(collisionObject.type === 'projectile' && this && this._stage) {
 		this.dead = true;
 	}
 }

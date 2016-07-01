@@ -75,7 +75,7 @@ Object.defineProperties(GameObject.prototype, {
 	},
 	'direction': {
 		set: function(angle) {
-			if(angle < 0)
+			if(angle < 0 || angle === this._direction)
 				return;
 			this._direction = angle;
 			let pi = Math.PI;
@@ -128,7 +128,7 @@ Object.defineProperties(GameObject.prototype, {
 	},
 	'sprite': {
 		set: function(src) {
-			this._sprites.default = new Sprite(this.type, 'default', src);
+			this._sprites.default = new Sprite(this.type, 'default', null, src);
 		}
 	},
 	'sprites': {

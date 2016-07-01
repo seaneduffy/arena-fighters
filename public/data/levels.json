@@ -3,12 +3,12 @@
 		"player1": {
 			"x": 500,
 			"y": 200,
-			"display": "_right_standing"
+			"display": "$right_standing"
 		},
 		"player2": {
 			"x": 900,
 			"y": 200,
-			"display": "_left_standing"
+			"display": "$left_standing"
 		},
 		"background": "bg1",
 		"leftWall": "wall",
@@ -28,7 +28,24 @@
 			}
 		],
 		"enemies": [
-			
+			{
+				"type": "grunt",
+				"x": 2000,
+				"y": 500,
+				"display": "$down_standing"
+			},
+			{
+				"type": "grunt",
+				"x": 2000,
+				"y": 900,
+				"display": "$down_standing"
+			},
+			{
+				"type": "grunt",
+				"x": 1500,
+				"y": 800,
+				"display": "$down_standing"
+			}
 		]
 	}
 ]}
