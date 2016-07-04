@@ -5,7 +5,8 @@
 			"properties": {
 				"x": 500,
 				"y": 200,
-				"display": "$right_standing"
+				"display": "$right_standing",
+				"direction": "global.RIGHT"
 			}
 		},
 		{
@@ -13,7 +14,8 @@
 			"properties": {
 				"x": 900,
 				"y": 200,
-				"display": "$left_standing"
+				"display": "$left_standing",
+				"direction": "global.LEFT"
 			}
 		},
 		{

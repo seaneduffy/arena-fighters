@@ -27,10 +27,6 @@ function Sprite(spriteSheetPath, imageMeta, spriteId) {
 	
 	this.width = this.imageWidth * global.resolution;
 	this.height = this.imageHeight * global.resolution;
-	
-	this.addUpdate('spriteSheetPath', spriteSheetPath);
-	this.addUpdate('imageMeta', imageMeta);
-	this.addUpdate('id', id);
 }
 
 Object.defineProperties(Sprite.prototype, {
@@ -73,6 +69,18 @@ Object.defineProperties(Sprite.prototype, {
 					stage[z] = [];
 					stage[z].push(this);
 				}
+				if(hosting) {
+					this.addUpdate({
+						spriteSheetPath: this.spriteSheetPath,
+						imageMeta: this.imageMeta,
+						id: this.id,
+						x: this.x,
+						y: this.y,
+						z: this.z,
+						destroyed: this.destroyed,
+						stage: this.stage
+					});
+				}
 			} else if(this._stage && !_stage) {
 				let arr = stage[z],
 					index = arr.indexOf(this);
@@ -81,9 +89,11 @@ Object.defineProperties(Sprite.prototype, {
 				if(index !== -1) {
 					arr.splice(index, 1);
 				}
-			}
-			if(hosting) {
-				this.addUpdate('stage', _stage);
+				if(hosting) {
+					this.addUpdate({
+						stage: this.stage
+					});
+				}
 			}
 		}
 	},
@@ -97,8 +107,8 @@ Object.defineProperties(Sprite.prototype, {
 				if(this._stage) {
 					this.stage = false;
 				}
-				if(hosting) {
-					this.addUpdate('destroyed', destroyed);
+				if(hosting && this.stage) {
+					this.addUpdate({destroyed:destroyed});
 				}
 			}
 		}
@@ -106,8 +116,8 @@ Object.defineProperties(Sprite.prototype, {
 	'x': {
 		set: function(x) {
 			this._x = Math.floor(x);
-			if(hosting) {
-				this.addUpdate('x', x);
+			if(hosting && this.stage) {
+				this.addUpdate({x: x});
 			}
 		},
 		get: function() {
@@ -117,8 +127,8 @@ Object.defineProperties(Sprite.prototype, {
 	'y': {
 		set: function(y) {
 			this._y = Math.floor(y);
-			if(hosting) {
-				this.addUpdate('y', y);
+			if(hosting && this.stage) {
+				this.addUpdate({y: y});
 			}
 		},
 		get: function() {
@@ -128,8 +138,8 @@ Object.defineProperties(Sprite.prototype, {
 	'z': {
 		set: function(z) {
 			this._z = z;
-			if(hosting) {
-				this.addUpdate('z', z);
+			if(hosting && this.stage) {
+				this.addUpdate({z: z});
 			}
 		},
 		get: function() {
@@ -160,20 +170,23 @@ Object.defineProperties(Sprite.prototype, {
 	}
 });
 
-function addUpdate(property, value) {
+function addUpdate(values) {
 	let updateObj = spritesToUpdate.find((obj)=>{
 		return (obj.id === this.id);
 	});
-	if(!updateObj) {
-		updateObj = {id: this.id}
+	if(typeof updateObj === 'undefined') {
+		updateObj = Object.create(null);
+		updateObj.id = this.id;
 		spritesToUpdate.push(updateObj);
 	}
-	updateObj[property] = this[property];
+	for(let property in values)
+		updateObj[property] = values[property];
 }
 
 function draw() {
 	let boundingBox = this.boundingBox,
 		resolution = global.resolution,
+		positionScale = global.positionScale,
 		imageX = null,
 		imageY = null;
 	
@@ -201,6 +214,10 @@ function draw() {
 }
 
 function receiveUpdate(serverSprites) {
+	if(counter < 10) {
+		//console.log(counter, serverSprites);
+		counter++;
+	}
 	let i = 0, l = serverSprites.length, spriteData = null, sprite = null, property;
 	for(i; i<l; i++) {
 		spriteData = serverSprites[i];
@@ -215,8 +232,12 @@ function receiveUpdate(serverSprites) {
 		}
 	}
 }
-
+var counter = 0;
 function sendUpdate() {
+	if(counter < 10) {
+		//console.log(spritesToUpdate);
+		counter++;
+	}
 	if(spritesToUpdate.length > 0)
 		socket.emit('sprite update', spritesToUpdate);
 	spritesToUpdate = [];

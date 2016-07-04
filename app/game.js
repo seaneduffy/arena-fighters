@@ -6,43 +6,64 @@ let games = [],
 
 function Game() {
 	this._players = [];
+	this._hostName = '';
+	this._guestName = '';
+	this._gameName = '';
 	this._id = id();
 	this._open = true;
 	games.push(this);
 }
 
-Object.defineProperty(Game.prototype, 'name', {
-	get: function() {
-		return this._name;
+Object.defineProperties(Game.prototype, {
+	'name': {
+		get: function() {
+			return this._name;
+		},
+		set: function(name) {
+			this._name = name;
+		}
 	},
-	set: function(name) {
-		this._name = name;
+	'gameName': {
+		get: function() {
+			return this._gameName;
+		},
+		set: function(gameName) {
+			this._gameName = gameName;
+		}
+	},
+	'open': {
+		get: function() {
+			return this._open;
+		}
+	},
+	'players': {
+		get: function() {
+			return this._players;
+		}
+	},
+	'id': {
+		get: function() {
+			return this._id;
+		}
+	},
+	'end': {
+		value: end
+	},
+	'addPlayer': {
+		value: addPlayer
 	}
 });
 
-Object.defineProperty(Game.prototype, 'open', {
-	get: function() {
-		return this._open;
-	}
-});
-
-Object.defineProperty(Game.prototype, 'players', {
-	get: function() {
-		return this._players;
-	}
-});
-
-Object.defineProperty(Game.prototype, 'id', {
-	get: function() {
-		return this._id;
-	}
-});
-
-Game.prototype.end = function() {
+function end() {
 	games.splice(games.indexOf(this), 1);
 };
 
-Game.prototype.addPlayer = function(name) {
+function addPlayer(name) {
+	if(this._players.length === 0) {
+		this._hostName = name;
+	} else {
+		this._guestName = name;
+	}
 	this._players.push(name);
 }
 
@@ -55,7 +76,8 @@ Game.getGamesList = function(id) {
 		if(game.open)
 			return {
 				id: game.id,
-				name: game.name
+				hostName: game.hostName,
+				gameName: game.gameName
 			}
 	});
 };

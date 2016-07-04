@@ -1,4 +1,10 @@
 {"settings": {
+	"hdImgPath": "/img/sprites/hd/",
+	"hdJsonPath": "/data/sprites/hd/",
+	"mdImgPath": "/img/sprites/md/",
+	"mdJsonPath": "/data/sprites/md/",
+	"sdImgPath": "/img/sprites/sd/",
+	"sdJsonPath": "/data/sprites/sd/",
 	"player1": {
 		"properties": {
 			"sprites": [
@@ -19,16 +25,12 @@
 				"$right_standing",
 				"$right_walking"
 			],
-			"spriteMeta": {
-				"data": "/data/sprites/player1.json",
-				"img": "/img/sprites/player1.png"
-			},
 			"speed": 6,
 			"z": 3,
 			"interacts": true,
 			"health": 15,
-			"enemies": [
-				"grunt"
+			"friends": [
+				"player2"
 			],
 			"firearm": "pistol"
 		},
@@ -54,16 +56,12 @@
 				"$right_standing",
 				"$right_walking"
 			],
-			"spriteMeta": {
-				"data": "/data/sprites/player2.json",
-				"img": "/img/sprites/player2.png"
-			},
 			"speed": 6,
 			"z": 3,
 			"interacts": true,
 			"health": 15,
-			"enemies": [
-				"grunt"
+			"friends": [
+				"player1"
 			],
 			"firearm": "pistol"
 		},
@@ -89,57 +87,59 @@
 				"$right_standing",
 				"$right_walking"
 			],
-			"spriteMeta": {
-				"img": "/img/sprites/grunt.png",
-				"data": "/data/sprites/grunt.json"
-			},
 			"speed": 2,
 			"z": 6,
 			"ai": "grunt",
 			"interacts": true,
 			"health": 1,
 			"melee": 1,
-			"enemies": [
-				"player1",
-				"player2"
+			"friends": [
+				"grunt"
 			]
 		},
 		"className": "Character"
 	},
 	"bullet": {
 		"properties": {
-			"sprite": "/img/sprites/bullet.png",
+			"sprite": "bullet",
 			"display": "default",
 			"speed": 10,
 			"z": 8,
 			"interacts": true,
-			"impact": 1
+			"impact": 1,
+			"friends": [
+				"bullet"
+			]
 		},
 		"className": "Ammunition"
 	},
 	"pistol": {
 		"properties": {
 			"sprites": [
-				"$up",
-				"$upright",
-				"$upleft",
-				"$right",
-				"$left",
-				"$down",
-				"$downright",
-				"$downleft"
+				"$up_off",
+				"$up_firing",
+				"$upright_off",
+				"$upright_firing",
+				"$upleft_off",
+				"$upleft_firing",
+				"$right_off",
+				"$right_firing",
+				"$left_off",
+				"$left_firing",
+				"$down_off",
+				"$down_firing",
+				"$downright_off",
+				"$downright_firing",
+				"$downleft_off",
+				"$downleft_firing"
 			],
-			"spriteMeta": {
-				"img": "/img/sprites/pistol.png",
-				"data": "/data/sprites/pistol.json"
-			},
-			"ammunition": "bullet",
-			"className": "Firearm"
-		}
+			"ammunition": "bullet"
+		},
+		"className": "Firearm"
 	},
 	"background1": {
 		"properties": {
-			"sprite": "img/sprites/bg1.png",
+			"sprite": "default",
 			"display": "default",
 			"x": "global.stageCenterX",
 			"y": "global.stageCenterY",
@@ -150,7 +150,7 @@
 	},
 	"leftWall1": {
 		"properties": {
-			"sprite": "img/sprites/sideWall.png",
+			"sprite": "default",
 			"display": "default",
 			"x": 0,
 			"y": "global.stageCenterY",
@@ -161,9 +161,9 @@
 	},
 	"rightWall1": {
 		"properties": {
-			"sprite": "img/sprites/sideWall.png",
+			"sprite": "default",
 			"display": "default",
-			"x": "global.stageWidth",
+			"x": "global.maxWidth",
 			"y": "global.stageCenterY",
 			"z": 1,
 			"interacts": true 
@@ -172,10 +172,10 @@
 	},
 	"bottomWall1": {
 		"properties": {
-			"sprite": "img/sprites/baseWall.png",
+			"sprite": "default",
 			"display": "default",
 			"x": "global.stageCenterX",
-			"y": "global.stageHeight",
+			"y": "global.maxHeight",
 			"z": 1,
 			"interacts": true 
 		},
@@ -183,7 +183,7 @@
 	},
 	"topWall1": {
 		"properties": {
-			"sprite": "img/sprites/baseWall.png",
+			"sprite": "default",
 			"display": "default",
 			"x": "global.stageCenterX",
 			"y": 0,
@@ -194,7 +194,7 @@
 	},
 	"obstacle": {
 		"properties": {
-			"sprite": "img/sprites/obstacle.png",
+			"sprite": "default",
 			"display": "default",
 			"z": 1,
 			"interacts": true

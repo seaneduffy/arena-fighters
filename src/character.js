@@ -17,6 +17,8 @@ Character.prototype = Object.create(GameObject.prototype, {
 			this._dead = dead;
 			if(dead) {
 				this.destroyed = true;
+				if(!!this.firearm)
+					this.firearm.destroyed = true;
 			}
 		}, 
 		get: function() {
@@ -33,8 +35,8 @@ Character.prototype = Object.create(GameObject.prototype, {
 			return this._health;
 		}
 	},
-	'damage': {
-		value: damage
+	'takeDamage': {
+		value: takeDamage
 	},
 	'move': {
 		value: move
@@ -58,47 +60,111 @@ Character.prototype = Object.create(GameObject.prototype, {
 	},
 	'firearm': {
 		set: function(firearm) {
-			let z = null,
-				directionLabel = this.directionLabel,
-				display = null;
-			if(directionLabel === global.UP 
-				|| directionLabel === global.UP_LEFT
-				|| directionLabel === global.UP_RIGHT
-			) {
-				z = this.z - 1;
-			} else {
-				z = this.z + 1;
-			}
-			if(directionLabel === global.UP) {
-				display = '$up';
-			} else if(directionLabel === global.DOWN) {
-				display = '$down';
-			} else if(directionLabel === global.LEFT) {
-				display = '$left';
-			} else if(directionLabel === global.RIGHT) {
-				display = '$right';
-			} else if(directionLabel === global.UP_LEFT) {
-				display = '$upleft';
-			} else if(directionLabel === global.UP_RIGHT) {
-				display = '$upright';
-			} else if(directionLabel === global.DOWN_LEFT) {
-				display = '$downleft';
-			} else if(directionLabel === global.DOWN_RIGHT) {
-				display = '$downright';
-			}
-			this._firearm = utils.createGameObject(firearm, {
-				x: this.x,
-				y: this.y,
-				z: z,
-				display: display
-			});
+			this._firearmType = firearm;
+			if(!!this._directionLabel)
+				this.initFirearm();
+		},
+		get: function() {
+			return this._firearm;
 		}
-	}
+	},
+	'directionLabel': {
+		set: function(directionLabel) {
+			Object.getOwnPropertyDescriptor(GameObject.prototype, 'directionLabel').set.call(this, directionLabel);
+			if(!!this._firearmType && !this.firearm)
+				this.initFirearm();
+		},
+		get: function() {
+			return Object.getOwnPropertyDescriptor(GameObject.prototype, 'directionLabel').get.call(this);
+		}
+	},
+	'initFirearm': {
+		value: initFirearm
+	},
+	'updateFirearmDisplay': {
+		value: updateFirearmDisplay
+	},
+	'x': {
+		set: function(x) {
+			Object.getOwnPropertyDescriptor(GameObject.prototype, 'x').set.call(this, x);
+			if(!!this.firearm)
+				this.firearm.x = x;
+		},
+		get: function() {
+			return Object.getOwnPropertyDescriptor(GameObject.prototype, 'x').get.call(this);
+		}
+	},
+	'y': {
+		set: function(y) {
+			Object.getOwnPropertyDescriptor(GameObject.prototype, 'y').set.call(this, y);
+			if(!!this.firearm)
+				this.firearm.y = y;
+		},
+		get: function() {
+			return Object.getOwnPropertyDescriptor(GameObject.prototype, 'y').get.call(this);
+		}
+	},
+	'direction': {
+		set: function(angle) {
+			Object.getOwnPropertyDescriptor(GameObject.prototype, 'direction').set.call(this, angle);
+			if(!!this.firearm)
+				this.updateFirearmDisplay();
+		},
+		get: function() {
+			return Object.getOwnPropertyDescriptor(GameObject.prototype, 'direction').get.call(this);
+		}
+	},
 });
 
+function initFirearm() {
+	this._firearm = utils.createGameObject(this._firearmType, {
+		x: this.x,
+		y: this.y
+	});
+	this.updateFirearmDisplay();
+	this._firearm.stage = true;
+}
+
+function updateFirearmDisplay() {
+	let z = null,
+		directionLabel = this._directionLabel,
+		display = this.firearm.display || '$up_off';
+	if(directionLabel === global.UP 
+		|| directionLabel === global.UP_LEFT
+		|| directionLabel === global.UP_RIGHT
+	)
+		z = this.z - 1;
+	else
+		z = this.z + 1;
+	if(directionLabel === global.UP) {
+		display = display.replace(/\$.+_/, '$up_');
+	} else if(directionLabel === global.DOWN) {
+		display = display.replace(/\$.+_/, '$down_');
+	} else if(directionLabel === global.LEFT) {
+		display = display.replace(/\$.+_/, '$left_');
+	} else if(directionLabel === global.RIGHT) {
+		display = display.replace(/\$.+_/, '$right_');
+	} else if(directionLabel === global.UP_LEFT) {
+		display = display.replace(/\$.+_/, '$upleft_');
+	} else if(directionLabel === global.UP_RIGHT) {
+		display = display.replace(/\$.+_/, '$upright_');
+	} else if(directionLabel === global.DOWN_LEFT) {
+		display = display.replace(/\$.+_/, '$downleft_');
+	} else if(directionLabel === global.DOWN_RIGHT) {
+		display = display.replace(/\$.+_/, '$downright_');
+	}
+	this.firearm.display = display;
+	if(z !== this._firearm.z) {
+		this._firearm.stage = false;
+		this._firearm.z = z;
+		this._firearm.stage = true;
+	}
+}
+
 function onCollidedWith(collidedObject) {
-	if(!!this.melee && this.enemies.find(type=>{ return type === collidedObject.type; })) {
-		collidedObject.damage(this.melee);
+	if(!!this.melee && this.friends.indexOf(collidedObject.type) === -1) {
+		if(!!collidedObject.takeDamage)
+			collidedObject.takeDamage(this.melee);
 	}	
 	GameObject.prototype.onCollidedWith.call(this);
 }
@@ -108,7 +174,6 @@ function move(direction) {
 	this.direction = direction;
 	if(direction < 0) {
 		this.display = display.replace('walking', 'standing');
-		console.log(this.display);
 	}
 	else {
 		let directionLabel = this.directionLabel;
@@ -134,7 +199,7 @@ function move(direction) {
 	this.checkCollision();
 }
 
-function damage(amount) {
+function takeDamage(amount) {
 	this.health -= amount;
 }
 

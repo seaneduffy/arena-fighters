@@ -15,16 +15,29 @@ Firearm.prototype = Object.create(GameObject.prototype, {
 		set: function(ammunition){
 			this._ammunition = ammunition;
 		}
+	},
+	'fire': {
+		value: fire
 	}
+	
 });
 
 function fire(origin){
-	let ammunition = utils.createGameObject(this.ammunition, {
-		x: this.x,
-		y: this.y,
-		origin: origin
-	});
+	let point = this.getEdgePointFromDirection(origin.direction);
+	let	ammunition = utils.createGameObject(this.ammunition, {
+			x: point.x,
+			y: point.y,
+			origin: origin,
+			direction: origin.direction
+		});
+	ammunition.ignoreObject(origin);
+	origin.ignoreObject(ammunition);
+	ammunition.stage = true;
 	ammunition.emit();
+	this.display = this.display.replace(/_.+/, '_firing');
+	setTimeout(()=>{
+		this.display = this.display.replace(/_.+/, '_off');
+	}, 100);
 }
 
 module.exports = Firearm;

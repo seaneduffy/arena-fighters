@@ -8,6 +8,14 @@ function Projectile() {
 }
 
 Projectile.prototype = Object.create(GameObject.prototype, {
+	'origin': {
+		set: function(origin) {
+			this._origin = origin;
+		},
+		get: function() {
+			return this._origin;
+		}
+	},
 	'emit': {
 		value: emit
 	},
@@ -29,8 +37,7 @@ function move() {
 }
 
 function onCollidedWith(collidedObject) {
-	if(collidedObject.type !== 'projectile' && collidedObject !== this.origin)
-		this.destroyed = true;
+	this.destroyed = true;
 };
 
 module.exports = Projectile;

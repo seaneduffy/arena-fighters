@@ -1,6 +1,6 @@
 {"frames": {
 
-"center.png":
+"center":
 {
 	"frame": {"x":2,"y":2,"w":150,"h":150},
 	"rotated": false,
@@ -9,7 +9,7 @@
 	"sourceSize": {"w":150,"h":150},
 	"pivot": {"x":0.5,"y":0.5}
 },
-"down.png":
+"down":
 {
 	"frame": {"x":2,"y":154,"w":150,"h":150},
 	"rotated": false,
@@ -18,7 +18,7 @@
 	"sourceSize": {"w":150,"h":150},
 	"pivot": {"x":0.5,"y":0.5}
 },
-"downleft.png":
+"downleft":
 {
 	"frame": {"x":2,"y":306,"w":150,"h":150},
 	"rotated": false,
@@ -27,7 +27,7 @@
 	"sourceSize": {"w":150,"h":150},
 	"pivot": {"x":0.5,"y":0.5}
 },
-"downright.png":
+"downright":
 {
 	"frame": {"x":154,"y":2,"w":150,"h":150},
 	"rotated": false,
@@ -36,7 +36,7 @@
 	"sourceSize": {"w":150,"h":150},
 	"pivot": {"x":0.5,"y":0.5}
 },
-"left.png":
+"left":
 {
 	"frame": {"x":306,"y":2,"w":150,"h":150},
 	"rotated": false,
@@ -45,7 +45,7 @@
 	"sourceSize": {"w":150,"h":150},
 	"pivot": {"x":0.5,"y":0.5}
 },
-"right.png":
+"right":
 {
 	"frame": {"x":154,"y":154,"w":150,"h":150},
 	"rotated": false,
@@ -54,7 +54,7 @@
 	"sourceSize": {"w":150,"h":150},
 	"pivot": {"x":0.5,"y":0.5}
 },
-"up.png":
+"up":
 {
 	"frame": {"x":154,"y":306,"w":150,"h":150},
 	"rotated": false,
@@ -63,7 +63,7 @@
 	"sourceSize": {"w":150,"h":150},
 	"pivot": {"x":0.5,"y":0.5}
 },
-"upleft.png":
+"upleft":
 {
 	"frame": {"x":306,"y":154,"w":150,"h":150},
 	"rotated": false,
@@ -72,7 +72,7 @@
 	"sourceSize": {"w":150,"h":150},
 	"pivot": {"x":0.5,"y":0.5}
 },
-"upright.png":
+"upright":
 {
 	"frame": {"x":306,"y":306,"w":150,"h":150},
 	"rotated": false,
@@ -84,7 +84,7 @@
 "meta": {
 	"app": "http://www.codeandweb.com/texturepacker",
 	"version": "1.0",
-	"image": "joystick.png",
+	"image": "joystick",
 	"format": "RGBA8888",
 	"size": {"w":458,"h":458},
 	"scale": "1",

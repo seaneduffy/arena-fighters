@@ -3,7 +3,7 @@
 var doc = app.activeDocument;
 
 var positionLength = 8;
-var motionLength = 8;
+var frameLength = 9;
 
 var filepath = Folder.selectDialog("Pick your destination");
 
@@ -22,8 +22,8 @@ var exportOptions = new ExportOptionsPNG24();
 exportOptions.artBoardClipping = true;
 
 for (var i=0; i<positionLength; i++) {
-	for(var j=0; j<motionLength; j++) {
-		doc.artboards.setActiveArtboardIndex(i * 9 + j);
+	for(var j=0; j<frameLength; j++) {
+		doc.artboards.setActiveArtboardIndex(i * frameLength + j);
 		filename = filenames[i][j];
 		doc.exportFile (File(filepath + "/" + filename), ExportType.PNG24, exportOptions);
 	}

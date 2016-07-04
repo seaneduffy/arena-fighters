@@ -1,0 +1,21 @@
+{"frames": {
+
+"leftWall1":
+{
+	"frame": {"x":0,"y":0,"w":50,"h":800},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":50,"h":800},
+	"sourceSize": {"w":50,"h":800},
+	"pivot": {"x":0.5,"y":0.5}
+}},
+"meta": {
+	"app": "http://www.codeandweb.com/texturepacker",
+	"version": "1.0",
+	"image": "leftWall1.png",
+	"format": "RGBA8888",
+	"size": {"w":50,"h":800},
+	"scale": "0.5",
+	"smartupdate": "$TexturePacker:SmartUpdate:366c9ac1f5e0ffafe355c8e6c7543a84:e9a3a009c4f4bcf4ca247abbe066b67b:d7b4cdd478fe2a1ff39b9a9d9507871d$"
+}
+}

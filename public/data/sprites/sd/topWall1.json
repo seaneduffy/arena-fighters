@@ -1,0 +1,21 @@
+{"frames": {
+
+"topWall1":
+{
+	"frame": {"x":0,"y":0,"w":712,"h":25},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":712,"h":25},
+	"sourceSize": {"w":712,"h":25},
+	"pivot": {"x":0.5,"y":0.5}
+}},
+"meta": {
+	"app": "http://www.codeandweb.com/texturepacker",
+	"version": "1.0",
+	"image": "topWall1.png",
+	"format": "RGBA8888",
+	"size": {"w":712,"h":25},
+	"scale": "0.25",
+	"smartupdate": "$TexturePacker:SmartUpdate:ffb97d969365fe8e7cf1f7eb7370a414:a52c6ae9f73257c2c2f8ee8feaf175a1:edeb93973c17fd564975efb4338996b8$"
+}
+}

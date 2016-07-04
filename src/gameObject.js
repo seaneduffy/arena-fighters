@@ -11,6 +11,7 @@ function GameObject() {
 	this._destroyed = false;
 	gameObjects.push(this);
 	this.id = id();
+	this.ignoreObjectList = [];
 }
 
 GameObject.cleanup = cleanup;
@@ -22,8 +23,8 @@ Object.defineProperties(GameObject.prototype, {
 	'onCollidedWith': {
 		value: onCollidedWith
 	},
-	'front': {
-		get: getFrontPoint
+	'getEdgePointFromDirection': {
+		value: getEdgePointFromDirection
 	},
 	'destroyed': {
 		get: function() {
@@ -72,21 +73,21 @@ Object.defineProperties(GameObject.prototype, {
 			this._direction = angle;
 			let pi = Math.PI;
 			if(angle <= pi / 8 || angle > 15 * pi / 8)
-				this._directionLabel = global.UP;
+				this.directionLabel = global.UP;
 			else if(angle <= 3 * pi / 8)
-				this._directionLabel = global.UP_RIGHT;
+				this.directionLabel = global.UP_RIGHT;
 			else if(angle <= 5 * pi / 8)
-				this._directionLabel = global.RIGHT;
+				this.directionLabel = global.RIGHT;
 			else if(angle <= 7 * pi / 8)
-				this._directionLabel = global.DOWN_RIGHT;
+				this.directionLabel = global.DOWN_RIGHT;
 			else if(angle <= 9 * pi / 8)
-				this._directionLabel = global.DOWN;
+				this.directionLabel = global.DOWN;
 			else if(angle <= 11 * pi / 8)
-				this._directionLabel = global.DOWN_LEFT;
+				this.directionLabel = global.DOWN_LEFT;
 			else if(angle <= 13 * pi / 8)
-				this._directionLabel = global.LEFT;
+				this.directionLabel = global.LEFT;
 			else if(angle <= 15 * pi / 8)
-				this._directionLabel = global.UP_LEFT;
+				this.directionLabel = global.UP_LEFT;
 			if(!!this._speed) {
 				let point = geom.getXYFromVector(this._x, this._y, this._direction, this._speed);
 				this._speedX = point.x;
@@ -210,6 +211,9 @@ Object.defineProperties(GameObject.prototype, {
 	},
 	'initSprites': {
 		value: initSprites
+	},
+	'ignoreObject': {
+		value: ignoreObject
 	}
 });
 
@@ -231,10 +235,11 @@ function checkCollision() {
 		objectToCheckBoundingBox = null;
 		
 	for(i=0; i<l; i++) {
-		
 		objectToCheck = gameObjects[i];
 		
-		if(objectToCheck !== this && objectToCheck.stage && objectToCheck.interacts) {
+		
+		
+		if(this.ignoreObjectList.indexOf(objectToCheck) === -1 && objectToCheck !== this && objectToCheck.stage && objectToCheck.interacts) {
 			objectToCheckBoundingBox = objectToCheck.boundingBox;
 			if(objectToCheckBoundingBox) {
 				objectToCheckX = objectToCheckBoundingBox.x;
@@ -243,12 +248,9 @@ function checkCollision() {
 				objectToCheckHeight = objectToCheckBoundingBox.height;
 				if((thisX + thisWidth > objectToCheckX && thisX < objectToCheckX + objectToCheckWidth)
 					&& (thisY + thisHeight > objectToCheckY && thisY < objectToCheckY + objectToCheckHeight)) {
-						if(this.__proto__.hasOwnProperty('onCollidedWith')) {
-							this.onCollidedWith(objectToCheck);
-						}
-						if(objectToCheck.__proto__.hasOwnProperty('onCollidedBy')) {
+						this.onCollidedWith(objectToCheck);
+						if(!!objectToCheck.onCollidedBy)
 							objectToCheck.onCollidedBy(this);
-						}
 					}
 			}
 		}
@@ -261,9 +263,8 @@ function move() {
 	this.x += this._speedX;
 }
 
-function getFrontPoint() {
-	let direction = this._direction,
-		boundingBox = this.boundingBox,
+function getEdgePointFromDirection(direction) {
+	let boundingBox = this.boundingBox,
 		delta = geom.getVectorFromXYAngle(boundingBox.width / 2, boundingBox.height / 2, direction);
 	return {
 		x: this._x + delta.x,
@@ -307,6 +308,10 @@ function initSprites() {
 			sprite.z = this._z;
 		sprites[spriteLabel] = sprite;
 	});
+}
+
+function ignoreObject(gameObject) {
+	this.ignoreObjectList.push(gameObject);
 }
 
 module.exports = GameObject;
