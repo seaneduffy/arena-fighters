@@ -16,27 +16,12 @@ Projectile.prototype = Object.create(GameObject.prototype, {
 			return this._origin;
 		}
 	},
-	'emit': {
-		value: emit
-	},
-	'move': {
-		value: move
-	},
-	'onCollidedWith': {
-		value: onCollidedWith
+	'onCollision': {
+		value: onCollision
 	}
 });
 
-function emit() {
-	cycle.addGameObjectUpdateFunction(this, this.move.bind(this));
-};
-
-function move() {
-	GameObject.prototype.move.call(this);
-	this.checkCollision();
-}
-
-function onCollidedWith(collidedObject) {
+function onCollision(collidedObject) {
 	this.destroyed = true;
 };
 

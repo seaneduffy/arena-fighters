@@ -25,15 +25,15 @@ Firearm.prototype = Object.create(GameObject.prototype, {
 function fire(origin){
 	let point = this.getEdgePointFromDirection(origin.direction);
 	let	ammunition = utils.createGameObject(this.ammunition, {
-			x: point.x,
-			y: point.y,
-			origin: origin,
-			direction: origin.direction
-		});
+		origin: origin,
+		direction: origin.direction
+	});
+	ammunition.x = point.x;
+	ammunition.y = point.y;
 	ammunition.ignoreObject(origin);
 	origin.ignoreObject(ammunition);
 	ammunition.stage = true;
-	ammunition.emit();
+	ammunition.applyForce({speed:ammunition.speed, direction:ammunition.direction});
 	this.display = this.display.replace(/_.+/, '_firing');
 	setTimeout(()=>{
 		this.display = this.display.replace(/_.+/, '_off');

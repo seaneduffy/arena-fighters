@@ -186,7 +186,6 @@ function addUpdate(values) {
 function draw() {
 	let boundingBox = this.boundingBox,
 		resolution = global.resolution,
-		positionScale = global.positionScale,
 		imageX = null,
 		imageY = null;
 	
@@ -214,10 +213,7 @@ function draw() {
 }
 
 function receiveUpdate(serverSprites) {
-	if(counter < 10) {
-		//console.log(counter, serverSprites);
-		counter++;
-	}
+
 	let i = 0, l = serverSprites.length, spriteData = null, sprite = null, property;
 	for(i; i<l; i++) {
 		spriteData = serverSprites[i];
@@ -232,12 +228,8 @@ function receiveUpdate(serverSprites) {
 		}
 	}
 }
-var counter = 0;
+
 function sendUpdate() {
-	if(counter < 10) {
-		//console.log(spritesToUpdate);
-		counter++;
-	}
 	if(spritesToUpdate.length > 0)
 		socket.emit('sprite update', spritesToUpdate);
 	spritesToUpdate = [];

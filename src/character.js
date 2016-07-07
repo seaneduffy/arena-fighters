@@ -38,16 +38,18 @@ Character.prototype = Object.create(GameObject.prototype, {
 	'takeDamage': {
 		value: takeDamage
 	},
-	'move': {
-		value: move
+	'walk': {
+		value: walk
 	},
-	'onCollidedWith': {
-		value: onCollidedWith
+	'onCollision': {
+		value: onCollision
 	},
 	'ai': {
 		set: function(ai) {
-			this._ai = aiFunctions[ai];
-			cycle.addGameObjectUpdateFunction(this, this._ai.bind(this));
+			this._ai = new aiFunctions[ai](this);
+		},
+		get: function() {
+			return this._ai;
 		}
 	},
 	'melee': {
@@ -117,10 +119,9 @@ Character.prototype = Object.create(GameObject.prototype, {
 });
 
 function initFirearm() {
-	this._firearm = utils.createGameObject(this._firearmType, {
-		x: this.x,
-		y: this.y
-	});
+	this._firearm = utils.createGameObject(this._firearmType);
+	this._firearm.x = this.x;
+	this._firearm.y = this.y;
 	this.updateFirearmDisplay();
 	this._firearm.stage = true;
 }
@@ -161,19 +162,28 @@ function updateFirearmDisplay() {
 	}
 }
 
-function onCollidedWith(collidedObject) {
-	if(!!this.melee && this.friends.indexOf(collidedObject.type) === -1) {
+function onCollision(collidedObject) {
+	if(!!this.ai) {
+		this.ai.onCollision();
+	}
+	if(!collidedObject !== 'wall' && !!this.melee && this.friends.indexOf(collidedObject.type) === -1) {
 		if(!!collidedObject.takeDamage)
 			collidedObject.takeDamage(this.melee);
-	}	
-	GameObject.prototype.onCollidedWith.call(this);
+	}
 }
 
-function move(direction) {
+function walk(power, direction) {
 	let display = this.display;
 	this.direction = direction;
 	if(direction < 0) {
 		this.display = display.replace('walking', 'standing');
+		this.velocity = {
+			speed: 0,
+			direction: -1,
+			dX: 0,
+			dY: 0
+		};
+		
 	}
 	else {
 		let directionLabel = this.directionLabel;
@@ -194,9 +204,11 @@ function move(direction) {
 		} else if(directionLabel === global.DOWN_RIGHT) {
 			this.display = '$downright_walking';
 		}
-		GameObject.prototype.move.call(this);
+		this.applyForce({
+			direction: direction,
+			speed: this.speed * power
+		})
 	}
-	this.checkCollision();
 }
 
 function takeDamage(amount) {

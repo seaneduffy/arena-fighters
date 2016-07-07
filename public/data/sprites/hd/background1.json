@@ -2,11 +2,11 @@
 
 "background1":
 {
-	"frame": {"x":0,"y":0,"w":2847,"h":1601},
+	"frame": {"x":0,"y":0,"w":2846,"h":1600},
 	"rotated": false,
 	"trimmed": false,
-	"spriteSourceSize": {"x":0,"y":0,"w":2847,"h":1601},
-	"sourceSize": {"w":2847,"h":1601},
+	"spriteSourceSize": {"x":0,"y":0,"w":2846,"h":1600},
+	"sourceSize": {"w":2846,"h":1600},
 	"pivot": {"x":0.5,"y":0.5}
 }},
 "meta": {
@@ -14,8 +14,8 @@
 	"version": "1.0",
 	"image": "background1.png",
 	"format": "RGBA8888",
-	"size": {"w":2847,"h":1601},
+	"size": {"w":2846,"h":1600},
 	"scale": "1",
-	"smartupdate": "$TexturePacker:SmartUpdate:443839fde8e15bfde807c0a788e472da:5080c073ef511e610d994197e3a64933:c87a99729f832034198d10543d417617$"
+	"smartupdate": "$TexturePacker:SmartUpdate:c1b5ad9187631c55abd303479d0f5465:cdaeb13250b65fb8e8272aea68b16ac1:c87a99729f832034198d10543d417617$"
 }
 }

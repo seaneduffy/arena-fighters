@@ -1,10 +1,17 @@
 {"settings": {
-	"hdImgPath": "/img/sprites/hd/",
-	"hdJsonPath": "/data/sprites/hd/",
-	"mdImgPath": "/img/sprites/md/",
-	"mdJsonPath": "/data/sprites/md/",
-	"sdImgPath": "/img/sprites/sd/",
-	"sdJsonPath": "/data/sprites/sd/",
+	"joystickMin": 0,
+	"joystickMax": 120,
+	"wallPadding": 50,
+	"maxWidth": 2846,
+	"maxHeight": 1600,
+	"stageCenterX": "global.maxWidth / 2",
+	"stageCenterY": "global.maxHeight / 2",
+	"hdWidth": 2846,
+	"hdHeight": 1600,
+	"mdWidth": 1423,
+	"mdHeight": 800,
+	"sdWidth": 712,
+	"sdHeight": 400,
 	"player1": {
 		"properties": {
 			"sprites": [
@@ -25,7 +32,7 @@
 				"$right_standing",
 				"$right_walking"
 			],
-			"speed": 6,
+			"speed": 10,
 			"z": 3,
 			"interacts": true,
 			"health": 15,
@@ -87,14 +94,51 @@
 				"$right_standing",
 				"$right_walking"
 			],
-			"speed": 2,
+			"speed": 3,
+			"actionSpeed": 10,
 			"z": 6,
 			"ai": "grunt",
 			"interacts": true,
 			"health": 1,
 			"melee": 1,
 			"friends": [
-				"grunt"
+				"grunt",
+				"devil"
+			]
+		},
+		"className": "Character"
+	},
+	"devil": {
+		"properties": {
+			"sprites": [
+				"$up_standing",
+				"$up_walking",
+				"$upleft_standing",
+				"$upleft_walking",
+				"$upright_standing",
+				"$upright_walking",
+				"$down_standing",
+				"$down_walking",
+				"$downleft_standing",
+				"$downleft_walking",
+				"$downright_standing",
+				"$downright_walking",
+				"$left_standing",
+				"$left_walking",
+				"$right_standing",
+				"$right_walking"
+			],
+			"speed": 8,
+			"actionSpeed": 2,
+			"moveTime": 7,
+			"z": 6,
+			"ai": "devil",
+			"interacts": true,
+			"health": 3,
+			"melee": 4,
+			"friends": [
+				"grunt",
+				"devil"
 			]
 		},
 		"className": "Character"
@@ -103,11 +147,11 @@
 		"properties": {
 			"sprite": "bullet",
 			"display": "default",
-			"speed": 10,
+			"speed": 12,
 			"z": 8,
 			"interacts": true,
 			"impact": 1,
-			"friends": [
+			"noInteraction": [
 				"bullet"
 			]
 		},
@@ -144,60 +188,18 @@
 			"x": "global.stageCenterX",
 			"y": "global.stageCenterY",
 			"z": 0,
-			"interacts": false
+			"interacts": false,
+			"static": true
 		},
 		"className": "GameObject"
 	},
-	"leftWall1": {
-		"properties": {
-			"sprite": "default",
-			"display": "default",
-			"x": 0,
-			"y": "global.stageCenterY",
-			"z": 1,
-			"interacts": true 
-		},
-		"className": "GameObject"
-	},
-	"rightWall1": {
-		"properties": {
-			"sprite": "default",
-			"display": "default",
-			"x": "global.maxWidth",
-			"y": "global.stageCenterY",
-			"z": 1,
-			"interacts": true 
-		},
-		"className": "GameObject"
-	},
-	"bottomWall1": {
-		"properties": {
-			"sprite": "default",
-			"display": "default",
-			"x": "global.stageCenterX",
-			"y": "global.maxHeight",
-			"z": 1,
-			"interacts": true 
-		},
-		"className": "GameObject"
-	},
-	"topWall1": {
-		"properties": {
-			"sprite": "default",
-			"display": "default",
-			"x": "global.stageCenterX",
-			"y": 0,
-			"z": 1,
-			"interacts": true 
-		},
-		"className": "GameObject"
-	},
-	"obstacle": {
+	"obstacle1": {
 		"properties": {
 			"sprite": "default",
 			"display": "default",
 			"z": 1,
-			"interacts": true
+			"interacts": true,
+			"static": true
 		},
 		"className": "GameObject"
 	}

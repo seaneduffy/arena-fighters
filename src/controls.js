@@ -10,7 +10,7 @@ document.getElementById('controls').addEventListener('touchstart', function(e){e
 
 let joystick = require('./joystick');
 require('./data')(global.joystickJsonUri, (data)=>{
-	joystick.init(document.getElementById('joystick'), data);
+	joystick.init(document.getElementById('joystick'), global.settings.joystickMax, global.settings.joystickMin, data);
 	joystick.addCallback(onJoystickMove);
 });
 
@@ -27,11 +27,12 @@ require('./data')(global.fireBtnJsonUri, (data)=>{
 });
 
 let joystickActive = false,
-	joystickAngle = -1;
+	joystickAngle = -1,
+	joystickAmount = 0;
 
 function joystickFrame() {
 	if(joystickActive) {
-		joystickCallback(joystickAngle);
+		joystickCallback(joystickAngle, joystickAmount);
 		window.requestAnimationFrame(joystickFrame);
 	}
 }
@@ -45,11 +46,12 @@ function onFireEnd() {
 	fireBtn.className = '';
 }
 
-function onJoystickMove(angle) {
+function onJoystickMove(angle, amount) {
 	joystickAngle = angle;
+	joystickAmount = amount;
 	if(angle === -1) {
 		joystickActive = false;
-		joystickCallback(angle);
+		joystickCallback(angle, amount);
 	} else if(!joystickActive) {
 		joystickActive = true;
 		window.requestAnimationFrame(joystickFrame);

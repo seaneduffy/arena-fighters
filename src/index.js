@@ -16,7 +16,8 @@
 		windowHeight = null,
 		levelsData = null,
 		settings = null,
-		socket = null;
+		socket = null,
+		property = null;
 		
 	let GamesList = React.createClass({
 		render: function() {
@@ -35,21 +36,14 @@
 			utils.init();
 			gameCanvas = document.getElementById('gameScreen').querySelector('canvas');
 			global.canvasContext = gameCanvas.getContext('2d');
-			
-			let resScaleWidth = windowWidth / global.stageWidth,
-				resScaleHeight = windowHeight / global.stageHeight,
-				posScaleWidth = global.stageWidth / global.maxWidth,
-				posScaleHeight = global.stageHeight / global.maxHeight;
-			global.resolution = (resScaleWidth < resScaleHeight) ? resScaleWidth : resScaleHeight;
-			global.positionScale = (posScaleWidth < posScaleHeight) ? posScaleWidth : posScaleHeight;
 			gameCanvas.setAttribute('width', windowWidth);
 			gameCanvas.setAttribute('height', windowHeight);
 			require('./controls.js')(
-				angle => {
+				(angle, amount) => {
 					if(!this.state.hosting) {
-						socket.emit('joystick', angle);
+						socket.emit('joystick', {angle:angle, amount:amount});
 					} else {
-						this._movePlayer(global.player1, angle);
+						this._movePlayer(global.player1, angle, amount);
 					}
 				},
 				() => {
@@ -60,7 +54,6 @@
 					}
 				}
 			);
-			//let swipeEventHandlers = null;
 			socket = require('./socket');
 			socket.on('games list', games=>{
 				this.setState({games: games});
@@ -71,44 +64,24 @@
 					hosting: true,
 					gameId: id
 				});
-				/*swipeEventHandlers = this._waitForSwipeDown(()=>{
-					window.scrollTo(0,1);
-					this._startLevel(0);
-				});*/
 			});
 			socket.on('player joined', playerName=>{
-				/*this._stopWaitingForSwipeDown(
-					swipeEventHandlers.touchStart, 
-					swipeEventHandlers.touchEnd, 
-					swipeEventHandlers.touchMove
-				);*/
 				this.setState({guestName: playerName});
 				this.setState({playerJoined: true});
-				/*swipeEventHandlers = this._waitForSwipeDown(()=>{
-					this.setState({hostReady:true});
-					window.scrollTo(0,1);
-					socket.emit('host ready');
-				});*/
 			});
 			socket.on('host ready', ()=>{
 				this.setState({hostReady:true});
-				/*swipeEventHandlers = this._waitForSwipeDown(()=>{
-					socket.emit('guest ready');
-					window.scrollTo(0,1);
-					this._startLevel(0);
-				});*/
 			});
 			socket.on('guest ready', ()=>{
 				this._startLevel(0);
 			});
-			socket.on('joystick', angle=>{
-				this._movePlayer(global.player2, angle);
+			socket.on('joystick', data=>{
+				this._movePlayer(global.player2, data.angle, data.amount);
 			});
 			socket.on('fire', ()=>{
 				this._fire(global.player2);
 			});
 			socket.on('end game', ()=>{
-				console.log('server end game');
 			});
 			cycle.addUIUpdateFunction(Sprite.draw);
 			cycle.addCleanup(GameObject.cleanup);
@@ -132,7 +105,7 @@
 				hosting: false,
 				playerJoined: false,
 				hostReady: false,
-				dev1Player: false
+				dev1Player: true
 			}
 		},
 		_startLevel: function(index) {
@@ -164,41 +137,9 @@
 				return;
 			player.firearm.fire(player);
 		},
-		_movePlayer: function(player, angle) {
+		_movePlayer: function(player, angle, amount) {
 			if(!player.dead)
-				player.move(angle);
-		},
-		_waitForSwipeDown: function(callback) {
-			let startY = 0, 
-				currY = 0,
-				touchMove = (e)=>{
-					currY = e.touches[0].pageY;
-				},
-				touchStart = (e)=>{
-					startY = e.touches[0].pageY;
-				},
-				touchEnd = (e)=>{
-					console.log(currY);
-					/*if(currY < -50) {
-						callback();
-						this._stopWaitingForSwipeDown(touchStart, touchEnd, touchMove);
-					}*/
-				};
-		
-			document.body.addEventListener('touchstart', touchStart, false);
-			document.body.addEventListener('touchend', touchEnd, false);
-			document.body.addEventListener('touchmove', touchMove, false);
-			
-			return {
-				touchStart: touchStart,
-				touchEnd: touchEnd,
-				touchMove: touchMove
-			}
-		},
-		_stopWaitingForSwipeDown: function(touchStart, touchEnd, touchMove) {
-			document.body.removeEventListener('touchstart', touchStart, false);
-			document.body.removeEventListener('touchend', touchEnd, false);
-			document.body.removeEventListener('touchmove', touchMove, false);
+				player.walk(amount,angle);
 		},
 		handleJoinGame: function() {
 			Sprite.setHosting(false);
@@ -223,7 +164,9 @@
 			});
 		},
 		handleEndGame: function(e) {
-			//this._endGame();
+			cycle.stop();
+			GameObject.clear();
+			this.setState({gameActive:false});
 		},
 		handleConfirmPlayerName: function() {
 			this.setState({playerNameSet:true});
@@ -303,51 +246,115 @@
 		levelsData = json.levels;
 		data(global.settingsJsonUri, (json)=>{
 			settings = global.settings = json.settings;
-			let sW = screen.width,
-				sH = screen.height;
-			windowWidth = sH > sW ? sH : sW;
-			windowHeight = sH < sW ? sH : sW;
-			if(windowWidth <= global.sdWidth) {
-				global.stageWidth = global.sdWidth;
-				global.stageHeight = global.sdHeight;
-				global.spriteImgPath = settings.sdImgPath;
-				global.spriteJsonPath = settings.sdJsonPath;
-			} else if(windowWidth <= global.mdWidth) {
-				global.stageWidth = global.mdWidth;
-				global.stageHeight = global.mdHeight;
-				global.spriteImgPath = settings.mdImgPath;
-				global.spriteJsonPath = settings.mdJsonPath;
+			windowWidth = screen.width;
+			windowHeight = screen.height;
+			
+			let stageWidth = 0,
+				stageHeight = 0,
+				spriteImgPath = null,
+				spriteJsonPath = null,
+				maxWidth = global.maxWidth = utils.processValue(settings.maxWidth),
+				maxHeight = global.maxHeight = utils.processValue(settings.maxHeight),
+				wallPadding = utils.processValue(settings.wallPadding),
+				positionScale = 0,
+				sdWidth = utils.processValue(settings.sdWidth),
+				sdHeight = utils.processValue(settings.sdHeight),
+				mdWidth = utils.processValue(settings.mdWidth),
+				mdHeight = utils.processValue(settings.mdHeight),
+				hdWidth = utils.processValue(settings.hdWidth),
+				hdHeight = utils.processValue(settings.hdHeight);
+			
+			if(windowWidth <= sdWidth) {
+				stageWidth = sdWidth;
+				stageHeight = sdHeight;
+				spriteImgPath = global.sdImgPath;
+				spriteJsonPath = global.sdJsonPath;
+			} else if(windowWidth <= mdWidth) {
+				stageWidth = mdWidth;
+				stageHeight = mdHeight;
+				spriteImgPath = global.mdImgPath;
+				spriteJsonPath = global.mdJsonPath;
 			} else {
-				global.stageWidth = global.hdWidth;
-				global.stageHeight = global.hdHeight;
-				global.spriteImgPath = settings.hdImgPath;
-				global.spriteJsonPath = settings.hdJsonPath;
+				stageWidth = hdWidth;
+				stageHeight = hdHeight;
+				spriteImgPath = global.hdImgPath;
+				spriteJsonPath = global.hdJsonPath;
 			}
-			global.stageWidth = global.hdWidth;
-			global.stageHeight = global.hdHeight;
-			global.spriteImgPath = settings.hdImgPath;
-			global.spriteJsonPath = settings.hdJsonPath;
+			
+			global.stageWidth = stageWidth;
+			global.stageHeight = stageHeight;
+
+			global.resolution = windowWidth / stageWidth;
+			positionScale = global.positionScale = stageWidth / maxWidth;
+			global.stageCenterX = utils.processValue(settings.stageCenterX);
+			global.stageCenterY = utils.processValue(settings.stageCenterY);
+			global.settings.joystickMin *= positionScale;
+			global.settings.joystickMax *= positionScale;
+			wallPadding *= positionScale;
+			global.topWall = {
+				x: 0,
+				y: 0,
+				width: stageWidth,
+				height: wallPadding
+			};
+			global.leftWall = {
+				x: 0,
+				y: 0,
+				width: wallPadding,
+				height: stageHeight
+			};
+			global.rightWall = {
+				x: stageWidth - wallPadding,
+				y: 0,
+				width: wallPadding,
+				height: stageHeight
+			};
+			global.bottomWall = {
+				x: 0,
+				y: stageHeight - wallPadding,
+				width: stageWidth,
+				height: wallPadding
+			};
 			let imagesToLoad = [
 				global.fireBtnImage,
 				global.joystickImage
 			];
+			
+			levelsData.forEach(levelData=>{
+				levelData.forEach(levelDataObject=>{
+					if(!!levelDataObject.properties) {
+						for(property in levelDataObject.properties) {
+							levelDataObject.properties[property] = utils.processValue(levelDataObject.properties[property]);
+							if(property === 'x' || property === 'y' || property === 'speed')
+								levelDataObject.properties[property] *= positionScale;
+						}
+					}
+				});
+			});
+			
 			for(let type in settings) {
+				if(!!settings[type].properties) {
+					for(property in settings[type].properties) {
+						settings[type].properties[property] = utils.processValue(settings[type].properties[property]);
+						if(property === 'x' || property === 'y' || property === 'speed')
+							settings[type].properties[property] *= positionScale;
+					}
+				}
 				if(!!settings[type].properties && !!settings[type].properties.sprites) {
-					let imagePath = global.spriteImgPath+type+'.png',
-						jsonPath = global.spriteJsonPath+type+'.json',
+					let imagePath = spriteImgPath+type+'.png',
+						jsonPath = spriteJsonPath+type+'.json',
 						spriteMeta = {
 							img: imagePath
 						};
 					imagesToLoad.push(imagePath);
-					settings[type].properties.spriteMeta = spriteMeta;
 					data(jsonPath, (json)=>{
 						spriteMeta.frames = json.frames;
+						settings[type].properties.spriteMeta = spriteMeta;
 					});
 				}
 				if(!!settings[type].properties && !!settings[type].properties.sprite) {
-					let spriteImagePath = global.spriteImgPath+type+'.png'
-					imagesToLoad.push(spriteImagePath);
-					settings[type].properties.sprite = spriteImagePath;
+					imagesToLoad.push(spriteImgPath+type+'.png');
+					settings[type].properties.sprite = spriteImgPath+type+'.png';
 				}
 			}
 			resources.load(imagesToLoad);

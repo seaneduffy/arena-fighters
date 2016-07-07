@@ -7,6 +7,36 @@ let Character,
 	GameObject,
 	global = require('./global');
 
+function processValue(value) {
+	if(typeof value === 'string' && value.indexOf('global.') !== -1) {
+		let values = value.match(/[global\.|a-z|A-Z|0-9]+/g),
+			operators = value.match(/[\+|\/|\-|\*]/g),
+			operator = '',
+			l = values.length;
+	
+		for(let i=0; i<l; i++) {
+			if(values[i].indexOf('global.') !== -1) {
+				values[i] = global[values[i].replace('global.','')] * 1;
+			}
+			values[i] *= 1;
+			if(i !== 0) {
+				operator = operators[i-1];
+				if(operator === '+')
+					value += values[i];
+				else if(operator === '-')
+					value -= values[i];
+				else if(operator === '*')
+					value *= values[i];
+				else if(operator === '/')
+					value /= values[i];
+			} else {
+				value = values[i];
+			}
+		}
+	}
+	return value;
+}
+
 module.exports = {
 	init: function() {
 		Character = require('./character');
@@ -15,6 +45,7 @@ module.exports = {
 		Ammunition = require('./ammunition');
 		GameObject = require('./gameObject');
 	},
+	processValue: processValue,
 	createGameObject: function(type, additionalProperties) {
 		let gameObject = null,
 			property = null, 
@@ -22,6 +53,7 @@ module.exports = {
 			gameObjectData = global.settings[type], 
 			properties = gameObjectData.properties,
 			className = gameObjectData.className;
+			
 		if(className === 'Character') {
 			gameObject = new Character();
 		} else if(className === 'GameObject') {
@@ -37,18 +69,10 @@ module.exports = {
 		}
 		gameObject.type = type;
 		for(property in properties) {
-			value = properties[property];				
-			if(typeof value === 'string' && value.indexOf('global.') !== -1) {
-				value = global[value.replace('global.','')];
-			}
-			gameObject[property] = value;
+			gameObject[property] = processValue(properties[property]);
 		}
 		for(property in additionalProperties) {
-			value = additionalProperties[property];
-			if(typeof value === 'string' && value.indexOf('global.') !== -1) {
-				value = global[value.replace('global.','')];
-			}
-			gameObject[property] = value;
+			gameObject[property] = processValue(additionalProperties[property]);
 		}
 		return gameObject;
 	}

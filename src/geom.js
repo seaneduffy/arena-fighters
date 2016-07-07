@@ -43,7 +43,7 @@ module.exports = {
 		}
 		return angle;
 	},
-	getDistance: function(x1, x2, y1, y2) {
+	getDistance: function(x1, y1, x2, y2) {
 		let deltaX = x2 - x1,
 			deltaY = y2 - y1;
 		return Math.sqrt(deltaX * deltaX + deltaY * deltaY);

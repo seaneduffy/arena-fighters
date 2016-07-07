@@ -9,10 +9,12 @@ let clientUpdateFunctions = [],
 	l = 0,
 	tmpFunc = null,
 	tmpArr = null,
-	tmpGameObject = null;
+	tmpGameObject = null,
+	counter = 0;
 	
 function cycle() {
 	if(active) {
+		counter++;	
 		l = clientUpdateFunctions.length;
 		for(i=0; i<l; i++) {
 			clientUpdateFunctions[i]();
@@ -50,13 +52,15 @@ function cycle() {
 			l--;
 		}
 		toRemove = [];
-		window.requestAnimationFrame(cycle);
+		if(active)
+			window.requestAnimationFrame(cycle);
 	}
 }
 
 
 
 module.exports = {
+	getCounter: function() {return counter},
 	start: function() {
 		active = true;
 		window.requestAnimationFrame(cycle);

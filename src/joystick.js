@@ -9,7 +9,8 @@ let global = require('./global'),
 	touchY = null,
 	deltaX = null,
 	deltaY = null,
-	sensitivity = 10,
+	sensitivity = null,
+	maxDistance = null,
 	directions = Object.create(null),
 	spriteJson = null,
 	xobj = new XMLHttpRequest();
@@ -55,16 +56,20 @@ function touchMove(e) {
 	touchY = e.touches[0].pageY;
 	deltaX = touchX - centerX;
 	deltaY = touchY - centerY;
+	let amount = geom.getDistance(centerX, centerY, touchX, touchY);
+	if(amount > maxDistance) amount = maxDistance;
 	if(Math.abs(deltaX) > sensitivity || Math.abs(deltaY) > sensitivity){
-		let angle = geom.getAngle(centerX, centerY, touchX, touchY);
-		callback(angle);
+		callback(
+			geom.getAngle(centerX, centerY, touchX, touchY), 
+			amount / maxDistance
+		);
 	} else {
-		callback(-1);
+		callback(-1, 0);
 	}
 }
 
 function endTouch(e) {
-	callback(-1);
+	callback(-1, 0);
 	element.className = '';
 }
 
@@ -83,17 +88,17 @@ function pressMove(e) {
 		let angle = geom.getAngle(centerX, centerY, x, y);
 		callback(angle);
 	} else {
-		callback(-1);
+		callback(-1, 0);
 	}
 }
 
 function onRelease(e) {
 	element.removeEventListener('mousemove', pressMove, false);
-	callback(-1);
+	callback(-1, 0);
 	element.className = '';
 }
 
-function callback(angle) {
+function callback(angle, amount) {
 	let pi = Math.PI, l = callbacks.length;
 	element.className = 'active';
 	if(angle === -1){
@@ -115,13 +120,15 @@ function callback(angle) {
 	else if(angle <= 15 * pi / 8)
 		updateDisplay('upleft');
 	for(let i=0; i<l; i++)
-		callbacks[i](angle);
+		callbacks[i](angle, amount);
 }
 
 module.exports = {
-	init: function(_element, data){
+	init: function(_element, _maxDistance, _sensitivity, _data){
 		element = _element;
-		spriteJson = data.frames;
+		maxDistance = _maxDistance;
+		sensitivity = _sensitivity;
+		spriteJson = _data.frames;
 		init();
 	},
 	addCallback: function(_callback) {
