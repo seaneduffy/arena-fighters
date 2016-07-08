@@ -12,8 +12,8 @@ app.get('/', function(req, res) {
 	res.render('game', {});
 });
 
-http.listen(8080, function(){
-	console.log('listening on *:8080');
+http.listen(3000, function(){
+	console.log('listening on *:3000');
 });
 
 let io = require('socket.io')(http),
