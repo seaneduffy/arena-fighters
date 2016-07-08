@@ -234,7 +234,7 @@
 	<div id="gameScreen" className={this.state.gameActive ? '' : 'hidden'}>
 		<canvas></canvas>
 		<div id="controls">
-			<span id="joystick" class="center"></span>
+			<span id="joystick" className="center"></span>
 			<span id="fire-btn"></span>
 			<span id="end-game-btn" onTouchStart={this.handleEndGame}></span>
 		</div>
