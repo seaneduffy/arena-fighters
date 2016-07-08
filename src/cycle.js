@@ -1,4 +1,5 @@
-let clientUpdateFunctions = [],
+let global = require('./global'),
+	clientUpdateFunctions = [],
 	uiUpdateFunctions = [],
 	gameObjectUpdateFunctions = [],
 	serverUpdateFunctions = [],
@@ -10,48 +11,31 @@ let clientUpdateFunctions = [],
 	tmpFunc = null,
 	tmpArr = null,
 	tmpGameObject = null,
-	counter = 0;
-	
+	counter = 0,
+	frameRate = null;
+
 function cycle() {
 	if(active) {
-		counter++;	
-		l = clientUpdateFunctions.length;
-		for(i=0; i<l; i++) {
-			clientUpdateFunctions[i]();
+		if(counter % frameRate === 0) {
+			clientUpdateFunctions.forEach(func=>{ func() });
+			gameObjectUpdateFunctions.filter(funcObject=>{
+				if(!!funcObject) {
+					if(!funcObject.obj.destroyed) {
+						funcObject.func();
+						return funcObject;
+					}
+				}
+				return false;
+			});
+			uiUpdateFunctions.forEach(func=>{ func() });
+			serverUpdateFunctions.forEach(func=>{ func() });
+			cleanupFunctions.forEach(func=>{ func() });
+			toRemove.forEach(removeObj=>{
+				removeObj.arr.splice(removeObj.arr.indexOf(removeObj.func), 1);
+			});
+			toRemove = [];
 		}
-		l = gameObjectUpdateFunctions.length;
-		for(i=0; i<l; i++) {
-			tmpGameObject = gameObjectUpdateFunctions[i].obj;
-			tmpFunc = gameObjectUpdateFunctions[i].func;
-			if(tmpGameObject.destroyed) {
-				gameObjectUpdateFunctions.splice(i,1);
-				i--;
-				l--;
-			} else {
-				tmpFunc();
-			}
-		}
-		l = uiUpdateFunctions.length;
-		for(i=0; i<l; i++) {
-			uiUpdateFunctions[i]();
-		}
-		l = serverUpdateFunctions.length;
-		for(i=0; i<l; i++) {
-			serverUpdateFunctions[i]();
-		}
-		l = cleanupFunctions.length;
-		for(i=0; i<l; i++) {
-			cleanupFunctions[i]();
-		}
-		l = toRemove.length;
-		for(i=0; i<l; i++) {
-			tmpArr = toRemove[i].arr;
-			tmpFunc = toRemove[i].func;
-			tmpArr.splice(tmpArr.indexOf(tmpFunc), 1);
-			i--;
-			l--;
-		}
-		toRemove = [];
+		counter++;
 		if(active)
 			window.requestAnimationFrame(cycle);
 	}
@@ -63,10 +47,12 @@ module.exports = {
 	getCounter: function() {return counter},
 	start: function() {
 		active = true;
+		frameRate = global.settings.frameRate;
 		window.requestAnimationFrame(cycle);
 	},
 	stop: function() {
 		active = false;
+		counter = 0;
 	},
 	addUIUpdateFunction: function(func) {
 		uiUpdateFunctions.push(func);

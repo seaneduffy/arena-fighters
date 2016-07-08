@@ -23,9 +23,10 @@ Object.defineProperties(Ai.prototype, {
 					this.move();
 				} else if(!!this.fire && !!this._character.firearm) {
 					this.fire();
-				}
-			} else
+				} 
+			} else {
 				this._counter++;
+			}
 		}
 	},
 	'getDistanceToPlayer': {
@@ -44,8 +45,10 @@ Object.defineProperties(Ai.prototype, {
 			} else if(this._distancePlayer1 && !this._distancePlayer2) {
 				return this._player1;
 			} else if(!this._distancePlayer1 && this._distancePlayer2) {
+				return this._player2;
+			} else {
 				return this._distancePlayer2 < this._distancePlayer1 ? this._player2 : this._player1;
-			}
+			}	
 		}
 	},
 	'onCollision': {

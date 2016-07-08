@@ -12,6 +12,7 @@
 	"mdHeight": 800,
 	"sdWidth": 712,
 	"sdHeight": 400,
+	"frameRate": 3,
 	"player1": {
 		"properties": {
 			"sprites": [
@@ -32,7 +33,7 @@
 				"$right_standing",
 				"$right_walking"
 			],
-			"speed": 10,
+			"speed": 20,
 			"z": 3,
 			"interacts": true,
 			"health": 15,
@@ -63,7 +64,7 @@
 				"$right_standing",
 				"$right_walking"
 			],
-			"speed": 6,
+			"speed": 20,
 			"z": 3,
 			"interacts": true,
 			"health": 15,
@@ -94,8 +95,8 @@
 				"$right_standing",
 				"$right_walking"
 			],
-			"speed": 3,
-			"actionSpeed": 10,
+			"speed": 6,
+			"actionSpeed": 20,
 			"z": 6,
 			"ai": "grunt",
 			"interacts": true,
@@ -128,9 +129,9 @@
 				"$right_standing",
 				"$right_walking"
 			],
-			"speed": 8,
-			"actionSpeed": 2,
-			"moveTime": 7,
+			"speed": 16,
+			"actionSpeed": 1,
+			"moveTime": 8,
 			"z": 6,
 			"ai": "devil",
 			"interacts": true,
@@ -147,7 +148,7 @@
 		"properties": {
 			"sprite": "bullet",
 			"display": "default",
-			"speed": 12,
+			"speed": 24,
 			"z": 8,
 			"interacts": true,
 			"impact": 1,

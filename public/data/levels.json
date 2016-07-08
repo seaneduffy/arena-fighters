@@ -38,9 +38,25 @@
 			}
 		},
 		{
+			"type": "grunt",
+			"properties": {
+				"x": "global.stageCenterX",
+				"y": "global.maxHeight + 400",
+				"display": "$down_standing"
+			}
+		},
+		{
+			"type": "grunt",
+			"properties": {
+				"x": "global.stageCenterX",
+				"y": "global.maxHeight + 800",
+				"display": "$down_standing"
+			}
+		},
+		{
 			"type": "devil",
 			"properties": {
-				"x": -1300,
+				"x": -400,
 				"y": "global.stageCenterY",
 				"display": "$down_standing"
 			}
@@ -48,8 +64,25 @@
 		{
 			"type": "devil",
 			"properties": {
-				"x": -1700,
-				"y": 1000,
+				"x": -800,
+				"y": "global.stageCenterY",
+				"display": "$down_standing"
+			}
+		},
+
+		{
+			"type": "devil",
+			"properties": {
+				"x": "global.maxWidth + 800",
+				"y": "global.stageCenterY",
+				"display": "$down_standing"
+			}
+		},
+		{
+			"type": "devil",
+			"properties": {
+				"x": "global.maxWidth + 400",
+				"y": "global.stageCenterY",
 				"display": "$down_standing"
 			}
 		},

@@ -237,7 +237,7 @@ Object.defineProperties(GameObject.prototype, {
 	}
 });
 
-function applyForce(velocity) {
+function applyForce(velocity) {	
 
 	let thisVelocity = this.velocity;
 	if(!!thisVelocity.dX && !!thisVelocity.dY) {
@@ -259,6 +259,13 @@ function applyForce(velocity) {
 	this.velocity = thisVelocity;
 }
 
+function onCollision(gameObject, x, y, newX, newY, collidedObject) {
+	gameObject.velocity.dX = newX - x;
+	gameObject.velocity.dY = newY - y;
+	if(!!gameObject.onCollision)
+		gameObject.onCollision(collidedObject);
+}
+
 function move() {
 	if(!this._stage || this.static || !this.boundingBox || (this.velocity.dX === 0 && this.velocity.dY ===0)) return;
 	if(!this._interacts) {
@@ -268,53 +275,17 @@ function move() {
 	}
 	
 	let boundingBox = this.boundingBox,
-		speedX = this.velocity.dX,
-		speedY = this.velocity.dY,
-		collidedWithObject = false,
-		tmpBoundingBox = {
-			x: boundingBox.x,
-			y: boundingBox.y,
-			width: boundingBox.width,
-			height: boundingBox.height
-		};
-	
-	if(speedX > 0) {
-		tmpBoundingBox.x += speedX;
-		if(checkCollision(tmpBoundingBox, global.rightWall)) {
-			speedX = 0;
-			collidedWithObject = true;
-		}
-		tmpBoundingBox.x = boundingBox.x;
+		collisionCheck = false;
+	if(this.velocity.dX > 0 && !!(collisionCheck = checkCollision(boundingBox, global.rightWall, this.velocity.dX, this.velocity.dY)))
+		onCollision(this, boundingBox.x, boundingBox.y, collisionCheck.x, collisionCheck.y, 'wall');
+	if(this.velocity.dX < 0 && !!(collisionCheck = checkCollision(boundingBox, global.leftWall, this.velocity.dX, this.velocity.dY)))
+		onCollision(this, boundingBox.x, boundingBox.y, collisionCheck.x, collisionCheck.y, 'wall');
+	if(this.velocity.dY > 0 && !!(collisionCheck = checkCollision(boundingBox, global.bottomWall, this.velocity.dX, this.velocity.dY)))
+		onCollision(this, boundingBox.x, boundingBox.y, collisionCheck.x, collisionCheck.y, 'wall');
+	if(this.velocity.dY < 0 && !!(collisionCheck = checkCollision(boundingBox, global.topWall, this.velocity.dX, this.velocity.dY))){
+		onCollision(this, boundingBox.x, boundingBox.y, collisionCheck.x, collisionCheck.y, 'wall');
 	}
-	if(speedX < 0) {
-		boundingBox.x += speedX;
-		if(checkCollision(tmpBoundingBox, global.leftWall)) {
-			speedX = 0;
-			collidedWithObject = true;
-		}
-		tmpBoundingBox.x = boundingBox.x;
-	}
-	if(speedY > 0) {
-		boundingBox.y += speedY;
-		if(checkCollision(tmpBoundingBox, global.bottomWall)) {
-			speedY = 0;
-			collidedWithObject = true;
-		}
-		tmpBoundingBox.y = boundingBox.y;
-	}
-	if(speedY < 0) {
-		boundingBox.y += speedY;
-		if(checkCollision(tmpBoundingBox, global.topWall)) {
-			speedY = 0;
-			collidedWithObject = true;
-		}
-		tmpBoundingBox.y = boundingBox.y;
-	}
-	if(collidedWithObject) {
-		this.velocity.dX = speedX;
-		this.velocity.dY = speedY;
-		this.onCollision('wall');
-	}
+		
 	
 	gameObjects.forEach( objectToCheck => {
 		let doesNotInteractWith = false;
@@ -330,43 +301,65 @@ function move() {
 			&& objectToCheck.stage 
 			&& objectToCheck.interacts) {
 				
-			let objectToCheckBoundingBox = objectToCheck.boundingBox;
+			if(!!(collisionCheck = checkCollision(boundingBox, objectToCheck.boundingBox, this.velocity.dX, this.velocity.dY)))
 				
-			collidedWithObject = false;
+				onCollision(this, boundingBox.x, boundingBox.y, collisionCheck.x, collisionCheck.y, objectToCheck);
 			
-			tmpBoundingBox.x += speedX;
-			if(this.checkCollision(tmpBoundingBox, objectToCheckBoundingBox)) {
-				collidedWithObject = true;
-				tmpBoundingBox.x -= speedX;
-				speedX = 0;
-			}
-			tmpBoundingBox.y += speedY;
-			if(this.checkCollision(tmpBoundingBox, objectToCheckBoundingBox)){
-				collidedWithObject = true;
-				speedY = 0;
-			}
-			if(collidedWithObject) {
-				this.velocity.dX = speedX;
-				this.velocity.dY = speedY;
-				if(!!this.onCollision) {
-					this.onCollision(objectToCheck);
-				}
-			}
-				
 		}
 	} );
-	this.x += speedX;
-	this.y += speedY;
+	this.x += this.velocity.dX;
+	this.y += this.velocity.dY;
 }
 
-function checkCollision(boundingBox, objectToCheckBoundingBox) {
-	return objectToCheckBoundingBox 
-		&& (boundingBox.x + boundingBox.width > objectToCheckBoundingBox.x 
-			&& boundingBox.x < objectToCheckBoundingBox.x + objectToCheckBoundingBox.width)
-		&& (boundingBox.y + boundingBox.height > objectToCheckBoundingBox.y 
-			&& boundingBox.y < objectToCheckBoundingBox.y + objectToCheckBoundingBox.height)
-}
+function checkCollision(boundingBox, objectToCheckBoundingBox, dx, dy) {
+	let x = -1,
+		y = -1;
+	if(!!objectToCheckBoundingBox && !!boundingBox) {
+		let x1a = boundingBox.x,
+			x1b = boundingBox.x + boundingBox.width,
+			x2a = objectToCheckBoundingBox.x,
+			x2b = objectToCheckBoundingBox.x + objectToCheckBoundingBox.width,
+			y1a = boundingBox.y,
+			y1b = boundingBox.y + boundingBox.height,
+			y2a = objectToCheckBoundingBox.y,
+			y2b = objectToCheckBoundingBox.y + objectToCheckBoundingBox.height,
+			dx1a = x1a + dx,
+			dx1b = x1b + dx,
+			dy1a = y1a + dy,
+			dy1b = y1b + dy,
+			collision = ((dx1a < x2a && dx1b > x2a) || (dx1a < x2b && dx1b > x2a))
+				&& ((dy1a < y2a && dy1b > y2a) || (dy1a < y2b && dy1b > y2a));
+		if(!collision)
+			return false;
 
+		let xPrevWithin = (x1a < x2a && x1b > x2a) || (x1a < x2b && x1b > x2a),
+			yPrevWithin = (y1a < y2a && y1b > y2a) || (y1a < y2b && y1b > y2a),
+			xMovingInLeft = dx < 0 && x1a > x2b && x1a + dx < x2b,
+			xMovingInRight = dx > 0 && x1b < x2a && x1b + dx > x2a,
+			yMovingInUp = dy < 0 && y1a > y2b && y1a + dy < y2b,
+			yMovingInDown = dy > 0 && y1b < y2a && y1b + dy > y2a;
+			
+		if(xMovingInLeft && yPrevWithin) {
+			x = x1a;//x2b;
+			y = dy1a;
+		} else if(xMovingInRight && yPrevWithin) {
+			x = x1a;//x2a - x1b + x1a;
+			y = dy1a;
+		} else if(xPrevWithin && yMovingInDown) {
+			x = dx1a;
+			y = y1a;//y2a - y1b + y1a; 
+		} else if(xPrevWithin && yMovingInUp) {
+			x = dx1a;
+			y = y1a;//y2b;
+		} else {
+			x = x1a;
+			y = y1a;
+		}
+		return {x: x, y: y}
+	}
+	return false;
+}
+var c = 0;
 function getEdgePointFromDirection(direction) {
 	let boundingBox = this._boundingBox,
 		delta = geom.getVectorFromXYAngle(boundingBox.width / 2, boundingBox.height / 2, direction);

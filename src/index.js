@@ -105,7 +105,7 @@
 				hosting: false,
 				playerJoined: false,
 				hostReady: false,
-				dev1Player: true
+				dev1Player: false
 			}
 		},
 		_startLevel: function(index) {
@@ -246,8 +246,10 @@
 		levelsData = json.levels;
 		data(global.settingsJsonUri, (json)=>{
 			settings = global.settings = json.settings;
-			windowWidth = screen.width;
-			windowHeight = screen.height;
+			var tmpL1 = window.innerWidth,
+				tmpL2 = window.innerHeight;
+			windowWidth = tmpL1 > tmpL2 ? tmpL1 : tmpL2;
+			windowHeight = tmpL1 < tmpL2 ? tmpL1 : tmpL2;
 			
 			let stageWidth = 0,
 				stageHeight = 0,
