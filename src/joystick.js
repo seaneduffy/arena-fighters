@@ -1,4 +1,4 @@
-let global = require('./global'),
+let config = require('./config'),
 	geom = require('./geom'),
 	element = null,
 	callbacks = [],
@@ -38,7 +38,7 @@ function init() {
 		element.addEventListener('mousedown', onPress, false);
 		element.addEventListener('mouseup', onRelease, false);
 	}
-	element.style.background = 'url('+global.joystickImage+')';
+	element.style.background = 'url('+config.joystickImage+')';
 	let imageInfo = spriteJson['center'].frame;
 	element.style.width = imageInfo.w + 'px';
 	element.style.height = imageInfo.h + 'px';
@@ -124,11 +124,11 @@ function callback(angle, amount) {
 }
 
 module.exports = {
-	init: function(_element, _maxDistance, _sensitivity, _data){
+	init: function(_element, _maxDistance, _sensitivity, json){
 		element = _element;
 		maxDistance = _maxDistance;
 		sensitivity = _sensitivity;
-		spriteJson = _data.frames;
+		spriteJson = json;
 		init();
 	},
 	addCallback: function(_callback) {

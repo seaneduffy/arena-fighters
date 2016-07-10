@@ -5,18 +5,18 @@ let Character,
 	Firearm,
 	Ammunition,
 	GameObject,
-	global = require('./global');
+	config = require('./config');
 
 function processValue(value) {
-	if(typeof value === 'string' && value.indexOf('global.') !== -1) {
-		let values = value.match(/[global\.|a-z|A-Z|0-9]+/g),
+	if(typeof value === 'string' && value.indexOf('config.') !== -1) {
+		let values = value.match(/[config\.|a-z|A-Z|0-9]+/g),
 			operators = value.match(/[\+|\/|\-|\*]/g),
 			operator = '',
 			l = values.length;
 	
 		for(let i=0; i<l; i++) {
-			if(values[i].indexOf('global.') !== -1) {
-				values[i] = global[values[i].replace('global.','')] * 1;
+			if(values[i].indexOf('config.') !== -1) {
+				values[i] = config[values[i].replace('config.','')] * 1;
 			}
 			values[i] *= 1;
 			if(i !== 0) {
@@ -50,7 +50,7 @@ module.exports = {
 		let gameObject = null,
 			property = null, 
 			value = null,
-			gameObjectData = global.settings[type], 
+			gameObjectData = config.settings[type], 
 			properties = gameObjectData.properties,
 			className = gameObjectData.className;
 			

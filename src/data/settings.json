@@ -1,0 +1,209 @@
+{"settings": {
+	"joystickMin": 0,
+	"joystickMax": 120,
+	"wallPadding": 50,
+	"maxWidth": 2846,
+	"maxHeight": 1600,
+	"stageCenterX": "config.maxWidth / 2",
+	"stageCenterY": "config.maxHeight / 2",
+	"hdWidth": 2846,
+	"hdHeight": 1600,
+	"mdWidth": 1423,
+	"mdHeight": 800,
+	"sdWidth": 712,
+	"sdHeight": 400,
+	"frameRate": 3,
+	"gameObjects": {
+		"player1": {
+			"properties": {
+				"sprites": [
+					"$up_standing",
+					"$up_walking",
+					"$upleft_standing",
+					"$upleft_walking",
+					"$upright_standing",
+					"$upright_walking",
+					"$down_standing",
+					"$down_walking",
+					"$downleft_standing",
+					"$downleft_walking",
+					"$downright_standing",
+					"$downright_walking",
+					"$left_standing",
+					"$left_walking",
+					"$right_standing",
+					"$right_walking"
+				],
+				"speed": 20,
+				"z": 3,
+				"interacts": true,
+				"health": 15,
+				"friends": [
+					"player2"
+				],
+				"firearm": "pistol"
+			},
+			"className": "Character"
+		},
+		"player2": {
+			"properties": {
+				"sprites": [
+					"$up_standing",
+					"$up_walking",
+					"$upleft_standing",
+					"$upleft_walking",
+					"$upright_standing",
+					"$upright_walking",
+					"$down_standing",
+					"$down_walking",
+					"$downleft_standing",
+					"$downleft_walking",
+					"$downright_standing",
+					"$downright_walking",
+					"$left_standing",
+					"$left_walking",
+					"$right_standing",
+					"$right_walking"
+				],
+				"speed": 20,
+				"z": 3,
+				"interacts": true,
+				"health": 15,
+				"friends": [
+					"player1"
+				],
+				"firearm": "pistol"
+			},
+			"className": "Character"
+		},
+		"grunt": {
+			"properties": {
+				"sprites": [
+					"$up_standing",
+					"$up_walking",
+					"$upleft_standing",
+					"$upleft_walking",
+					"$upright_standing",
+					"$upright_walking",
+					"$down_standing",
+					"$down_walking",
+					"$downleft_standing",
+					"$downleft_walking",
+					"$downright_standing",
+					"$downright_walking",
+					"$left_standing",
+					"$left_walking",
+					"$right_standing",
+					"$right_walking"
+				],
+				"speed": 6,
+				"actionSpeed": 20,
+				"z": 6,
+				"ai": "grunt",
+				"interacts": true,
+				"health": 1,
+				"melee": 1,
+				"friends": [
+					"grunt",
+					"devil"
+				]
+			},
+			"className": "Character"
+		},
+		"devil": {
+			"properties": {
+				"sprites": [
+					"$up_standing",
+					"$up_walking",
+					"$upleft_standing",
+					"$upleft_walking",
+					"$upright_standing",
+					"$upright_walking",
+					"$down_standing",
+					"$down_walking",
+					"$downleft_standing",
+					"$downleft_walking",
+					"$downright_standing",
+					"$downright_walking",
+					"$left_standing",
+					"$left_walking",
+					"$right_standing",
+					"$right_walking"
+				],
+				"speed": 16,
+				"actionSpeed": 1,
+				"moveTime": 8,
+				"z": 6,
+				"ai": "devil",
+				"interacts": true,
+				"health": 3,
+				"melee": 4,
+				"friends": [
+					"grunt",
+					"devil"
+				]
+			},
+			"className": "Character"
+		},
+		"bullet": {
+			"properties": {
+				"sprite": "bullet",
+				"display": "default",
+				"speed": 24,
+				"z": 8,
+				"interacts": true,
+				"impact": 1,
+				"noInteraction": [
+					"bullet"
+				]
+			},
+			"className": "Ammunition"
+		},
+		"pistol": {
+			"properties": {
+				"sprites": [
+					"$up_off",
+					"$up_firing",
+					"$upright_off",
+					"$upright_firing",
+					"$upleft_off",
+					"$upleft_firing",
+					"$right_off",
+					"$right_firing",
+					"$left_off",
+					"$left_firing",
+					"$down_off",
+					"$down_firing",
+					"$downright_off",
+					"$downright_firing",
+					"$downleft_off",
+					"$downleft_firing"
+				],
+				"ammunition": "bullet"
+			},
+			"className": "Firearm"
+		},
+		"background1": {
+			"properties": {
+				"sprite": "default",
+				"display": "default",
+				"x": "config.stageCenterX",
+				"y": "config.stageCenterY",
+				"z": 0,
+				"interacts": false,
+				"static": true
+			},
+			"className": "GameObject"
+		},
+		"obstacle1": {
+			"properties": {
+				"sprite": "default",
+				"display": "default",
+				"z": 1,
+				"interacts": true,
+				"static": true
+			},
+			"className": "GameObject"
+		}
+	}
+}}

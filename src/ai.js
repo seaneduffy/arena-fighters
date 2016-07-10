@@ -1,13 +1,13 @@
 'use strict';
 
-let global = require('./global'),
+let config = require('./config'),
 	geom = require('./geom'),
 	cycle = require('./cycle');
 	
 function Ai(character) {
 	this._character = character;
-	this._player1 = global.player1;
-	this._player2 = global.player2;
+	this._player1 = config.player1;
+	this._player2 = config.player2;
 	this._counter = 0;
 	cycle.addGameObjectUpdateFunction(character, this.actions.bind(this));
 }

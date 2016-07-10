@@ -1,0 +1,21 @@
+{"obstacle1-hd": {
+
+"obstacle1":
+{
+	"frame": {"x":0,"y":0,"w":264,"h":264},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":264,"h":264},
+	"sourceSize": {"w":264,"h":264},
+	"pivot": {"x":0.5,"y":0.5}
+}},
+"meta": {
+	"app": "http://www.codeandweb.com/texturepacker",
+	"version": "1.0",
+	"image": "obstacle1-hd.png",
+	"format": "RGBA8888",
+	"size": {"w":264,"h":264},
+	"scale": "1",
+	"smartupdate": "$TexturePacker:SmartUpdate:449d808f7c7d1d65fb23cfcd21021fe8:7aea1f6141145447bf0a6b6bcf3f9828:b31dfb53daecf420591c48661e9d2046$"
+}
+}

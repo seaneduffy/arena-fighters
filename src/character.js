@@ -1,6 +1,6 @@
 'use strict';
 
-let global = require('./global'),
+let config = require('./config'),
 	GameObject = require('./gameObject'),
 	aiFunctions = require('./ai'),
 	cycle = require('./cycle'),
@@ -130,28 +130,28 @@ function updateFirearmDisplay() {
 	let z = null,
 		directionLabel = this._directionLabel,
 		display = this.firearm.display || '$up_off';
-	if(directionLabel === global.UP 
-		|| directionLabel === global.UP_LEFT
-		|| directionLabel === global.UP_RIGHT
+	if(directionLabel === config.UP 
+		|| directionLabel === config.UP_LEFT
+		|| directionLabel === config.UP_RIGHT
 	)
 		z = this.z - 1;
 	else
 		z = this.z + 1;
-	if(directionLabel === global.UP) {
+	if(directionLabel === config.UP) {
 		display = display.replace(/\$.+_/, '$up_');
-	} else if(directionLabel === global.DOWN) {
+	} else if(directionLabel === config.DOWN) {
 		display = display.replace(/\$.+_/, '$down_');
-	} else if(directionLabel === global.LEFT) {
+	} else if(directionLabel === config.LEFT) {
 		display = display.replace(/\$.+_/, '$left_');
-	} else if(directionLabel === global.RIGHT) {
+	} else if(directionLabel === config.RIGHT) {
 		display = display.replace(/\$.+_/, '$right_');
-	} else if(directionLabel === global.UP_LEFT) {
+	} else if(directionLabel === config.UP_LEFT) {
 		display = display.replace(/\$.+_/, '$upleft_');
-	} else if(directionLabel === global.UP_RIGHT) {
+	} else if(directionLabel === config.UP_RIGHT) {
 		display = display.replace(/\$.+_/, '$upright_');
-	} else if(directionLabel === global.DOWN_LEFT) {
+	} else if(directionLabel === config.DOWN_LEFT) {
 		display = display.replace(/\$.+_/, '$downleft_');
-	} else if(directionLabel === global.DOWN_RIGHT) {
+	} else if(directionLabel === config.DOWN_RIGHT) {
 		display = display.replace(/\$.+_/, '$downright_');
 	}
 	this.firearm.display = display;
@@ -187,21 +187,21 @@ function walk(power, direction) {
 	}
 	else {
 		let directionLabel = this.directionLabel;
-		if(directionLabel === global.UP) {
+		if(directionLabel === config.UP) {
 			this.display = '$up_walking';
-		} else if(directionLabel === global.DOWN) {
+		} else if(directionLabel === config.DOWN) {
 			this.display = '$down_walking';
-		} else if(directionLabel === global.LEFT) {
+		} else if(directionLabel === config.LEFT) {
 			this.display = '$left_walking';
-		} else if(directionLabel === global.RIGHT) {
+		} else if(directionLabel === config.RIGHT) {
 			this.display = '$right_walking';
-		} else if(directionLabel === global.UP_LEFT) {
+		} else if(directionLabel === config.UP_LEFT) {
 			this.display = '$upleft_walking';
-		} else if(directionLabel === global.UP_RIGHT) {
+		} else if(directionLabel === config.UP_RIGHT) {
 			this.display = '$upright_walking';
-		} else if(directionLabel === global.DOWN_LEFT) {
+		} else if(directionLabel === config.DOWN_LEFT) {
 			this.display = '$downleft_walking';
-		} else if(directionLabel === global.DOWN_RIGHT) {
+		} else if(directionLabel === config.DOWN_RIGHT) {
 			this.display = '$downright_walking';
 		}
 		this.applyForce({

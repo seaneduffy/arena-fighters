@@ -1,4 +1,4 @@
-let global = require('./global'),
+let config = require('./config'),
 	clientUpdateFunctions = [],
 	uiUpdateFunctions = [],
 	gameObjectUpdateFunctions = [],
@@ -47,7 +47,7 @@ module.exports = {
 	getCounter: function() {return counter},
 	start: function() {
 		active = true;
-		frameRate = global.settings.frameRate;
+		frameRate = config.settings.frameRate;
 		window.requestAnimationFrame(cycle);
 	},
 	stop: function() {

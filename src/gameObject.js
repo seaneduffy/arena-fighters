@@ -1,5 +1,5 @@
 let Sprite = require('./sprite'),
-	global = require('./global'),
+	config = require('./config'),
 	geom = require('./geom'),
 	cycle = require('./cycle'),
 	gameObjects = [],
@@ -75,21 +75,21 @@ Object.defineProperties(GameObject.prototype, {
 			this._direction = angle;
 			let pi = Math.PI;
 			if(angle <= pi / 8 || angle > 15 * pi / 8)
-				this.directionLabel = global.UP;
+				this.directionLabel = config.UP;
 			else if(angle <= 3 * pi / 8)
-				this.directionLabel = global.UP_RIGHT;
+				this.directionLabel = config.UP_RIGHT;
 			else if(angle <= 5 * pi / 8)
-				this.directionLabel = global.RIGHT;
+				this.directionLabel = config.RIGHT;
 			else if(angle <= 7 * pi / 8)
-				this.directionLabel = global.DOWN_RIGHT;
+				this.directionLabel = config.DOWN_RIGHT;
 			else if(angle <= 9 * pi / 8)
-				this.directionLabel = global.DOWN;
+				this.directionLabel = config.DOWN;
 			else if(angle <= 11 * pi / 8)
-				this.directionLabel = global.DOWN_LEFT;
+				this.directionLabel = config.DOWN_LEFT;
 			else if(angle <= 13 * pi / 8)
-				this.directionLabel = global.LEFT;
+				this.directionLabel = config.LEFT;
 			else if(angle <= 15 * pi / 8)
-				this.directionLabel = global.UP_LEFT;
+				this.directionLabel = config.UP_LEFT;
 		},
 		get: function() {
 			return this._direction;
@@ -276,13 +276,13 @@ function move() {
 	
 	let boundingBox = this.boundingBox,
 		collisionCheck = false;
-	if(this.velocity.dX > 0 && !!(collisionCheck = checkCollision(boundingBox, global.rightWall, this.velocity.dX, this.velocity.dY)))
+	if(this.velocity.dX > 0 && !!(collisionCheck = checkCollision(boundingBox, config.rightWall, this.velocity.dX, this.velocity.dY)))
 		onCollision(this, boundingBox.x, boundingBox.y, collisionCheck.x, collisionCheck.y, 'wall');
-	if(this.velocity.dX < 0 && !!(collisionCheck = checkCollision(boundingBox, global.leftWall, this.velocity.dX, this.velocity.dY)))
+	if(this.velocity.dX < 0 && !!(collisionCheck = checkCollision(boundingBox, config.leftWall, this.velocity.dX, this.velocity.dY)))
 		onCollision(this, boundingBox.x, boundingBox.y, collisionCheck.x, collisionCheck.y, 'wall');
-	if(this.velocity.dY > 0 && !!(collisionCheck = checkCollision(boundingBox, global.bottomWall, this.velocity.dX, this.velocity.dY)))
+	if(this.velocity.dY > 0 && !!(collisionCheck = checkCollision(boundingBox, config.bottomWall, this.velocity.dX, this.velocity.dY)))
 		onCollision(this, boundingBox.x, boundingBox.y, collisionCheck.x, collisionCheck.y, 'wall');
-	if(this.velocity.dY < 0 && !!(collisionCheck = checkCollision(boundingBox, global.topWall, this.velocity.dX, this.velocity.dY))){
+	if(this.velocity.dY < 0 && !!(collisionCheck = checkCollision(boundingBox, config.topWall, this.velocity.dX, this.velocity.dY))){
 		onCollision(this, boundingBox.x, boundingBox.y, collisionCheck.x, collisionCheck.y, 'wall');
 	}
 		

@@ -1,6 +1,6 @@
 'use strict';
 
-let global = require('./global'),
+let config = require('./config'),
 	joystickCallback = null,
 	fireCallback = null,
 	activeControl = null,
@@ -9,22 +9,18 @@ let global = require('./global'),
 document.getElementById('controls').addEventListener('touchstart', function(e){e.preventDefault()});
 
 let joystick = require('./joystick');
-require('./data')(global.joystickJsonUri, (data)=>{
-	joystick.init(document.getElementById('joystick'), global.settings.joystickMax, global.settings.joystickMin, data);
-	joystick.addCallback(onJoystickMove);
-});
+joystick.init(document.getElementById('joystick'), config.joystickMax, config.joystickMin, config.joystick);
+joystick.addCallback(onJoystickMove);
 
 let fireBtn = document.getElementById('fire-btn');
-require('./data')(global.fireBtnJsonUri, (data)=>{
-	fireBtnJson = data.frames;
-	fireBtn.style.background = 'url('+global.fireBtnImage+')';
-	let imageInfo = fireBtnJson['fire_up.png'].frame;
-	fireBtn.style.width = imageInfo.w + 'px';
-	fireBtn.style.height = imageInfo.h + 'px';
-	fireBtn.style.backgroundPosition = (-imageInfo.x)+'px '+(-imageInfo.y)+'px';
-	fireBtn.addEventListener('touchstart', onFire, false);
-	fireBtn.addEventListener('touchend', onFireEnd, false);
-});
+fireBtnJson = config.fire;
+fireBtn.style.background = 'url('+config.fireBtnImage+')';
+let imageInfo = fireBtnJson['fire_up'].frame;
+fireBtn.style.width = imageInfo.w + 'px';
+fireBtn.style.height = imageInfo.h + 'px';
+fireBtn.style.backgroundPosition = (-imageInfo.x)+'px '+(-imageInfo.y)+'px';
+fireBtn.addEventListener('touchstart', onFire, false);
+fireBtn.addEventListener('touchend', onFireEnd, false);
 
 let joystickActive = false,
 	joystickAngle = -1,

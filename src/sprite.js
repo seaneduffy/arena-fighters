@@ -1,4 +1,4 @@
-let global = require('./global'),
+let config = require('./config'),
 	resources = require('./resources'),
 	socket = require('./socket'),
 	cycle = require('./cycle'),
@@ -25,8 +25,8 @@ function Sprite(spriteSheetPath, imageMeta, spriteId) {
 		this.imageHeight = this.spriteSheet.height;
 	}
 	
-	this.width = this.imageWidth * global.resolution;
-	this.height = this.imageHeight * global.resolution;
+	this.width = this.imageWidth * config.resolution;
+	this.height = this.imageHeight * config.resolution;
 }
 
 Object.defineProperties(Sprite.prototype, {
@@ -185,7 +185,7 @@ function addUpdate(values) {
 
 function draw() {
 	let boundingBox = this.boundingBox,
-		resolution = global.resolution,
+		resolution = config.resolution,
 		imageX = null,
 		imageY = null;
 	
@@ -200,7 +200,7 @@ function draw() {
 		imageY = 0;
 	}
 	
-	global.canvasContext.drawImage(
+	config.canvasContext.drawImage(
 		this.spriteSheet,
 		imageX,
 		imageY, 
