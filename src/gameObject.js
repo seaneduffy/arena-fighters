@@ -13,6 +13,7 @@ function GameObject() {
 	gameObjects.push(this);
 	this.id = id();
 	this.ignoreObjectList = [];
+	this.moveCycle = false;
 }
 
 GameObject.cleanup = cleanup;
@@ -59,7 +60,11 @@ Object.defineProperties(GameObject.prototype, {
 				if(!!sprite) {
 					sprite.stage = true;
 					this.boundingBox = sprite.boundingBox;
-					cycle.addGameObjectUpdateFunction(this, this.move.bind(this));
+					if(!this.moveCycle) {
+						cycle.addGameObjectUpdateFunction(this, this.move.bind(this));
+						
+						this.moveCycle = true;
+					}
 				}
 			} else if(!onStage && this._stage) {
 				this._stage = false;
@@ -193,8 +198,14 @@ Object.defineProperties(GameObject.prototype, {
 				this._display = display;
 				if(this._stage) {
 					sprite = sprites[display];
-					sprite.stage = true;
-					this.boundingBox = sprites[display].boundingBox;
+					if(!!sprite) {
+						sprite.stage = true;
+						this.boundingBox = sprite.boundingBox;
+						if(!this.moveCycle) {
+							cycle.addGameObjectUpdateFunction(this, this.move.bind(this));
+							this.moveCycle = true;
+						}
+					}
 				}
 			}
 		},
@@ -407,7 +418,14 @@ function initSprites() {
 		sprites[spriteLabel] = sprite;
 	});
 	if(!!this.display) {
-		thisboundingBox = sprites[this.display].boundingBox;
+		this.boundingBox = sprites[this.display].boundingBox;
+		if(!!this.stage) {
+			sprite.stage = true;
+			if(!this.moveCycle) {
+				cycle.addGameObjectUpdateFunction(this, this.move.bind(this));
+				this.moveCycle = true;
+			}
+		}
 	}
 }
 

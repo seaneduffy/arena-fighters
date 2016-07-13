@@ -32,16 +32,16 @@ li {
 	list-style: none;
 }
 
-.registrationForm {
+.menuForm {
 	padding: 20px;
 }
 
-.registrationForm label {
+.menuForm label {
 	display: block;
 	font-size: 11px;
 }
 
-.registrationForm p {
+.menuForm p {
 	margin: 2px 0;
 }
 

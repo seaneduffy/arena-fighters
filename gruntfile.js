@@ -5,6 +5,7 @@ module.exports = function(grunt) {
 	grunt.registerTask('process-sprite-data', 'process sprite data', function() {
 		let paths = grunt.file.expand("src/data/**/*.json");
 		paths.forEach(path=>{
+			console.log(path);
 			let content = grunt.file.read(path),
 				suffix = path.match(/[h|m|s]d/);
 			if(!!suffix) suffix = suffix[0];
@@ -36,7 +37,9 @@ module.exports = function(grunt) {
 
 	grunt.loadNpmTasks("grunt-browserify");
 	grunt.loadNpmTasks('grunt-merge-json');
-
-	grunt.registerTask("default", ["browserify", "process-sprite-data", "merge-json"]);
+	
+	grunt.registerTask("default",["browserify", "process-sprite-data", "merge-json"]);
+	grunt.registerTask("build",["browserify"]);
+	grunt.registerTask("data", ["process-sprite-data", "merge-json"]);
 
 };

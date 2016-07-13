@@ -18,7 +18,7 @@
 	"sourceSize": {"w":75,"h":75},
 	"pivot": {"x":0.5,"y":0.5}
 },
-"down_left":
+"downleft":
 {
 	"frame": {"x":0,"y":150,"w":75,"h":75},
 	"rotated": false,
@@ -27,7 +27,7 @@
 	"sourceSize": {"w":75,"h":75},
 	"pivot": {"x":0.5,"y":0.5}
 },
-"down_right":
+"downright":
 {
 	"frame": {"x":75,"y":0,"w":75,"h":75},
 	"rotated": false,
@@ -63,7 +63,7 @@
 	"sourceSize": {"w":75,"h":75},
 	"pivot": {"x":0.5,"y":0.5}
 },
-"up_left":
+"upleft":
 {
 	"frame": {"x":150,"y":75,"w":75,"h":75},
 	"rotated": false,
@@ -72,7 +72,7 @@
 	"sourceSize": {"w":75,"h":75},
 	"pivot": {"x":0.5,"y":0.5}
 },
-"up_right":
+"upright":
 {
 	"frame": {"x":150,"y":150,"w":75,"h":75},
 	"rotated": false,
@@ -88,6 +88,6 @@
 	"format": "RGBA8888",
 	"size": {"w":225,"h":225},
 	"scale": "0.5",
-	"smartupdate": "$TexturePacker:SmartUpdate:ddd48f85981964bae74e02eefca92257:5c28729f7b73a05f07074785f6424dd1:6815c924628499dd89546cc23dd2a329$"
+	"smartupdate": "$TexturePacker:SmartUpdate:c3c600f20e66e10957fe1846f41544f8:5c28729f7b73a05f07074785f6424dd1:6815c924628499dd89546cc23dd2a329$"
 }
 }

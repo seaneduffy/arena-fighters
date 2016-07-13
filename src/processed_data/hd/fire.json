@@ -1,6 +1,6 @@
 {"fire-hd": {
 
-"fire_down":
+"$fire_down":
 {
 	"frame": {"x":0,"y":0,"w":65,"h":65},
 	"rotated": false,
@@ -9,7 +9,7 @@
 	"sourceSize": {"w":65,"h":65},
 	"pivot": {"x":0.5,"y":0.5}
 },
-"fire_up":
+"$fire_up":
 {
 	"frame": {"x":65,"y":0,"w":65,"h":65},
 	"rotated": false,
@@ -25,6 +25,6 @@
 	"format": "RGBA8888",
 	"size": {"w":130,"h":65},
 	"scale": "1",
-	"smartupdate": "$TexturePacker:SmartUpdate:42215213f196b775853bec00ea6bc4e4:f794d3c41b365972cb94632dfa2707f5:c204a7656fa2cd485c8588e6720f2a99$"
+	"smartupdate": "$TexturePacker:SmartUpdate:2123fef66adb9b984f7794cd23f94edd:449f2b795e4543dbc0abfad065f00f5a:c204a7656fa2cd485c8588e6720f2a99$"
 }
 }

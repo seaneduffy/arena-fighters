@@ -12,7 +12,7 @@
 	"mdHeight": 800,
 	"sdWidth": 712,
 	"sdHeight": 400,
-	"frameRate": 3,
+	"frameRate": 4,
 	"gameObjects": {
 		"player1": {
 			"properties": {
@@ -34,7 +34,7 @@
 					"$right_standing",
 					"$right_walking"
 				],
-				"speed": 20,
+				"speed": 30,
 				"z": 3,
 				"interacts": true,
 				"health": 15,
@@ -65,7 +65,7 @@
 					"$right_standing",
 					"$right_walking"
 				],
-				"speed": 20,
+				"speed": 30,
 				"z": 3,
 				"interacts": true,
 				"health": 15,

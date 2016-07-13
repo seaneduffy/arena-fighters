@@ -7,7 +7,8 @@ let config = require('./config'),
 function processData(json) {
 	let settings = json.settings,
 		windowInnerWidth = window.innerWidth,
-		windowInnerHeight = window.innerHeight;
+		windowInnerHeight = window.innerHeight,
+		resAppend = '';
 	config.settings = json.settings;
 	config.levels = json.levels;
 	config.gameObjects = settings.gameObjects;
@@ -22,26 +23,27 @@ function processData(json) {
 	settings.mdHeight = utils.processValue(settings.mdHeight);
 	settings.hdWidth = utils.processValue(settings.hdWidth);
 	settings.hdHeight = utils.processValue(settings.hdHeight);
+	config.spriteImgPath = '/img/sprites/';
 
 	if(config.windowWidth <= settings.sdWidth) {
 		config.stageWidth = settings.sdWidth;
 		config.stageHeight = settings.sdHeight;
-		config.spriteImgPath = config.sdImgPath;
-		config.joystick = json['joystick-sd'];
-		config.fire = json['fire-sd'];
+		resAppend = '-sd';
 	} else if(config.windowWidth <= settings.mdWidth) {
 		config.stageWidth = settings.mdWidth;
 		config.stageHeight = settings.mdHeight;
-		config.spriteImgPath = config.mdImgPath;
-		config.joystick = json['joystick-md'];
-		config.fire = json['fire-md'];
+		resAppend = '-md';
 	} else {
 		config.stageWidth = settings.hdWidth;
 		config.stageHeight = settings.hdHeight;
-		config.spriteImgPath = config.hdImgPath;
-		config.joystick = json['joystick-hd'];
-		config.fire = json['fire-hd'];
+		resAppend = '-hd';
 	}
+	
+
+	config.joystick = json['joystick'+resAppend];
+	config.fire = json['fire'+resAppend];
+	config.fireBtnImage = config.spriteImgPath+'fire'+resAppend+'.png';
+	config.joystickImage = config.spriteImgPath+'joystick'+resAppend+'.png';
 
 	config.resolution = config.windowWidth / config.stageWidth;
 	
@@ -81,7 +83,9 @@ function processData(json) {
 	];
 	
 	let property = '',
-		type = '';
+		type = '',
+		sprite = '',
+		frames = null;
 
 	config.levels.forEach(level=>{
 		level.forEach(levelData=>{
@@ -102,15 +106,19 @@ function processData(json) {
 				config.gameObjects[type].properties[property] *= config.positionScale;
 		}
 		if(!!config.gameObjects[type].properties.sprites) {
-			config.imagesToLoad.push(config.spriteImgPath+type+'.png');
-			config.gameObjects[type].spriteMeta = {
-				img: config.spriteImgPath+type+'.png',
-				frames: config.gameObjects[type].properties.sprites
+			config.imagesToLoad.push(config.spriteImgPath+type+resAppend+'.png');
+			frames = {};
+			for(sprite in json[type+resAppend]) {
+				frames[sprite] = json[type+resAppend][sprite];
+			}
+			config.gameObjects[type].properties.spriteMeta = {
+				img: config.spriteImgPath+type+resAppend+'.png',
+				frames: frames
 			};
 		}
 		if(!!config.gameObjects[type].properties.sprite) {
-			config.imagesToLoad.push(config.spriteImgPath+type+'.png');
-			config.gameObjects[type].properties.sprite = config.spriteImgPath+type+'.png';
+			config.imagesToLoad.push(config.spriteImgPath+type+resAppend+'.png');
+			config.gameObjects[type].properties.sprite = config.spriteImgPath+type+resAppend+'.png';
 		}
 	}
 	callback();

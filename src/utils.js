@@ -50,10 +50,9 @@ module.exports = {
 		let gameObject = null,
 			property = null, 
 			value = null,
-			gameObjectData = config.settings[type], 
+			gameObjectData = config.gameObjects[type], 
 			properties = gameObjectData.properties,
 			className = gameObjectData.className;
-			
 		if(className === 'Character') {
 			gameObject = new Character();
 		} else if(className === 'GameObject') {
