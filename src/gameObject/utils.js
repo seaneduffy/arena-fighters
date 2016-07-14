@@ -5,37 +5,7 @@ let Character,
 	Firearm,
 	Ammunition,
 	GameObject,
-	config = require('./config');
-
-function processValue(value) {
-	if(typeof value === 'string' && value.indexOf('config.') !== -1) {
-		let values = value.match(/[config\.|a-z|A-Z|0-9]+/g),
-			operators = value.match(/[\+|\/|\-|\*]/g),
-			operator = '',
-			l = values.length;
-	
-		for(let i=0; i<l; i++) {
-			if(values[i].indexOf('config.') !== -1) {
-				values[i] = config[values[i].replace('config.','')] * 1;
-			}
-			values[i] *= 1;
-			if(i !== 0) {
-				operator = operators[i-1];
-				if(operator === '+')
-					value += values[i];
-				else if(operator === '-')
-					value -= values[i];
-				else if(operator === '*')
-					value *= values[i];
-				else if(operator === '/')
-					value /= values[i];
-			} else {
-				value = values[i];
-			}
-		}
-	}
-	return value;
-}
+	config = require('../config');
 
 module.exports = {
 	init: function() {
@@ -45,7 +15,6 @@ module.exports = {
 		Ammunition = require('./ammunition');
 		GameObject = require('./gameObject');
 	},
-	processValue: processValue,
 	createGameObject: function(type, additionalProperties) {
 		let gameObject = null,
 			property = null, 
@@ -68,10 +37,10 @@ module.exports = {
 		}
 		gameObject.type = type;
 		for(property in properties) {
-			gameObject[property] = processValue(properties[property]);
+			gameObject[property] = properties[property];
 		}
 		for(property in additionalProperties) {
-			gameObject[property] = processValue(additionalProperties[property]);
+			gameObject[property] = additionalProperties[property];
 		}
 		return gameObject;
 	}

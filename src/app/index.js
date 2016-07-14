@@ -7,26 +7,28 @@ components = require('./components'),
 dataLoader = require('../data'),
 config = require('../config'),
 resources = require('../resources'),
-utils = require('../utils'),
-socket = require('../socket'),
+utils = require('../gameObject/utils'),
+socket = '',//require('../socket'),
 cycle = require('../cycle'),
-GameObject = require('../gameObject'),
-Sprite = require('../sprite'),
+//GameObject = require('../gameObject'),
+//Sprite = require('../sprite'),
+Sprite = require('../gameObject/sprite'),
+GameObject = require('../gameObject/gameObject'),
 
 controls = null,
 
 gameComponent = ReactDOM.render(React.createElement(components.Game), document.getElementById('game'), ()=>{
+	
+	config.domElement = document.getElementById('canvas');
+	
 	dataLoader.load(()=>{
 		resources.onReady(function(){
 			utils.init();
 			controls = require('../controls');
 			controls(onJoystick, onFire);
-			config.gameCanvas = document.getElementById('gameScreen').querySelector('canvas');
-			config.gameCanvas.setAttribute('width', config.windowWidth);
-			config.gameCanvas.setAttribute('height', config.windowHeight);
-			config.canvasContext = config.gameCanvas.getContext('2d');
 			cycle.addUIUpdateFunction(Sprite.draw);
 			cycle.addCleanup(GameObject.cleanup);
+			cycle.addCleanup(Sprite.cleanup);
 			components.addHandlers(
 				handleStartSinglePlayerGame,
 				handleStartTwoPlayerGame,
@@ -45,7 +47,7 @@ gameComponent = ReactDOM.render(React.createElement(components.Game), document.g
 
 function startLevel(index) {
 	let levelData = config.levels[index];
-	if(config.hosting || config.gameType === 'single') {
+	/*if(config.hosting || config.gameType === 'single') {
 		let i = 0, l = levelData.length, gameObject = null, type = null, properties = null;
 		for(i; i<l; i++) {
 			type = levelData[i].type;
@@ -60,7 +62,10 @@ function startLevel(index) {
 					config.player2 = gameObject;
 			}
 		}
-	}
+	}*/
+	let player = utils.createGameObject(levelData[0].type, levelData[0].properties);
+	player.stage = true;
+	config.player1 = player;
 	gameComponent.setState({gameActive:true});
 	cycle.start();
 }

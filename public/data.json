@@ -600,23 +600,11 @@
 			{
 				"type": "player1",
 				"properties": {
-					"x": "config.maxWidth / 3",
-					"y": "config.stageCenterY",
+					"x": "0",
+					"y": "0",
 					"display": "$right_standing",
 					"direction": "config.RIGHT"
 				}
-			},
-			{
-				"type": "player2",
-				"properties": {
-					"x": "config.maxWidth * 2 / 3",
-					"y": "config.stageCenterY",
-					"display": "$left_standing",
-					"direction": "config.LEFT"
-				}
-			},
-			{
-				"type": "background1"
 			}
 		]
 	],
@@ -1256,21 +1244,19 @@
 		"joystickMin": 0,
 		"joystickMax": 120,
 		"wallPadding": 50,
-		"maxWidth": 2846,
-		"maxHeight": 1600,
-		"stageCenterX": "config.maxWidth / 2",
-		"stageCenterY": "config.maxHeight / 2",
+		"stageWidth": 2846,
+		"stageHeight": 1600,
 		"hdWidth": 2846,
 		"hdHeight": 1600,
 		"mdWidth": 1423,
 		"mdHeight": 800,
 		"sdWidth": 712,
 		"sdHeight": 400,
-		"frameRate": 4,
+		"frameRate": 2,
 		"gameObjects": {
 			"player1": {
 				"properties": {
-					"sprites": [
+					"spriteLabels": [
 						"$up_standing",
 						"$up_walking",
 						"$upleft_standing",
@@ -1288,7 +1274,7 @@
 						"$right_standing",
 						"$right_walking"
 					],
-					"speed": 30,
+					"speed": 12,
 					"z": 3,
 					"interacts": true,
 					"health": 15,
@@ -1301,7 +1287,7 @@
 			},
 			"player2": {
 				"properties": {
-					"sprites": [
+					"spriteLabels": [
 						"$up_standing",
 						"$up_walking",
 						"$upleft_standing",
@@ -1319,7 +1305,7 @@
 						"$right_standing",
 						"$right_walking"
 					],
-					"speed": 30,
+					"speed": 12,
 					"z": 3,
 					"interacts": true,
 					"health": 15,
@@ -1332,7 +1318,7 @@
 			},
 			"grunt": {
 				"properties": {
-					"sprites": [
+					"spriteLabels": [
 						"$up_standing",
 						"$up_walking",
 						"$upleft_standing",
@@ -1366,7 +1352,7 @@
 			},
 			"devil": {
 				"properties": {
-					"sprites": [
+					"spriteLabels": [
 						"$up_standing",
 						"$up_walking",
 						"$upleft_standing",
@@ -1401,7 +1387,6 @@
 			},
 			"bullet": {
 				"properties": {
-					"sprite": "bullet",
 					"display": "default",
 					"speed": 24,
 					"z": 8,
@@ -1415,7 +1400,7 @@
 			},
 			"pistol": {
 				"properties": {
-					"sprites": [
+					"spriteLabels": [
 						"$up_off",
 						"$up_firing",
 						"$upright_off",
@@ -1439,10 +1424,9 @@
 			},
 			"background1": {
 				"properties": {
-					"sprite": "default",
 					"display": "default",
-					"x": "config.stageCenterX",
-					"y": "config.stageCenterY",
+					"x": "config.windowCenterX",
+					"y": "config.windowCenterY",
 					"z": 0,
 					"interacts": false,
 					"static": true
@@ -1451,7 +1435,6 @@
 			},
 			"obstacle1": {
 				"properties": {
-					"sprite": "default",
 					"display": "default",
 					"z": 1,
 					"interacts": true,

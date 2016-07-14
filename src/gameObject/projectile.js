@@ -1,7 +1,7 @@
 let Sprite = require('./sprite'),
-	config = require('./config'),
+	config = require('../config'),
 	GameObject = require('./gameObject'),
-	cycle = require('./cycle');
+	cycle = require('../cycle');
 
 function Projectile() {
 	GameObject.prototype.constructor.call(this);
@@ -22,7 +22,7 @@ Projectile.prototype = Object.create(GameObject.prototype, {
 });
 
 function onCollision(collidedObject) {
-	this.destroyed = true;
+	this.destroy();
 };
 
 module.exports = Projectile;

@@ -1,14 +1,13 @@
 'use strict';
 
-let config = require('./config'),
+let config = require('../config'),
 	GameObject = require('./gameObject'),
-	aiFunctions = require('./ai'),
-	cycle = require('./cycle'),
+	aiFunctions = require('../ai'),
+	cycle = require('../cycle'),
 	utils = require('./utils');
 
 function Character() {
 	GameObject.prototype.constructor.call(this);
-	this._dead = false;
 }
 
 Character.prototype = Object.create(GameObject.prototype, {
@@ -16,12 +15,14 @@ Character.prototype = Object.create(GameObject.prototype, {
 		set: function(dead) {
 			this._dead = dead;
 			if(dead) {
-				this.destroyed = true;
+				this.destroy();
 				if(!!this.firearm)
-					this.firearm.destroyed = true;
+					this.firearm.destroy();
 			}
 		}, 
 		get: function() {
+			if(typeof this._dead === 'undefined')
+				return this._dead = false;
 			return this._dead;
 		}
 	},
@@ -115,7 +116,7 @@ Character.prototype = Object.create(GameObject.prototype, {
 		get: function() {
 			return Object.getOwnPropertyDescriptor(GameObject.prototype, 'direction').get.call(this);
 		}
-	},
+	}
 });
 
 function initFirearm() {

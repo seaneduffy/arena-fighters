@@ -12,7 +12,7 @@ let config = require('./config'),
 	tmpArr = null,
 	tmpGameObject = null,
 	counter = 0,
-	frameRate = null;
+	frameRate = 1;
 
 function cycle() {
 	if(active) {
@@ -47,7 +47,6 @@ module.exports = {
 	getCounter: function() {return counter},
 	start: function() {
 		active = true;
-		frameRate = config.settings.frameRate;
 		window.requestAnimationFrame(cycle);
 	},
 	stop: function() {
@@ -96,4 +95,7 @@ module.exports = {
 			func: func
 		});
 	},
+	setFrameRate: function(rate) {
+		frameRate = rate;
+	}
 };

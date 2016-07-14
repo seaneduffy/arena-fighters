@@ -1,127 +1,162 @@
 'use strict';
 
 let config = require('./config'),
-	utils = require('./utils'),
+	cycle = require('./cycle'),
 	callback = null;
 
 function processData(json) {
 	let settings = json.settings,
 		windowInnerWidth = window.innerWidth,
 		windowInnerHeight = window.innerHeight,
-		resAppend = '';
-	config.settings = json.settings;
-	config.levels = json.levels;
-	config.gameObjects = settings.gameObjects;
-	config.windowWidth = windowInnerWidth > windowInnerHeight ? windowInnerWidth : windowInnerHeight;
-	config.windowHeight = windowInnerWidth < windowInnerHeight ? windowInnerWidth : windowInnerHeight;
-	config.maxWidth = utils.processValue(settings.maxWidth);
-	config.maxHeight = utils.processValue(settings.maxHeight);
-	config.wallPadding = utils.processValue(settings.wallPadding);
-	settings.sdWidth = utils.processValue(settings.sdWidth);
-	settings.sdHeight = utils.processValue(settings.sdHeight);
-	settings.mdWidth = utils.processValue(settings.mdWidth);
-	settings.mdHeight = utils.processValue(settings.mdHeight);
-	settings.hdWidth = utils.processValue(settings.hdWidth);
-	settings.hdHeight = utils.processValue(settings.hdHeight);
-	config.spriteImgPath = '/img/sprites/';
+		resAppend = '',
+		windowWidth_max = processValue(settings.stageWidth),
+		windowHeight_max = processValue(settings.stageHeight),
+		windowWidth_srcRes = 0,
+		windowHeight_srcRes = 0,
+		wallPadding = processValue(settings.wallPadding),
+		sdWidth = processValue(settings.sdWidth),
+		sdHeight = processValue(settings.sdHeight),
+		mdWidth = processValue(settings.mdWidth),
+		mdHeight = processValue(settings.mdHeight),
+		hdWidth = processValue(settings.hdWidth),
+		hdHeight = processValue(settings.hdHeight),
+		spriteImgPath = '/img/sprites/',
+		positionScale = 1,
+		windowWidth = config.windowWidth = windowInnerWidth > windowInnerHeight ? windowInnerWidth : windowInnerHeight,
+		windowHeight = config.windowHeight = windowInnerWidth < windowInnerHeight ? windowInnerWidth : windowInnerHeight,
+		gameObjects = config.gameObjects = settings.gameObjects,
+		levels = config.levels = json.levels,
+		resolution = 1,
+		windowCenterX = config.windowCenterX = windowWidth / 2,
+		windowCenterY = config.windowCenterY = windowHeight / 2,
+		imagesToLoad = config.imagesToLoad = new Array(),
+		property = '',
+		type = '',
+		sprite = '',
+		frames = null;
+	
+	
+	config.domElement.style.width = windowWidth+'px';
+	config.domElement.style.height = windowHeight+'px';
+	cycle.setFrameRate(settings.frameRate);
 
-	if(config.windowWidth <= settings.sdWidth) {
-		config.stageWidth = settings.sdWidth;
-		config.stageHeight = settings.sdHeight;
+	if(windowWidth <= settings.sdWidth) {
+		windowWidth_srcRes = settings.sdWidth;
+		windowHeight_srcRes = settings.sdHeight;
 		resAppend = '-sd';
-	} else if(config.windowWidth <= settings.mdWidth) {
-		config.stageWidth = settings.mdWidth;
-		config.stageHeight = settings.mdHeight;
+	} else if(windowWidth <= settings.mdWidth) {
+		windowWidth_srcRes = settings.mdWidth;
+		windowHeight_srcRes = settings.mdHeight;
 		resAppend = '-md';
 	} else {
-		config.stageWidth = settings.hdWidth;
-		config.stageHeight = settings.hdHeight;
+		windowWidth_srcRes = settings.hdWidth;
+		windowHeight_srcRes = settings.hdHeight;
 		resAppend = '-hd';
 	}
-	
 
 	config.joystick = json['joystick'+resAppend];
 	config.fire = json['fire'+resAppend];
-	config.fireBtnImage = config.spriteImgPath+'fire'+resAppend+'.png';
-	config.joystickImage = config.spriteImgPath+'joystick'+resAppend+'.png';
+	config.fireBtnImage = spriteImgPath+'fire'+resAppend+'.png';
+	imagesToLoad.push(config.fireBtnImage);
+	config.joystickImage = spriteImgPath+'joystick'+resAppend+'.png';
+	imagesToLoad.push(config.joystickImage);
 
-	config.resolution = config.windowWidth / config.stageWidth;
+	resolution = config.resolution = windowWidth / windowWidth_srcRes;
 	
-	config.positionScale = config.stageWidth / config.maxWidth;
-	config.stageCenterX = utils.processValue(settings.stageCenterX);
-	config.stageCenterY = utils.processValue(settings.stageCenterY);
-	config.joystickMin = settings.joystickMin * config.positionScale;
-	config.joystickMax = settings.joystickMax * config.positionScale;
-	config.wallPadding = settings.wallPadding * config.positionScale;
+	positionScale = windowWidth_srcRes / windowWidth_max;
+	config.joystickMin = settings.joystickMin * positionScale;
+	config.joystickMax = settings.joystickMax * positionScale;
+	wallPadding *= positionScale;
+	
 	config.topWall = {
 		x: 0,
 		y: 0,
-		width: config.stageWidth,
-		height: config.wallPadding
+		width: windowWidth,
+		height: wallPadding
 	};
 	config.leftWall = {
 		x: 0,
 		y: 0,
-		width: config.wallPadding,
-		height: config.stageHeight
+		width: wallPadding,
+		height: windowHeight
 	};
 	config.rightWall = {
-		x: config.stageWidth - config.wallPadding,
+		x: windowWidth - wallPadding,
 		y: 0,
-		width: config.wallPadding,
-		height: config.stageHeight
+		width: wallPadding,
+		height: windowHeight
 	};
 	config.bottomWall = {
 		x: 0,
-		y: config.stageHeight - config.wallPadding,
-		width: config.stageWidth,
-		height: config.wallPadding
+		y: windowHeight - wallPadding,
+		width: windowWidth,
+		height: wallPadding
 	};
-	config.imagesToLoad = [
-		config.fireBtnImage,
-		config.joystickImage
-	];
-	
-	let property = '',
-		type = '',
-		sprite = '',
-		frames = null;
 
-	config.levels.forEach(level=>{
+	levels.forEach(level=>{
 		level.forEach(levelData=>{
 			if(!!levelData.properties) {
 				for(property in levelData.properties) {
-					levelData.properties[property] = utils.processValue(levelData.properties[property]);
+					levelData.properties[property] = processValue(levelData.properties[property]);
 					if(property === 'x' || property === 'y' || property === 'speed')
-						levelData.properties[property] *= config.positionScale;
+						levelData.properties[property] *= positionScale;
 				}
 			}
 		});
 	});
 
-	for(type in config.gameObjects) {
-		for(property in config.gameObjects[type].properties) {
-			config.gameObjects[type].properties[property] = utils.processValue(config.gameObjects[type].properties[property]);
+	for(type in gameObjects) {
+		for(property in gameObjects[type].properties) {
+			gameObjects[type].properties[property] = processValue(gameObjects[type].properties[property]);
 			if(property === 'x' || property === 'y' || property === 'speed')
-				config.gameObjects[type].properties[property] *= config.positionScale;
+				gameObjects[type].properties[property] *= positionScale;
 		}
-		if(!!config.gameObjects[type].properties.sprites) {
-			config.imagesToLoad.push(config.spriteImgPath+type+resAppend+'.png');
+		if(!!gameObjects[type].properties.spriteLabels) {
+			imagesToLoad.push(spriteImgPath+type+resAppend+'.png');
 			frames = {};
 			for(sprite in json[type+resAppend]) {
 				frames[sprite] = json[type+resAppend][sprite];
 			}
-			config.gameObjects[type].properties.spriteMeta = {
-				img: config.spriteImgPath+type+resAppend+'.png',
+			gameObjects[type].properties.spriteMeta = {
+				img: spriteImgPath+type+resAppend+'.png',
 				frames: frames
 			};
-		}
-		if(!!config.gameObjects[type].properties.sprite) {
-			config.imagesToLoad.push(config.spriteImgPath+type+resAppend+'.png');
-			config.gameObjects[type].properties.sprite = config.spriteImgPath+type+resAppend+'.png';
+		} else {
+			imagesToLoad.push(spriteImgPath+type+resAppend+'.png');
+			gameObjects[type].properties.image = spriteImgPath+type+resAppend+'.png';
 		}
 	}
 	callback();
+}
+
+function processValue(value) {
+	if(typeof value === 'string' && value.indexOf('config.') !== -1) {
+		let values = value.match(/[config\.|a-z|A-Z|0-9]+/g),
+			operators = value.match(/[\+|\/|\-|\*]/g),
+			operator = '',
+			l = values.length;
+	
+		for(let i=0; i<l; i++) {
+			if(values[i].indexOf('config.') !== -1) {
+				values[i] = config[values[i].replace('config.','')] * 1;
+			}
+			values[i] *= 1;
+			if(i !== 0) {
+				operator = operators[i-1];
+				if(operator === '+')
+					value += values[i];
+				else if(operator === '-')
+					value -= values[i];
+				else if(operator === '*')
+					value *= values[i];
+				else if(operator === '/')
+					value /= values[i];
+			} else {
+				value = values[i];
+			}
+		}
+	}
+	return value;
 }
 
 function loadData(uri) {

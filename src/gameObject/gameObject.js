@@ -1,18 +1,14 @@
 let Sprite = require('./sprite'),
-	config = require('./config'),
-	geom = require('./geom'),
-	cycle = require('./cycle'),
+	config = require('../config'),
+	geom = require('../geom'),
+	cycle = require('../cycle'),
 	gameObjects = [],
-	id = require('./id');
+	id = require('../id');
 
 function GameObject() {
 	this._sprites = Object.create(null);
-	this._stage = false;
-	this._interacts = false;
-	this._destroyed = false;
 	gameObjects.push(this);
 	this.id = id();
-	this.ignoreObjectList = [];
 	this.moveCycle = false;
 }
 
@@ -26,23 +22,38 @@ Object.defineProperties(GameObject.prototype, {
 	'getEdgePointFromDirection': {
 		value: getEdgePointFromDirection
 	},
+	'destroy': {
+		value: function() {
+			if(!this.destroyed) {
+				let sprites = this.sprites;
+				for(let label in sprites) {
+					sprites[label].destroy();
+				}
+				this.destroyed = true;
+			}
+		}
+	},
+	'ignoreObjectList': {
+		get: function() {
+			if(!!this._ignoreObjectList)
+				return this._ignoreObjectList;
+			return this._ignoreObjectList = new Array();
+		}
+	},
 	'destroyed': {
 		get: function() {
-			return this._destroyed;
+			if(typeof this._destroyed === 'undefined')
+				return this._destroyed = false;
+			else return this._destroyed;
 		},
 		set: function(destroyed) {
-			if(!this._destroyed && destroyed) {
-				let label = null, sprites = this._sprites;
-				this.stage = false;
-				for(label in sprites) {
-					sprites[label].destroyed = true;
-				}
-				this._destroyed = true;
-			}
+			this._destroyed = destroyed;
 		}
 	},
 	'interacts': {
 		get: function() {
+			if(typeof this._interacts === 'undefined')
+				return this._interacts = false;
 			return this._interacts;
 		},
 		set: function(interacts) {
@@ -51,22 +62,24 @@ Object.defineProperties(GameObject.prototype, {
 	},
 	'stage': {
 		get: function() {
+			if(typeof this._stage === 'undefined')
+				return this._stage = false;
 			return this._stage;
 		},
-		set: function(onStage) {
-			let sprite = this._sprites[this._display];
-			if(onStage && !this._stage) {
-				this._stage = true;
+		set: function(stage) {
+			let sprites = this.sprites,
+				sprite = sprites[this.display];
+			if(stage && !this.stage) {
+				this._stage = stage;
 				if(!!sprite) {
 					sprite.stage = true;
 					this.boundingBox = sprite.boundingBox;
 					if(!this.moveCycle) {
 						cycle.addGameObjectUpdateFunction(this, this.move.bind(this));
-						
 						this.moveCycle = true;
 					}
 				}
-			} else if(!onStage && this._stage) {
+			} else if(!stage && this.stage) {
 				this._stage = false;
 				if(!!sprite)
 					sprite.stage = false;
@@ -116,96 +129,109 @@ Object.defineProperties(GameObject.prototype, {
 			return this._speed;
 		}
 	},
-	'sprite': {
+	'image': {
 		set: function(src) {
-			let sprite = new Sprite(src);
-			if(!!this._x)
-				sprite.x = this._x;
-			if(!!this._y)
-				sprite.y = this._y;
-			if(!!this._z)
-				sprite.z = this._z;
-			this._sprites.default = sprite;
+			let sprite = Sprite.getSprite(this.type + '-default', src);
+			sprite.x = this.x;
+			sprite.y = this.y;
+			sprite.z = this.z;
+			this.sprites.default = sprite;
 			this.boundingBox = sprite.boundingBox;
 		}
 	},
 	'sprites': {
+		get: function() {
+			if(typeof this._sprites === 'undefined')
+				return this._sprites = Object.create(null);
+			return this._sprites;
+		}
+	},
+	'spriteLabels': {
 		set: function(spriteLabels) {
 			this._spriteLabels = spriteLabels;
-			if(!!this._spriteMeta)
+			if(!!this.spriteMeta)
 				this.initSprites();
+		},
+		get: function() {
+			return this._spriteLabels;
 		}
 	},
 	'spriteMeta': {
 		set: function(spriteMeta) {
 			this._spriteMeta = spriteMeta;
-			if(!!this._spriteLabels)
+			if(!!this.spriteLabels)
 				this.initSprites();
+		},
+		get: function() {
+			return this._spriteMeta;
 		}
 	},
 	'x': {
 		set: function(x) {
-			this._prevX = this._x;
 			this._x = x;
-			let label = null,
-				sprites = this._sprites;
-			for(label in sprites) {
+			let sprites = this.sprites;
+			for(let label in sprites) {
 				sprites[label].x = x;
 			}
-			if(!!this._sprites[this._display]) {
-				
-				this.boundingBox = this._sprites[this._display].boundingBox;
+			if(!!sprites[this.display]) {
+				this.boundingBox = sprites[this.display].boundingBox;
 			}	
 		},
 		get: function() {
-			return this._x;
+			if(!!this._x)
+				return this._x;
+			return this._x = 0;
 		}
 	},
 	'y': {
 		set: function(y) {
-			this._prevY = this._y;
 			this._y = y;
-			let sprites = this._sprites, label = null;
-			for(label in sprites) {
+			let sprites = this.sprites;
+			for(let label in sprites) {
 				sprites[label].y = y;
 			}
-			if(!!this._sprites[this._display]) {
-				this.boundingBox = this._sprites[this._display].boundingBox;
+			if(!!sprites[this.display]) {
+				this.boundingBoy = sprites[this.display].boundingBoy;
 			}	
 		},
 		get: function() {
-			return this._y;
+			if(!!this._y)
+				return this._y;
+			return this._y = 0;
 		}
 	},
 	'z': {
 		set: function(z) {
 			this._z = z;
-			let sprites = this._sprites, label = null;
-			for(label in sprites) {
+			let sprites = this.sprites;
+			for(let label in sprites) {
 				sprites[label].z = z;
 			}
 		},
 		get: function() {
-			return this._z;
+			if(!!this._z)
+				return this._z;
+			return this._z = 0;
 		}
 	},
 	'display': {
 		set: function(display) {
 			if(this._display !== display) {
-				let label = null, sprites = this._sprites, sprite = null;
-				sprite = sprites[this._display];
+				let sprites = this.sprites,
+					sprite = sprites[this._display];
 				if(!!sprite) sprite.stage = false;
 				this._display = display;
-				if(this._stage) {
-					sprite = sprites[display];
-					if(!!sprite) {
-						sprite.stage = true;
-						this.boundingBox = sprite.boundingBox;
-						if(!this.moveCycle) {
-							cycle.addGameObjectUpdateFunction(this, this.move.bind(this));
-							this.moveCycle = true;
-						}
+				sprite = sprites[display];
+				if(this.stage && !!sprite) {
+					sprite.stage = true;
+					this.boundingBox = sprite.boundingBox;
+					if(!this.moveCycle) {
+						cycle.addGameObjectUpdateFunction(this, this.move.bind(this));
+						this.moveCycle = true;
 					}
+				} else {
+					this._display = display;
+					return;	
 				}
 			}
 		},
@@ -296,8 +322,7 @@ function move() {
 	if(this.velocity.dY < 0 && !!(collisionCheck = checkCollision(boundingBox, config.topWall, this.velocity.dX, this.velocity.dY))){
 		onCollision(this, boundingBox.x, boundingBox.y, collisionCheck.x, collisionCheck.y, 'wall');
 	}
-		
-	
+
 	gameObjects.forEach( objectToCheck => {
 		let doesNotInteractWith = false;
 		if(!!this.noInteraction) {
@@ -351,17 +376,17 @@ function checkCollision(boundingBox, objectToCheckBoundingBox, dx, dy) {
 			yMovingInDown = dy > 0 && y1b < y2a && y1b + dy > y2a;
 			
 		if(xMovingInLeft && yPrevWithin) {
-			x = x1a;//x2b;
+			x = x1a;
 			y = dy1a;
 		} else if(xMovingInRight && yPrevWithin) {
-			x = x1a;//x2a - x1b + x1a;
+			x = x1a;
 			y = dy1a;
 		} else if(xPrevWithin && yMovingInDown) {
 			x = dx1a;
-			y = y1a;//y2a - y1b + y1a; 
+			y = y1a;
 		} else if(xPrevWithin && yMovingInUp) {
 			x = dx1a;
-			y = y1a;//y2b;
+			y = y1a;
 		} else {
 			x = x1a;
 			y = y1a;
@@ -370,25 +395,23 @@ function checkCollision(boundingBox, objectToCheckBoundingBox, dx, dy) {
 	}
 	return false;
 }
-var c = 0;
+
 function getEdgePointFromDirection(direction) {
-	let boundingBox = this._boundingBox,
+	let boundingBox = this.boundingBox,
 		delta = geom.getVectorFromXYAngle(boundingBox.width / 2, boundingBox.height / 2, direction);
 	return {
-		x: this._x + delta.x,
-		y: this._y + delta.y
+		x: this.x + delta.x,
+		y: this.y + delta.y
 	};
 }
 
 function cleanup() {
-	let i = 0, l = gameObjects.length;
-	for(i=0; i<l; i++) {
-		if(gameObjects[i].destroyed) {
-			gameObjects.splice(i, 1);
-			i--;
-			l--;
-		}
-	}
+	let tmp = new Array();
+	gameObjects.forEach( gameObject => {
+		if(!gameObject.destroyed)
+			tmp.push(gameObject);
+	} );
+	gameObjects = tmp;
 }
 
 function clear() {
@@ -398,27 +421,26 @@ function clear() {
 }
 
 function initSprites() {
-	let sprites = this._sprites,
-		frames = this._spriteMeta.frames,
-		spriteSheetPath = this._spriteMeta.img;
-	this._spriteLabels.forEach( spriteLabel => {
-		let images = [];
+	let frames = this.spriteMeta.frames,
+		spriteSheetPath = this.spriteMeta.img,
+		sprite = null,
+		sprites = this.sprites;
+	this.spriteLabels.forEach( spriteLabel => {
+		let frameData = new Array();
 		for(let key in frames) {
 			if(key.indexOf(spriteLabel) != -1) {
-				images.push(frames[key]);
+				frameData.push(frames[key]);
 			}
 		}
-		let sprite = new Sprite(spriteSheetPath, images);
-		if(!!this._x)
-			sprite.x = this._x;
-		if(!!this._y)
-			sprite.y = this._y;
-		if(!!this._z)
-			sprite.z = this._z;
+		sprite = Sprite.getSprite(this.type + '-' + spriteLabel, spriteSheetPath, frameData);
+		sprite.x = this.x;
+		sprite.y = this.y;
+		sprite.z = this.z;
 		sprites[spriteLabel] = sprite;
 	});
 	if(!!this.display) {
-		this.boundingBox = sprites[this.display].boundingBox;
+		sprite = sprites[this.display];
+		this.boundingBox = sprite.boundingBox;
 		if(!!this.stage) {
 			sprite.stage = true;
 			if(!this.moveCycle) {
@@ -431,6 +453,10 @@ function initSprites() {
 
 function ignoreObject(gameObject) {
 	this.ignoreObjectList.push(gameObject);
+}
+
+window.getGameObjectTotal = function() {
+	return gameObjects.length;
 }
 
 module.exports = GameObject;

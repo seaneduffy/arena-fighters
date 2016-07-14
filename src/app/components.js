@@ -123,7 +123,7 @@ Game = React.createClass({
 		</div>
 	</div>
 	<div id="gameScreen" className={this.state.gameActive ? '' : 'hidden'}>
-		<canvas></canvas>
+		<div id="canvas"></div>
 		<div id="controls">
 			<span id="joystick" className="center"></span>
 			<span id="fire-btn"></span>

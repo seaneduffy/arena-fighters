@@ -11,7 +11,7 @@ let config = require('./config'),
 	deltaX = null,
 	deltaY = null,
 	sensitivity = null,
-	maxDistance = null,
+	windowHeight_maxResDistance = null,
 	directions = Object.create(null),
 	spriteJson = null,
 	xobj = new XMLHttpRequest();
@@ -58,11 +58,11 @@ function touchMove(e) {
 	deltaX = touchX - centerX;
 	deltaY = touchY - centerY;
 	let amount = geom.getDistance(centerX, centerY, touchX, touchY);
-	if(amount > maxDistance) amount = maxDistance;
+	if(amount > windowHeight_maxResDistance) amount = windowHeight_maxResDistance;
 	if(Math.abs(deltaX) > sensitivity || Math.abs(deltaY) > sensitivity){
 		callback(
 			geom.getAngle(centerX, centerY, touchX, touchY), 
-			amount / maxDistance
+			amount / windowHeight_maxResDistance
 		);
 	} else {
 		callback(-1, 0);
@@ -126,9 +126,9 @@ function callback(angle, amount) {
 }
 
 module.exports = {
-	init: function(_element, _maxDistance, _sensitivity, json){
+	init: function(_element, _windowHeight_maxResDistance, _sensitivity, json){
 		element = _element;
-		maxDistance = _maxDistance;
+		windowHeight_maxResDistance = _windowHeight_maxResDistance;
 		sensitivity = _sensitivity;
 		spriteJson = json;
 		init();
