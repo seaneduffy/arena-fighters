@@ -9,10 +9,8 @@ function processData(json) {
 		windowInnerWidth = window.innerWidth,
 		windowInnerHeight = window.innerHeight,
 		resAppend = '',
-		windowWidth_max = processValue(settings.stageWidth),
-		windowHeight_max = processValue(settings.stageHeight),
-		windowWidth_srcRes = 0,
-		windowHeight_srcRes = 0,
+		stageWidth = 0,
+		stageHeight = 0,
 		wallPadding = processValue(settings.wallPadding),
 		sdWidth = processValue(settings.sdWidth),
 		sdHeight = processValue(settings.sdHeight),
@@ -21,39 +19,42 @@ function processData(json) {
 		hdWidth = processValue(settings.hdWidth),
 		hdHeight = processValue(settings.hdHeight),
 		spriteImgPath = '/img/sprites/',
-		positionScale = 1,
+		resolution = 1,
 		windowWidth = config.windowWidth = windowInnerWidth > windowInnerHeight ? windowInnerWidth : windowInnerHeight,
 		windowHeight = config.windowHeight = windowInnerWidth < windowInnerHeight ? windowInnerWidth : windowInnerHeight,
 		gameObjects = config.gameObjects = settings.gameObjects,
 		levels = config.levels = json.levels,
-		resolution = 1,
-		windowCenterX = config.windowCenterX = windowWidth / 2,
-		windowCenterY = config.windowCenterY = windowHeight / 2,
+		stageCenterX = 0,
+		stageCenterY = 0,
 		imagesToLoad = config.imagesToLoad = new Array(),
 		property = '',
 		type = '',
 		sprite = '',
 		frames = null;
 	
-	
-	config.domElement.style.width = windowWidth+'px';
-	config.domElement.style.height = windowHeight+'px';
 	cycle.setFrameRate(settings.frameRate);
 
 	if(windowWidth <= settings.sdWidth) {
-		windowWidth_srcRes = settings.sdWidth;
-		windowHeight_srcRes = settings.sdHeight;
+		stageWidth = settings.sdWidth;
+		stageHeight = settings.sdHeight;
 		resAppend = '-sd';
 	} else if(windowWidth <= settings.mdWidth) {
-		windowWidth_srcRes = settings.mdWidth;
-		windowHeight_srcRes = settings.mdHeight;
+		stageWidth = settings.mdWidth;
+		stageHeight = settings.mdHeight;
 		resAppend = '-md';
 	} else {
-		windowWidth_srcRes = settings.hdWidth;
-		windowHeight_srcRes = settings.hdHeight;
+		stageWidth = settings.hdWidth;
+		stageHeight = settings.hdHeight;
 		resAppend = '-hd';
 	}
-
+	
+	config.stageWidth = stageWidth;
+	config.stageHeight = stageHeight;
+	
+	
+	
+	stageCenterX = config.stageCenterX = stageWidth / 2;
+	stageCenterY = config.stageCenterY = stageHeight / 2;
 	config.joystick = json['joystick'+resAppend];
 	config.fire = json['fire'+resAppend];
 	config.fireBtnImage = spriteImgPath+'fire'+resAppend+'.png';
@@ -61,35 +62,36 @@ function processData(json) {
 	config.joystickImage = spriteImgPath+'joystick'+resAppend+'.png';
 	imagesToLoad.push(config.joystickImage);
 
-	resolution = config.resolution = windowWidth / windowWidth_srcRes;
+	resolution = config.resolution = windowWidth / stageWidth;
 	
-	positionScale = windowWidth_srcRes / windowWidth_max;
-	config.joystickMin = settings.joystickMin * positionScale;
-	config.joystickMax = settings.joystickMax * positionScale;
-	wallPadding *= positionScale;
+	config.domElement.style.width = stageWidth * resolution + 'px';
+	config.domElement.style.height = stageHeight * resolution + 'px';
+	config.joystickMin = settings.joystickMin * resolution;
+	config.joystickMax = settings.joystickMax * resolution;
+	wallPadding *= resolution;
 	
 	config.topWall = {
 		x: 0,
 		y: 0,
-		width: windowWidth,
+		width: stageWidth * resolution,
 		height: wallPadding
 	};
 	config.leftWall = {
 		x: 0,
 		y: 0,
 		width: wallPadding,
-		height: windowHeight
+		height: stageHeight * resolution
 	};
 	config.rightWall = {
-		x: windowWidth - wallPadding,
+		x: stageWidth * resolution - wallPadding,
 		y: 0,
 		width: wallPadding,
-		height: windowHeight
+		height: stageHeight * resolution
 	};
 	config.bottomWall = {
 		x: 0,
-		y: windowHeight - wallPadding,
-		width: windowWidth,
+		y: stageHeight * resolution - wallPadding,
+		width: stageWidth * resolution,
 		height: wallPadding
 	};
 
@@ -99,7 +101,7 @@ function processData(json) {
 				for(property in levelData.properties) {
 					levelData.properties[property] = processValue(levelData.properties[property]);
 					if(property === 'x' || property === 'y' || property === 'speed')
-						levelData.properties[property] *= positionScale;
+						levelData.properties[property] *= resolution;
 				}
 			}
 		});
@@ -109,7 +111,7 @@ function processData(json) {
 		for(property in gameObjects[type].properties) {
 			gameObjects[type].properties[property] = processValue(gameObjects[type].properties[property]);
 			if(property === 'x' || property === 'y' || property === 'speed')
-				gameObjects[type].properties[property] *= positionScale;
+				gameObjects[type].properties[property] *= resolution;
 		}
 		if(!!gameObjects[type].properties.spriteLabels) {
 			imagesToLoad.push(spriteImgPath+type+resAppend+'.png');

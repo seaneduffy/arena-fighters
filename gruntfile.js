@@ -32,13 +32,22 @@ module.exports = function(grunt) {
 				src: [ "src/processed_data/**/*.json" ],
 				dest: "public/data.json"
 			}
+		},
+		compass: {
+		    dist: {
+		      options: {
+		        sassDir: 'src/scss',
+		        cssDir: 'public/css'
+		      }
+		    }
 		}
 	});
 
 	grunt.loadNpmTasks("grunt-browserify");
 	grunt.loadNpmTasks('grunt-merge-json');
+	grunt.loadNpmTasks("grunt-contrib-compass");
 	
-	grunt.registerTask("default",["browserify", "process-sprite-data", "merge-json"]);
+	grunt.registerTask("default",["browserify", "process-sprite-data", "merge-json", "compass"]);
 	grunt.registerTask("build",["browserify"]);
 	grunt.registerTask("data", ["process-sprite-data", "merge-json"]);
 

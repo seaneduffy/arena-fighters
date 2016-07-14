@@ -8,10 +8,8 @@ dataLoader = require('../data'),
 config = require('../config'),
 resources = require('../resources'),
 utils = require('../gameObject/utils'),
-socket = '',//require('../socket'),
+socket = require('../socket'),
 cycle = require('../cycle'),
-//GameObject = require('../gameObject'),
-//Sprite = require('../sprite'),
 Sprite = require('../gameObject/sprite'),
 GameObject = require('../gameObject/gameObject'),
 
@@ -20,6 +18,8 @@ controls = null,
 gameComponent = ReactDOM.render(React.createElement(components.Game), document.getElementById('game'), ()=>{
 	
 	config.domElement = document.getElementById('canvas');
+	
+	initSocket();
 	
 	dataLoader.load(()=>{
 		resources.onReady(function(){
@@ -47,35 +47,27 @@ gameComponent = ReactDOM.render(React.createElement(components.Game), document.g
 
 function startLevel(index) {
 	let levelData = config.levels[index];
-	/*if(config.hosting || config.gameType === 'single') {
-		let i = 0, l = levelData.length, gameObject = null, type = null, properties = null;
-		for(i; i<l; i++) {
-			type = levelData[i].type;
-			properties = levelData[i].properties;
-			if(type !== 'player2') {
-				gameObject = utils.createGameObject(type, properties);
-				if(!!gameObject)
+	if(config.hosting || config.gameType === 'single') {
+		let gameObject = null, type = null, properties = null;
+		levelData.forEach( level => {
+			if(level.type !== 'player2' || config.gameType === 'two') {
+				gameObject = utils.createGameObject(level.type, level.properties);
+				if(!!gameObject) {
 					gameObject.stage = true;
-				if(type === 'player1')
-					config.player1 = gameObject;
-				else if(type === 'player2')
-					config.player2 = gameObject;
+					if(level.type === 'player1')
+						config.player1 = gameObject;
+					else if(level.type === 'player2')
+						config.player2 = gameObject;
+				}
 			}
-		}
-	}*/
-	let player = utils.createGameObject(levelData[0].type, levelData[0].properties);
-	player.stage = true;
-	config.player1 = player;
+		} );
+	}
+}
+
+function startGame() {
 	gameComponent.setState({gameActive:true});
 	cycle.start();
-}
-
-function startSinglePlayerGame() {
-	
-}
-
-function startTwoPlayerGame() {
-	
+	startLevel(0);
 }
 
 function movePlayer(player, angle, amount) {
@@ -106,46 +98,48 @@ function onFire() {
 }
 
 function initSocket() {
-	/*socket.on('games list', games=>{
-		//this.setState({games: games});
+	socket.on('games list', games=>{
+		gameComponent.setState({games: games});
 	});
 	socket.on('game created', id=>{
 		Sprite.setHosting(true);
-		this.setState({
+		config.hosting = true;
+		gameComponent.setState({
 			hosting: true,
 			gameId: id
 		});
 	});
 	socket.on('player joined', playerName=>{
-		this.setState({guestName: playerName});
-		this.setState({playerJoined: true});
+		gameComponent.setState({guestName: playerName});
+		gameComponent.setState({playerJoined: true});
 	});
 	socket.on('host ready', ()=>{
-		this.setState({hostReady:true});
+		gameComponent.setState({hostReady:true});
 	});
 	socket.on('guest ready', ()=>{
-		this._startLevel(0);
+		startGame();
 	});
 	socket.on('joystick', data=>{
-		this._movePlayer(config.player2, data.angle, data.amount);
+		movePlayer(config.player2, data.angle, data.amount);
 	});
 	socket.on('fire', ()=>{
-		this._fire(config.player2);
+		fire(config.player2);
 	});
 	socket.on('end game', ()=>{
-	});*/
+	});
 }
 
 function handleJoinGame() {
 	Sprite.setHosting(false);
+	config.hosting = false;
 	socket.emit('join game', {
-		name: this.state.playerName,
-		gameId: this.state.gameId
+		name: gameComponent.state.playerName,
+		gameId: gameComponent.state.gameId
 	});
 	gameComponent.setState({gameJoined:true});
 }
-function handleGameListSelect(e) {
-	let element = e.target;
+function handleGameListSelect(event) {
+	let element = event.target;
 	gameComponent.setState({
 		gameId: element.getAttribute('data-game-id'),
 		hostName: element.getAttribute('data-player-name')
@@ -169,9 +163,12 @@ function handleConfirmPlayerName() {
 }
 function handleStartSinglePlayerGame() {
 	config.gameType = 'single';
-	startLevel(0);
+	gameComponent.setState({gameType: 'single'});
+	startGame();
 }
 function handleStartTwoPlayerGame() {
+	config.gameType = 'two';
+	gameComponent.setState({gameType: 'two'});
 }
 function handleHostReady() {
 	gameComponent.setState({hostReady:true});
@@ -179,5 +176,5 @@ function handleHostReady() {
 }
 function handleGuestReady() {
 	socket.emit('guest ready');
-	startLevel(0);
+	startGame();
 }

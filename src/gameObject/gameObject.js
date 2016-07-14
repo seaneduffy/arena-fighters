@@ -343,8 +343,10 @@ function move() {
 			
 		}
 	} );
-	this.x += this.velocity.dX;
-	this.y += this.velocity.dY;
+	if(this.velocity.dX !== 0)
+		this.x += this.velocity.dX;
+	if(this.velocity.dY !== 0)
+		this.y += this.velocity.dY;
 }
 
 function checkCollision(boundingBox, objectToCheckBoundingBox, dx, dy) {
@@ -455,8 +457,38 @@ function ignoreObject(gameObject) {
 	this.ignoreObjectList.push(gameObject);
 }
 
-window.getGameObjectTotal = function() {
-	return gameObjects.length;
+if(config.dev) {
+	window.getGameObjectTotal = function() {
+		return gameObjects.length;
+	}
+	window.getGameObjects = function() {
+		return gameObjects;
+	}
+	window.updateGameObject = function(type, properties) {
+		let object = gameObjects.find( gameObject => {
+			if(gameObject.type === type)
+				return true;
+			return false;
+		});
+		if(!!object) {
+			for(let property in properties) {
+				object[property] = properties[property];
+			}
+		}
+	}
+	window.updateGameObjectsFromConfig = function() {
+		let configGameObjects = config.gameObjects, 
+			configObject = null,
+			properties = null,
+			property = null;
+		gameObjects.forEach( gameObject => {
+			configObject = configGameObjects[gameObject.type];
+			properties = configObject.properties;
+			for(property in properties) {
+				gameObject[property] = properties[property];
+			}
+		});
+	}
 }
 
 module.exports = GameObject;

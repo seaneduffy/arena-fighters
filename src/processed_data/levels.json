@@ -3,11 +3,23 @@
 		{
 			"type": "player1",
 			"properties": {
-				"x": "0",
-				"y": "0",
+				"x": "config.stageWidth / 3",
+				"y": "config.stageCenterY",
 				"display": "$right_standing",
 				"direction": "config.RIGHT"
 			}
+		},
+		{
+			"type": "player2",
+			"properties": {
+				"x": "config.stageWidth * 2 / 3",
+				"y": "config.stageCenterY",
+				"display": "$left_standing",
+				"direction": "config.LEFT"
+			}
+		},
+		{
+			"type": "background1"
 		}
 	]
 ]}

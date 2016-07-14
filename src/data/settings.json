@@ -10,7 +10,7 @@
 	"mdHeight": 800,
 	"sdWidth": 712,
 	"sdHeight": 400,
-	"frameRate": 2,
+	"frameRate": 1,
 	"gameObjects": {
 		"player1": {
 			"properties": {
@@ -32,14 +32,32 @@
 					"$right_standing",
 					"$right_walking"
 				],
-				"speed": 12,
+				"speed": 5,
 				"z": 3,
 				"interacts": true,
 				"health": 15,
 				"friends": [
 					"player2"
 				],
-				"firearm": "pistol"
+				"firearm": "pistol",
+				"firearmOffset": {
+					"$up_standing": {"x":-3,"y":-3},
+					"$up_walking": {"x":-3,"y":-3},
+					"$upleft_standing": {"x":1,"y":-3},
+					"$upleft_walking": {"x":1,"y":-3},
+					"$upright_standing": {"x":3,"y":-3},
+					"$upright_walking": {"x":3,"y":-3},
+					"$down_standing": {"x":-1,"y":7},
+					"$down_walking": {"x":-1,"y":7},
+					"$downleft_standing": {"x":0,"y":2},
+					"$downleft_walking": {"x":0,"y":2},
+					"$downright_standing": {"x":3,"y":4},
+					"$downright_walking": {"x":3,"y":4},
+					"$left_standing": {"x":-15,"y":-4},
+					"$left_walking": {"x":-15,"y":-4},
+					"$right_standing": {"x":5,"y":-4},
+					"$right_walking": {"x":5,"y":-4}
+				}
 			},
 			"className": "Character"
 		},
@@ -63,14 +81,32 @@
 					"$right_standing",
 					"$right_walking"
 				],
-				"speed": 12,
+				"speed": 5,
 				"z": 3,
 				"interacts": true,
 				"health": 15,
 				"friends": [
 					"player1"
 				],
-				"firearm": "pistol"
+				"firearm": "pistol",
+				"firearmOffset": {
+					"$up_standing": {"x":-3,"y":-3},
+					"$up_walking": {"x":-3,"y":-3},
+					"$upleft_standing": {"x":1,"y":-3},
+					"$upleft_walking": {"x":1,"y":-3},
+					"$upright_standing": {"x":3,"y":-3},
+					"$upright_walking": {"x":3,"y":-3},
+					"$down_standing": {"x":-1,"y":7},
+					"$down_walking": {"x":-1,"y":7},
+					"$downleft_standing": {"x":0,"y":2},
+					"$downleft_walking": {"x":0,"y":2},
+					"$downright_standing": {"x":3,"y":4},
+					"$downright_walking": {"x":3,"y":4},
+					"$left_standing": {"x":-15,"y":-4},
+					"$left_walking": {"x":-15,"y":-4},
+					"$right_standing": {"x":5,"y":-4},
+					"$right_walking": {"x":5,"y":-4}
+				}
 			},
 			"className": "Character"
 		},
@@ -94,7 +130,7 @@
 					"$right_standing",
 					"$right_walking"
 				],
-				"speed": 6,
+				"speed": 2,
 				"actionSpeed": 20,
 				"z": 6,
 				"ai": "grunt",
@@ -128,7 +164,7 @@
 					"$right_standing",
 					"$right_walking"
 				],
-				"speed": 16,
+				"speed": 4,
 				"actionSpeed": 1,
 				"moveTime": 8,
 				"z": 6,
@@ -146,7 +182,7 @@
 		"bullet": {
 			"properties": {
 				"display": "default",
-				"speed": 24,
+				"speed": 7,
 				"z": 8,
 				"interacts": true,
 				"impact": 1,
@@ -183,8 +219,8 @@
 		"background1": {
 			"properties": {
 				"display": "default",
-				"x": "config.windowCenterX",
-				"y": "config.windowCenterY",
+				"x": "config.stageCenterX",
+				"y": "config.stageCenterY",
 				"z": 0,
 				"interacts": false,
 				"static": true

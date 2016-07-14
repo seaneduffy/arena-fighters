@@ -1,101 +1,134 @@
+/* line 1, ../../src/scss/game.scss */
 html, body, p, ul, li {
-	margin: 0;
-	padding: 0;
+  margin: 0;
+  padding: 0;
 }
 
+/* line 6, ../../src/scss/game.scss */
 body {
-	font-family: sans-serif;
-	font-size: 12px;
-	width: 100vw;
-	height: 100vh;
-	background: black;
-	color: white;
+  font-family: sans-serif;
+  font-size: 12px;
+  width: 100vw;
+  height: 100vh;
+  background: black;
+  color: white;
 }
 
+/* line 15, ../../src/scss/game.scss */
 input[type='text'],
 input[type='number'],
 textarea {
   font-size: 16px;
 }
 
+/* line 21, ../../src/scss/game.scss */
 input {
-	border: 1px solid #c2c2c2;
+  border: 1px solid #c2c2c2;
 }
 
+/* line 25, ../../src/scss/game.scss */
 button {
-	border: 1px solid #c2c2c2;
-	border-radius: 3px;
-	background: #fafafa;
+  border: 1px solid #c2c2c2;
+  border-radius: 3px;
+  background: #fafafa;
 }
 
+/* line 31, ../../src/scss/game.scss */
 li {
-	list-style: none;
+  list-style: none;
 }
 
+/* line 35, ../../src/scss/game.scss */
 .menuForm {
-	padding: 20px;
+  padding: 20px;
 }
 
+/* line 39, ../../src/scss/game.scss */
 .menuForm label {
-	display: block;
-	font-size: 11px;
+  display: block;
+  font-size: 11px;
 }
 
+/* line 44, ../../src/scss/game.scss */
 .menuForm p {
-	margin: 2px 0;
+  margin: 2px 0;
 }
 
+/* line 48, ../../src/scss/game.scss */
 .hidden {
-	display: none !important;
+  display: none !important;
 }
 
+/* line 52, ../../src/scss/game.scss */
 .swipe {
-	height: 150vh;
+  height: 150vh;
 }
 
-#arena-fighters > div {
-	display: flex;
-	justify-content: center;
+/* line 56, ../../src/scss/game.scss */
+#game {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
 }
-
-#controls {
-	width: 100%;
-	height: 100%;
-	position: absolute;
-	top: 0;
-	left: 0;
+/* line 62, ../../src/scss/game.scss */
+#game #arena-fighters {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
-
-#joystick {
-	left: 10px;
-	bottom: 10px;
-	position: absolute;
-	display: block;
-	opacity: .5;
+/* line 70, ../../src/scss/game.scss */
+#game #menus {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
-
-#joystick.active {
-	opacity: 1;
+/* line 78, ../../src/scss/game.scss */
+#game #gameScreen {
+  position: relative;
 }
-
-#fire-btn {
-	right: 40px;
-	bottom: 40px;
-	position: absolute;
-	opacity: .5;
-	display: block;
+/* line 82, ../../src/scss/game.scss */
+#game #controls {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
 }
-
-#fire-btn.active {
-	opacity: 1;
+/* line 89, ../../src/scss/game.scss */
+#game #controls #joystick {
+  left: 10px;
+  bottom: 10px;
+  position: absolute;
+  display: block;
+  opacity: .5;
 }
-
-#end-game-btn {
-	display: block;
-	background: red;
-	position: absolute;
-	top: 0;
-	right: 0;
-	width: 30px;
-	height: 30px;
+/* line 96, ../../src/scss/game.scss */
+#game #controls #joystick.active {
+  opacity: 1;
+}
+/* line 101, ../../src/scss/game.scss */
+#game #controls #fire-btn {
+  right: 40px;
+  bottom: 40px;
+  position: absolute;
+  opacity: .5;
+  display: block;
+}
+/* line 108, ../../src/scss/game.scss */
+#game #controls #fire-btn.active {
+  opacity: 1;
+}
+/* line 113, ../../src/scss/game.scss */
+#game #controls #end-game-btn {
+  display: block;
+  background: red;
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 30px;
+  height: 30px;
 }

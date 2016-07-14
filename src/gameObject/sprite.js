@@ -3,10 +3,14 @@
 let config = require('../config'),
 	cycle = require('../cycle'),
 	resources = require('../resources'),
+	id = require('../id'),
+	socket = require('../socket'),
+	hosting = false,
 	sprites = new Array(),
+	spritesToUpdate = new Array(),
 	availableSprites = Object.create(null);
 
-function Sprite(id, sheetPath, frameData) {
+function Sprite(label, sheetPath, frameData) {
 	this.domElement = config.domElement;
 	this.sheetPath = sheetPath;
 	this.sheet = resources.get(sheetPath);
@@ -24,7 +28,8 @@ function Sprite(id, sheetPath, frameData) {
 		this.width = this.sheet.width * config.resolution;
 		this.height = this.sheet.height * config.resolution;
 	}
-	this.id = id;
+	this.label = label;
+	this.id = id();
 	this.draw();
 	sprites.push(this);
 }
@@ -40,6 +45,9 @@ Object.defineProperties(Sprite.prototype, {
 			this._x = x;
 			let boundingBox = this.boundingBox;
 			this.canvas.style.transform = 'translate('+boundingBox.x+'px, '+boundingBox.y+'px)';
+			if(hosting && this.stage) {
+				this.addUpdate({x:x});
+			}
 		}
 	},
 	'y': {
@@ -52,6 +60,9 @@ Object.defineProperties(Sprite.prototype, {
 			this._y = y;
 			let boundingBox = this.boundingBox;
 			this.canvas.style.transform = 'translate('+boundingBox.x+'px, '+boundingBox.y+'px)';
+			if(hosting && this.stage) {
+				this.addUpdate({y:y});
+			}
 		}
 	},
 	'z': {
@@ -63,6 +74,9 @@ Object.defineProperties(Sprite.prototype, {
 		set: function(z){
 			this._z = z;
 			this.canvas.style.zIndex = z;
+			if(hosting && this.stage) {
+				this.addUpdate({z:z});
+			}
 		}
 	},
 	'stage': {
@@ -73,10 +87,22 @@ Object.defineProperties(Sprite.prototype, {
 		},
 		set: function(stage){
 			this._stage = stage;
-			this.canvas.style.position = 'absolute';
 			this.canvas.style.display = stage ? 'block' : 'none';
 			if(stage) {
 				this.cycleStart = cycle.getCounter();
+			}
+			if(hosting && stage) {
+				this.addUpdate({
+					stage: stage,
+					x: this.x,
+					y: this.y,
+					z: this.z,
+					sheetPath: this.sheetPath,
+					label: this.label,
+					frameData: this.frameData
+				});
+			} else if(hosting && !stage) {
+				this.addUpdate({stage:stage});
 			}
 		}
 	},
@@ -115,8 +141,9 @@ Object.defineProperties(Sprite.prototype, {
 			if(!!this._canvas)
 				return this._canvas;
 			this._canvas = document.createElement('canvas');
-			this._canvas.className = this.id;
+			this._canvas.className = this.label;
 			this._canvas.style.display = 'none';
+			this._canvas.style.position = 'absolute';
 			this._canvas.style.transform = 'translate(0, 0)';
 			this._canvas.setAttribute('width', this.width);
 			this._canvas.setAttribute('height', this.height);
@@ -152,13 +179,16 @@ Object.defineProperties(Sprite.prototype, {
 				this.height);
 		}
 	},
+	'addUpdate': {
+		value: addUpdate
+	},
 	'destroy': {
 		value: function() {
 			if(!this.destroyed) {
 				this.stage = false;
 				this.frame = 0;
-				availableSprites[this.id] = availableSprites[this.id] || new Array();
-				availableSprites[this.id].push(this);
+				availableSprites[this.label] = availableSprites[this.label] || new Array();
+				availableSprites[this.label].push(this);
 				this.destroyed = true;
 			}
 		}
@@ -185,15 +215,15 @@ Object.defineProperties(Sprite.prototype, {
 	}
 });
 
-Sprite.getSprite = function(id, sheetPath, frameData) {
+Sprite.getSprite = function(label, sheetPath, frameData) {
 	let sprite = null, 
-		availArray = availableSprites[id];
+		availArray = availableSprites[label];
 	if(!!availArray && availArray.length > 0) {
 		sprite = availArray.pop();
 		sprite.destroyed = false;
 		return sprite;
 	}
-	return new Sprite(id, sheetPath, frameData);
+	return new Sprite(label, sheetPath, frameData);
 }
 
 Sprite.cleanup = function() {
@@ -216,16 +246,65 @@ Sprite.draw = function() {
 				counterDiff = 0;
 				sprite.cycleStart = counter;
 			}
-			sprite.frame = counterDiff;
-			if(frame !== sprite.frame) {
+			if(frame !== counterDiff) {
+				sprite.frame = counterDiff;
 				sprite.draw();
 			}
 		}
 	} );
 }
 
-window.getSpriteTotal = function() {
-	return sprites.length;
+Sprite.setHosting = function(isHosting) {
+	hosting = isHosting;
+	if(hosting)
+		cycle.addServerUpdate(sendUpdate);
+	else 
+		socket.on('sprite update', receiveUpdate);
+}
+
+function addUpdate(values) {
+	let updateObj = spritesToUpdate.find((obj)=>{
+		return (obj.id === this.id);
+	});
+	if(typeof updateObj === 'undefined') {
+		updateObj = Object.create(null);
+		updateObj.label = this.label;
+		updateObj.id = this.id;
+		spritesToUpdate.push(updateObj);
+	}
+	for(let property in values)
+		updateObj[property] = values[property];
+}
+
+function receiveUpdate(serverSprites) {
+
+	let sprite = null, property;
+	serverSprites.forEach( spriteData => {
+		sprite = sprites.find( s => {
+			return s.id === spriteData.id;
+		});
+		sprite = sprite || Sprite.getSprite(spriteData.label, spriteData.sheetPath, spriteData.frameData);
+		for(property in spriteData) {
+			if(property !== 'sheetPath' 
+				&& property !== 'label' 
+				&& property !== 'frameData')
+				
+				sprite[property] = spriteData[property];
+		}
+	});
+}
+
+function sendUpdate() {
+	if(spritesToUpdate.length > 0) {
+		socket.emit('sprite update', spritesToUpdate);
+	}
+	spritesToUpdate = new Array();
+}
+
+if(config.dev) {
+	window.getSpriteTotal = function() {
+		return sprites.length;
+	}
 }
 
 module.exports = Sprite;

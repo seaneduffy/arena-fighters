@@ -41,7 +41,6 @@ Game = React.createClass({
 			hosting: false,
 			playerJoined: false,
 			hostReady: false,
-			dev1Player: false,
 			gameType: false
 		}
 	},
@@ -51,41 +50,39 @@ Game = React.createClass({
 	onGameNameChange: function(e) {
 		this.setState({gameName: e.target.value});
 	},
-	_handleStartSinglePlayerGame: function() {
-		_handleStartSinglePlayerGame();
+	_handleStartSinglePlayerGame: function(e) {
+		_handleStartSinglePlayerGame(e);
 	},
-	_handleStartTwoPlayerGame: function() {
-		_handleStartTwoPlayerGame();
+	_handleStartTwoPlayerGame: function(e) {
+		_handleStartTwoPlayerGame(e);
 	},
-	_handleConfirmPlayerName: function() {
-		_handleConfirmPlayerName();
+	_handleConfirmPlayerName: function(e) {
+		_handleConfirmPlayerName(e);
 	},
-	_handleCreateGame: function() {
-		_handleCreateGame();
+	_handleCreateGame: function(e) {
+		_handleCreateGame(e);
 	},
-	_handleGameListSelect: function() {
-		_handleGameListSelect();
+	_handleGameListSelect: function(e) {
+		_handleGameListSelect(e);
 	},
-	_handleJoinGame: function() {
-		_handleJoinGame();
+	_handleJoinGame: function(e) {
+		_handleJoinGame(e);
 	},
-	_handleHostReady: function() {
-		_handleHostReady();
+	_handleHostReady: function(e) {
+		_handleHostReady(e);
 	},
-	_handleGuestReady: function() {
-		_handleGuestReady();
+	_handleGuestReady: function(e) {
+		_handleGuestReady(e);
 	},
 	render: function() {
 		return (
 		
 <div id="arena-fighters" className={this.state.gameActive ? 'minimal-ui' : ''}>
-	<div className={this.state.gameActive ? 'hidden' : ''}>
-		
+	<div id="menus" className={this.state.gameActive ? 'hidden' : ''}>
 		<div className={this.state.gameType ? 'hidden' : 'menuForm'}>
 			<button onClick={this._handleStartSinglePlayerGame}>1 Player</button>
 			<button onClick={this._handleStartTwoPlayerGame}>2 Players</button>
 		</div>
-		
 		<div className={this.state.gameType === 'two' && !this.state.playerNameSet ? 'menuForm' : 'hidden'}>
 			<p>Enter your name</p>
 			<input type="text" onChange={this.onPlayerNameChange} />

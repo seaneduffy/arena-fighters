@@ -91,7 +91,7 @@ Character.prototype = Object.create(GameObject.prototype, {
 		set: function(x) {
 			Object.getOwnPropertyDescriptor(GameObject.prototype, 'x').set.call(this, x);
 			if(!!this.firearm)
-				this.firearm.x = x;
+				this.firearm.x = this.firearmOffset[this.display].x + x;
 		},
 		get: function() {
 			return Object.getOwnPropertyDescriptor(GameObject.prototype, 'x').get.call(this);
@@ -101,7 +101,7 @@ Character.prototype = Object.create(GameObject.prototype, {
 		set: function(y) {
 			Object.getOwnPropertyDescriptor(GameObject.prototype, 'y').set.call(this, y);
 			if(!!this.firearm)
-				this.firearm.y = y;
+				this.firearm.y = this.firearmOffset[this.display].y + y;
 		},
 		get: function() {
 			return Object.getOwnPropertyDescriptor(GameObject.prototype, 'y').get.call(this);
