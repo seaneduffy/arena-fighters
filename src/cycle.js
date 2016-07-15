@@ -71,8 +71,6 @@ function cycle() {
 						return funcObj.func === removeFunc
 					}) === 'undefined') {
 						arr.push(func);
-					} else {
-						console.log('removed in array');
 					}
 				});
 				waitFunctions = arr;
@@ -117,11 +115,9 @@ module.exports = {
 		frameRate = rate;
 	},
 	wait: function(func, time) {
-		console.log('wait');
 		waitFunctions.push({func:func,counter:counter+time});
 	},
 	endWait: function(func) {
-		console.log('end wait');
 		waitToRemove.push(func);
 	}
 };

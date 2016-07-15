@@ -45,7 +45,6 @@ function fire(character){
 	ammunition.stage = true;
 	ammunition.applyForce({speed:ammunition.speed, direction:ammunition.direction});
 	this.display = this.display.replace(/_.+/, '_firing');
-	console.log('this.cycleEndFire', this.cycleEndFire);
 	if(!!this.cycleEndFire)
 		cycle.endWait(this.cycleEndFire);
 	this.cycleEndFire = this.endFire.bind(this);
@@ -53,7 +52,6 @@ function fire(character){
 }
 
 function endFire() {
-	console.log('end fire');
 	delete this.cycleEndFire;
 	this.display = this.display.replace(/_.+/, '_off');
 }

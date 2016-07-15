@@ -20,6 +20,51 @@
 		},
 		{
 			"type": "background1"
+		},
+		{
+			"type": "grunt",
+			"properties": {
+				"x": "config.stageCenterX",
+				"y": "-200",
+				"display": "$down_standing",
+				"direction": "config.DOWN"
+			}
+		},
+		{
+			"type": "grunt",
+			"properties": {
+				"x": "config.stageWidth + 200",
+				"y": "config.stageCenterY",
+				"display": "$down_standing",
+				"direction": "config.DOWN"
+			}
+		},
+		{
+			"type": "grunt",
+			"properties": {
+				"x": "config.stageCenterX",
+				"y": "-500",
+				"display": "$down_standing",
+				"direction": "config.DOWN"
+			}
+		},
+		{
+			"type": "devil",
+			"properties": {
+				"x": "-200",
+				"y": "config.stageCenterY",
+				"display": "$down_standing",
+				"direction": "config.DOWN"
+			}
+		},
+		{
+			"type": "devil",
+			"properties": {
+				"x": "-400",
+				"y": "config.stageCenterY",
+				"display": "$down_standing",
+				"direction": "config.DOWN"
+			}
 		}
 	]
 ]}
