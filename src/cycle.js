@@ -1,47 +1,89 @@
 let config = require('./config'),
-	clientUpdateFunctions = [],
-	uiUpdateFunctions = [],
-	gameObjectUpdateFunctions = [],
-	serverUpdateFunctions = [],
-	cleanupFunctions = [],
-	toRemove = [],
+	updateFunctions = new Array(),
+	serverFunctions = new Array(),
+	cleanupFunctions = new Array(),
+	updateToRemove = new Array(),
+	serverToRemove = new Array(),
+	cleanupToRemove = new Array(),
+	waitFunctions = new Array(),
+	waitToRemove = new Array(),
+	arr = null,
 	active = false,
-	i = 0,
-	l = 0,
-	tmpFunc = null,
-	tmpArr = null,
-	tmpGameObject = null,
 	counter = 0,
 	frameRate = 1;
 
 function cycle() {
 	if(active) {
 		if(counter % frameRate === 0) {
-			clientUpdateFunctions.forEach(func=>{ func() });
-			gameObjectUpdateFunctions.filter(funcObject=>{
-				if(!!funcObject) {
-					if(!funcObject.obj.destroyed) {
-						funcObject.func();
-						return funcObject;
-					}
-				}
-				return false;
-			});
-			uiUpdateFunctions.forEach(func=>{ func() });
-			serverUpdateFunctions.forEach(func=>{ func() });
+			updateFunctions.forEach(func=>{ func() });
+			serverFunctions.forEach(func=>{ func() });
 			cleanupFunctions.forEach(func=>{ func() });
-			toRemove.forEach(removeObj=>{
-				removeObj.arr.splice(removeObj.arr.indexOf(removeObj.func), 1);
+			waitFunctions.forEach(funcObj=>{
+				if(counter >= funcObj.counter) {
+					funcObj.func();
+					waitToRemove.push(funcObj.func);
+				}	
 			});
-			toRemove = [];
+			
+			if(updateToRemove.length > 0) {
+				arr = new Array();
+				updateFunctions.forEach(func=>{ 
+					if(typeof updateToRemove.find( removeFunc => {
+						return func === removeFunc
+					}) === 'undefined') {
+						arr.push(func);
+					}
+				});
+				updateFunctions = arr;
+				updateToRemove = new Array();
+			}
+			
+			if(serverToRemove.length > 0) {
+				arr = new Array();
+				serverFunctions.forEach(func=>{ 
+					if(typeof serverToRemove.find( removeFunc => {
+						return func === removeFunc
+					}) === 'undefined') {
+						arr.push(func);
+					}
+				});
+				serverFunctions = arr;
+				serverToRemove = new Array();
+			}
+			
+			if(cleanupToRemove.length > 0) {
+				arr = new Array();
+				cleanupFunctions.forEach(func=>{ 
+					if(typeof cleanupToRemove.find( removeFunc => {
+						return func === removeFunc
+					}) === 'undefined') {
+						arr.push(func);
+					}
+				});
+				cleanupFunctions = arr;
+				cleanupToRemove = new Array();
+			}
+			
+			if(waitToRemove.length > 0) {
+				arr = new Array();
+				waitFunctions.forEach(funcObj=>{ 
+					if(typeof waitToRemove.find( removeFunc => {
+						return funcObj.func === removeFunc
+					}) === 'undefined') {
+						arr.push(func);
+					} else {
+						console.log('removed in array');
+					}
+				});
+				waitFunctions = arr;
+				waitToRemove = new Array();
+			}
 		}
 		counter++;
 		if(active)
 			window.requestAnimationFrame(cycle);
 	}
 }
-
-
 
 module.exports = {
 	getCounter: function() {return counter},
@@ -53,49 +95,45 @@ module.exports = {
 		active = false;
 		counter = 0;
 	},
-	addUIUpdateFunction: function(func) {
-		uiUpdateFunctions.push(func);
+	addUpdate: function(func) {
+		updateFunctions.push(func);
 	},
-	removeUIUpdateFunction: function(func) {
-		toRemove.push({
-			arr: uiUpdateFunctions,
-			func: func
-		});
+	removeUpdate: function(func) {
+		updateToRemove.push(func);
 	},
-	addGameObjectUpdateFunction: function(obj, func) {
-		gameObjectUpdateFunctions.push({
-			obj: obj,
-			func: func
-		});
+	addServer: function(func) {
+		serverFunctions.push(func);
 	},
-	addClientUpdate: function(func) {
-		clientUpdateFunctions.push(func);
-	},
-	removeClientUpdate: function(func) {
-		toRemove.push({
-			arr: clientUpdateFunctions,
-			func: func
-		});
-	},
-	addServerUpdate: function(func) {
-		serverUpdateFunctions.push(func);
-	},
-	removeServerUpdate: function(func) {
-		toRemove.push({
-			arr: serverUpdateFunctions,
-			func: func
-		});
+	removeServer: function(func) {
+		serverToRemove.push(func);
 	},
 	addCleanup: function(func) {
 		cleanupFunctions.push(func);
 	},
 	removeCleanup: function(func) {
-		toRemove.push({
-			arr: cleanupFunctions,
-			func: func
-		});
+		cleanupToRemove.push(func);
 	},
 	setFrameRate: function(rate) {
 		frameRate = rate;
+	},
+	wait: function(func, time) {
+		console.log('wait');
+		waitFunctions.push({func:func,counter:counter+time});
+	},
+	endWait: function(func) {
+		console.log('end wait');
+		waitToRemove.push(func);
 	}
 };
+
+if(config.dev) {
+	window.getCycleUpdateTotal = function() {
+		return updateFunctions.length;
+	}
+	window.getCycleServerTotal = function() {
+		return serverFunctions.length;
+	}
+	window.getCycleCleanupTotal = function() {
+		return cleanupFunctions.length;
+	}
+}

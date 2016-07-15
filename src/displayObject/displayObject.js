@@ -2,20 +2,21 @@ let Sprite = require('./sprite'),
 	config = require('../config'),
 	geom = require('../geom'),
 	cycle = require('../cycle'),
-	gameObjects = [],
+	displayObjects = [],
 	id = require('../id');
 
-function GameObject() {
+function DisplayObject() {
 	this._sprites = Object.create(null);
-	gameObjects.push(this);
+	displayObjects.push(this);
 	this.id = id();
 	this.moveCycle = false;
+	this.cycleMove = this.move.bind(this);
 }
 
-GameObject.cleanup = cleanup;
-GameObject.clear = clear;
+DisplayObject.cleanup = cleanup;
+DisplayObject.clear = clear;
 
-Object.defineProperties(GameObject.prototype, {
+Object.defineProperties(DisplayObject.prototype, {
 	'move': {
 		value: move
 	},
@@ -30,6 +31,7 @@ Object.defineProperties(GameObject.prototype, {
 					sprites[label].destroy();
 				}
 				this.destroyed = true;
+				cycle.removeUpdate(this.cycleMove);
 			}
 		}
 	},
@@ -75,7 +77,7 @@ Object.defineProperties(GameObject.prototype, {
 					sprite.stage = true;
 					this.boundingBox = sprite.boundingBox;
 					if(!this.moveCycle) {
-						cycle.addGameObjectUpdateFunction(this, this.move.bind(this));
+						cycle.addUpdate(this.cycleMove);
 						this.moveCycle = true;
 					}
 				}
@@ -226,7 +228,7 @@ Object.defineProperties(GameObject.prototype, {
 					sprite.stage = true;
 					this.boundingBox = sprite.boundingBox;
 					if(!this.moveCycle) {
-						cycle.addGameObjectUpdateFunction(this, this.move.bind(this));
+						cycle.addUpdate(this.cycleMove);
 						this.moveCycle = true;
 					}
 				} else {
@@ -296,11 +298,11 @@ function applyForce(velocity) {
 	this.velocity = thisVelocity;
 }
 
-function onCollision(gameObject, x, y, newX, newY, collidedObject) {
-	gameObject.velocity.dX = newX - x;
-	gameObject.velocity.dY = newY - y;
-	if(!!gameObject.onCollision)
-		gameObject.onCollision(collidedObject);
+function onCollision(displayObject, x, y, newX, newY, collidedObject) {
+	displayObject.velocity.dX = newX - x;
+	displayObject.velocity.dY = newY - y;
+	if(!!displayObject.onCollision)
+		displayObject.onCollision(collidedObject);
 }
 
 function move() {
@@ -323,7 +325,7 @@ function move() {
 		onCollision(this, boundingBox.x, boundingBox.y, collisionCheck.x, collisionCheck.y, 'wall');
 	}
 
-	gameObjects.forEach( objectToCheck => {
+	displayObjects.forEach( objectToCheck => {
 		let doesNotInteractWith = false;
 		if(!!this.noInteraction) {
 			doesNotInteractWith = typeof this.noInteraction.find(type=>{
@@ -409,16 +411,16 @@ function getEdgePointFromDirection(direction) {
 
 function cleanup() {
 	let tmp = new Array();
-	gameObjects.forEach( gameObject => {
-		if(!gameObject.destroyed)
-			tmp.push(gameObject);
+	displayObjects.forEach( displayObject => {
+		if(!displayObject.destroyed)
+			tmp.push(displayObject);
 	} );
-	gameObjects = tmp;
+	displayObjects = tmp;
 }
 
 function clear() {
-	gameObjects.forEach(gameObject=>{
-		gameObject.destroyed = true;
+	displayObjects.forEach(displayObject=>{
+		displayObject.destroyed = true;
 	});
 }
 
@@ -430,7 +432,7 @@ function initSprites() {
 	this.spriteLabels.forEach( spriteLabel => {
 		let frameData = new Array();
 		for(let key in frames) {
-			if(key.indexOf(spriteLabel) != -1) {
+			if(key.match(new RegExp(spriteLabel.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')))) {
 				frameData.push(frames[key]);
 			}
 		}
@@ -446,27 +448,29 @@ function initSprites() {
 		if(!!this.stage) {
 			sprite.stage = true;
 			if(!this.moveCycle) {
-				cycle.addGameObjectUpdateFunction(this, this.move.bind(this));
+				cycle.addUpdate(this.cycleMove);
 				this.moveCycle = true;
 			}
 		}
 	}
 }
 
-function ignoreObject(gameObject) {
-	this.ignoreObjectList.push(gameObject);
+function ignoreObject(displayObject) {
+	this.ignoreObjectList.push(displayObject);
+}
+
+DisplayObject.getDisplayObjects = function() {
+	return displayObjects;
 }
 
 if(config.dev) {
-	window.getGameObjectTotal = function() {
-		return gameObjects.length;
+	window.getDisplayObjectTotal = function() {
+		return displayObjects.length;
 	}
-	window.getGameObjects = function() {
-		return gameObjects;
-	}
-	window.updateGameObject = function(type, properties) {
-		let object = gameObjects.find( gameObject => {
-			if(gameObject.type === type)
+	window.getDisplayObjects = DisplayObject.getDisplayObjects;
+	window.updateDisplayObject = function(type, properties) {
+		let object = displayObjects.find( displayObject => {
+			if(displayObject.type === type)
 				return true;
 			return false;
 		});
@@ -476,19 +480,19 @@ if(config.dev) {
 			}
 		}
 	}
-	window.updateGameObjectsFromConfig = function() {
-		let configGameObjects = config.gameObjects, 
+	window.updateDisplayObjectsFromConfig = function() {
+		let configDisplayObjects = config.displayObjects, 
 			configObject = null,
 			properties = null,
 			property = null;
-		gameObjects.forEach( gameObject => {
-			configObject = configGameObjects[gameObject.type];
+		displayObjects.forEach( displayObject => {
+			configObject = configDisplayObjects[displayObject.type];
 			properties = configObject.properties;
 			for(property in properties) {
-				gameObject[property] = properties[property];
+				displayObject[property] = properties[property];
 			}
 		});
 	}
 }
 
-module.exports = GameObject;
+module.exports = DisplayObject;

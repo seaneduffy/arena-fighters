@@ -21,8 +21,7 @@ Ammunition.prototype = Object.create(Projectile.prototype, {
 });
 
 function onCollision(collidedObject) {
-	if(collidedObject !== this.origin && this.origin.friends.indexOf(collidedObject.type) === -1) {
-			
+	if(collidedObject !== this.origin) {
 		if(!!collidedObject.takeDamage) {
 			collidedObject.takeDamage(this.impact);
 		}

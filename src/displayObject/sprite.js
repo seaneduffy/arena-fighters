@@ -257,7 +257,7 @@ Sprite.draw = function() {
 Sprite.setHosting = function(isHosting) {
 	hosting = isHosting;
 	if(hosting)
-		cycle.addServerUpdate(sendUpdate);
+		cycle.addServer(sendUpdate);
 	else 
 		socket.on('sprite update', receiveUpdate);
 }

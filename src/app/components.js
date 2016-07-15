@@ -27,7 +27,7 @@ GamesList = React.createClass({
 Game = React.createClass({
 	getInitialState: function() {
 		return {
-			gameObjects: [],
+			displayObjects: [],
 			playerName: '',
 			gameId: '',
 			gameName: false,

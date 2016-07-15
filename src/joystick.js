@@ -100,7 +100,6 @@ function onRelease(e) {
 }
 
 function callback(angle, amount) {
-	let counter = cycle.getCounter();
 	let pi = Math.PI, l = callbacks.length;
 	element.className = 'active';
 	if(angle === -1){

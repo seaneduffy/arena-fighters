@@ -1265,7 +1265,7 @@
 		"sdWidth": 712,
 		"sdHeight": 400,
 		"frameRate": 1,
-		"gameObjects": {
+		"displayObjects": {
 			"player1": {
 				"properties": {
 					"spriteLabels": [
@@ -1575,7 +1575,7 @@
 					"interacts": false,
 					"static": true
 				},
-				"className": "GameObject"
+				"className": "DisplayObject"
 			},
 			"obstacle1": {
 				"properties": {
@@ -1584,7 +1584,7 @@
 					"interacts": true,
 					"static": true
 				},
-				"className": "GameObject"
+				"className": "DisplayObject"
 			}
 		}
 	},

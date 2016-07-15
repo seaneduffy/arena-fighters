@@ -9,7 +9,8 @@ function Ai(character) {
 	this._player1 = config.player1;
 	this._player2 = config.player2;
 	this._counter = 0;
-	cycle.addGameObjectUpdateFunction(character, this.actions.bind(this));
+	this.cycleActions = this.actions.bind(this);
+	cycle.addUpdate(this.cycleActions);
 }
 Object.defineProperties(Ai.prototype, {
 	'actions': {
@@ -53,6 +54,11 @@ Object.defineProperties(Ai.prototype, {
 	},
 	'onCollision': {
 		value: function() { return }
+	},
+	'destroy': {
+		value: function() {
+			cycle.removeUpdate(this.cycleActions);
+		}
 	}
 });
 

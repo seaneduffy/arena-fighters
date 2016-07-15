@@ -19702,7 +19702,8 @@ function Ai(character) {
 	this._player1 = config.player1;
 	this._player2 = config.player2;
 	this._counter = 0;
-	cycle.addGameObjectUpdateFunction(character, this.actions.bind(this));
+	this.cycleActions = this.actions.bind(this);
+	cycle.addUpdate(this.cycleActions);
 }
 Object.defineProperties(Ai.prototype, {
 	'actions': {
@@ -19747,6 +19748,11 @@ Object.defineProperties(Ai.prototype, {
 	'onCollision': {
 		value: function value() {
 			return;
+		}
+	},
+	'destroy': {
+		value: function value() {
+			cycle.removeUpdate(this.cycleActions);
 		}
 	}
 });
@@ -19891,7 +19897,7 @@ var React = require('react'),
 
 	getInitialState: function getInitialState() {
 		return {
-			gameObjects: [],
+			displayObjects: [],
 			playerName: '',
 			gameId: '',
 			gameName: false,
@@ -20115,11 +20121,11 @@ var React = require('react'),
     dataLoader = require('../data'),
     config = require('../config'),
     resources = require('../resources'),
-    utils = require('../gameObject/utils'),
+    utils = require('../displayObject/utils'),
     socket = require('../socket'),
     cycle = require('../cycle'),
-    Sprite = require('../gameObject/sprite'),
-    GameObject = require('../gameObject/gameObject'),
+    Sprite = require('../displayObject/sprite'),
+    DisplayObject = require('../displayObject/displayObject'),
     controls = null,
     gameComponent = ReactDOM.render(React.createElement(components.Game), document.getElementById('game'), function () {
 
@@ -20132,8 +20138,8 @@ var React = require('react'),
 			utils.init();
 			controls = require('../controls');
 			controls(onJoystick, onFire);
-			cycle.addUIUpdateFunction(Sprite.draw);
-			cycle.addCleanup(GameObject.cleanup);
+			cycle.addUpdate(Sprite.draw);
+			cycle.addCleanup(DisplayObject.cleanup);
 			cycle.addCleanup(Sprite.cleanup);
 			components.addHandlers(handleStartSinglePlayerGame, handleStartTwoPlayerGame, handleConfirmPlayerName, handleCreateGame, handleGameListSelect, handleJoinGame, handleHostReady, handleGuestReady, handleEndGame);
 		});
@@ -20145,15 +20151,15 @@ function startLevel(index) {
 	var levelData = config.levels[index];
 	if (config.hosting || config.gameType === 'single') {
 		(function () {
-			var gameObject = null,
+			var displayObject = null,
 			    type = null,
 			    properties = null;
 			levelData.forEach(function (level) {
 				if (level.type !== 'player2' || config.gameType === 'two') {
-					gameObject = utils.createGameObject(level.type, level.properties);
-					if (!!gameObject) {
-						gameObject.stage = true;
-						if (level.type === 'player1') config.player1 = gameObject;else if (level.type === 'player2') config.player2 = gameObject;
+					displayObject = utils.createDisplayObject(level.type, level.properties);
+					if (!!displayObject) {
+						displayObject.stage = true;
+						if (level.type === 'player1') config.player1 = displayObject;else if (level.type === 'player2') config.player2 = displayObject;
 					}
 				}
 			});
@@ -20248,7 +20254,7 @@ function handleCreateGame() {
 }
 function handleEndGame(e) {
 	cycle.stop();
-	GameObject.clear();
+	DisplayObject.clear();
 	gameComponent.setState({ gameActive: false });
 }
 function handleConfirmPlayerName() {
@@ -20273,7 +20279,7 @@ function handleGuestReady() {
 	startGame();
 }
 
-},{"../config":171,"../controls":172,"../cycle":173,"../data":174,"../gameObject/gameObject":178,"../gameObject/sprite":180,"../gameObject/utils":181,"../resources":186,"../socket":187,"./components":169,"react":167,"react-dom":29}],171:[function(require,module,exports){
+},{"../config":171,"../controls":172,"../cycle":173,"../data":174,"../displayObject/displayObject":177,"../displayObject/sprite":180,"../displayObject/utils":181,"../resources":186,"../socket":187,"./components":169,"react":167,"react-dom":29}],171:[function(require,module,exports){
 'use strict';
 
 var config = {
@@ -20398,49 +20404,91 @@ module.exports = function (_joystickCallback, _fireCallback) {
 'use strict';
 
 var config = require('./config'),
-    clientUpdateFunctions = [],
-    uiUpdateFunctions = [],
-    gameObjectUpdateFunctions = [],
-    serverUpdateFunctions = [],
-    cleanupFunctions = [],
-    toRemove = [],
+    updateFunctions = new Array(),
+    serverFunctions = new Array(),
+    cleanupFunctions = new Array(),
+    updateToRemove = new Array(),
+    serverToRemove = new Array(),
+    cleanupToRemove = new Array(),
+    waitFunctions = new Array(),
+    waitToRemove = new Array(),
+    arr = null,
     active = false,
-    i = 0,
-    l = 0,
-    tmpFunc = null,
-    tmpArr = null,
-    tmpGameObject = null,
     counter = 0,
     frameRate = 1;
 
 function cycle() {
 	if (active) {
 		if (counter % frameRate === 0) {
-			clientUpdateFunctions.forEach(function (func) {
+			updateFunctions.forEach(function (func) {
 				func();
 			});
-			gameObjectUpdateFunctions.filter(function (funcObject) {
-				if (!!funcObject) {
-					if (!funcObject.obj.destroyed) {
-						funcObject.func();
-						return funcObject;
-					}
-				}
-				return false;
-			});
-			uiUpdateFunctions.forEach(function (func) {
-				func();
-			});
-			serverUpdateFunctions.forEach(function (func) {
+			serverFunctions.forEach(function (func) {
 				func();
 			});
 			cleanupFunctions.forEach(function (func) {
 				func();
 			});
-			toRemove.forEach(function (removeObj) {
-				removeObj.arr.splice(removeObj.arr.indexOf(removeObj.func), 1);
+			waitFunctions.forEach(function (funcObj) {
+				if (counter >= funcObj.counter) {
+					funcObj.func();
+					waitToRemove.push(funcObj.func);
+				}
 			});
-			toRemove = [];
+
+			if (updateToRemove.length > 0) {
+				arr = new Array();
+				updateFunctions.forEach(function (func) {
+					if (typeof updateToRemove.find(function (removeFunc) {
+						return func === removeFunc;
+					}) === 'undefined') {
+						arr.push(func);
+					}
+				});
+				updateFunctions = arr;
+				updateToRemove = new Array();
+			}
+
+			if (serverToRemove.length > 0) {
+				arr = new Array();
+				serverFunctions.forEach(function (func) {
+					if (typeof serverToRemove.find(function (removeFunc) {
+						return func === removeFunc;
+					}) === 'undefined') {
+						arr.push(func);
+					}
+				});
+				serverFunctions = arr;
+				serverToRemove = new Array();
+			}
+
+			if (cleanupToRemove.length > 0) {
+				arr = new Array();
+				cleanupFunctions.forEach(function (func) {
+					if (typeof cleanupToRemove.find(function (removeFunc) {
+						return func === removeFunc;
+					}) === 'undefined') {
+						arr.push(func);
+					}
+				});
+				cleanupFunctions = arr;
+				cleanupToRemove = new Array();
+			}
+
+			if (waitToRemove.length > 0) {
+				arr = new Array();
+				waitFunctions.forEach(function (funcObj) {
+					if (typeof waitToRemove.find(function (removeFunc) {
+						return funcObj.func === removeFunc;
+					}) === 'undefined') {
+						arr.push(func);
+					} else {
+						console.log('removed in array');
+					}
+				});
+				waitFunctions = arr;
+				waitToRemove = new Array();
+			}
 		}
 		counter++;
 		if (active) window.requestAnimationFrame(cycle);
@@ -20459,52 +20507,48 @@ module.exports = {
 		active = false;
 		counter = 0;
 	},
-	addUIUpdateFunction: function addUIUpdateFunction(func) {
-		uiUpdateFunctions.push(func);
+	addUpdate: function addUpdate(func) {
+		updateFunctions.push(func);
 	},
-	removeUIUpdateFunction: function removeUIUpdateFunction(func) {
-		toRemove.push({
-			arr: uiUpdateFunctions,
-			func: func
-		});
+	removeUpdate: function removeUpdate(func) {
+		updateToRemove.push(func);
 	},
-	addGameObjectUpdateFunction: function addGameObjectUpdateFunction(obj, func) {
-		gameObjectUpdateFunctions.push({
-			obj: obj,
-			func: func
-		});
+	addServer: function addServer(func) {
+		serverFunctions.push(func);
 	},
-	addClientUpdate: function addClientUpdate(func) {
-		clientUpdateFunctions.push(func);
-	},
-	removeClientUpdate: function removeClientUpdate(func) {
-		toRemove.push({
-			arr: clientUpdateFunctions,
-			func: func
-		});
-	},
-	addServerUpdate: function addServerUpdate(func) {
-		serverUpdateFunctions.push(func);
-	},
-	removeServerUpdate: function removeServerUpdate(func) {
-		toRemove.push({
-			arr: serverUpdateFunctions,
-			func: func
-		});
+	removeServer: function removeServer(func) {
+		serverToRemove.push(func);
 	},
 	addCleanup: function addCleanup(func) {
 		cleanupFunctions.push(func);
 	},
 	removeCleanup: function removeCleanup(func) {
-		toRemove.push({
-			arr: cleanupFunctions,
-			func: func
-		});
+		cleanupToRemove.push(func);
 	},
 	setFrameRate: function setFrameRate(rate) {
 		frameRate = rate;
+	},
+	wait: function wait(func, time) {
+		console.log('wait');
+		waitFunctions.push({ func: func, counter: counter + time });
+	},
+	endWait: function endWait(func) {
+		console.log('end wait');
+		waitToRemove.push(func);
 	}
 };
+
+if (config.dev) {
+	window.getCycleUpdateTotal = function () {
+		return updateFunctions.length;
+	};
+	window.getCycleServerTotal = function () {
+		return serverFunctions.length;
+	};
+	window.getCycleCleanupTotal = function () {
+		return cleanupFunctions.length;
+	};
+}
 
 },{"./config":171}],174:[function(require,module,exports){
 'use strict';
@@ -20531,7 +20575,7 @@ function processData(json) {
 	    resolution = 1,
 	    windowWidth = config.windowWidth = windowInnerWidth > windowInnerHeight ? windowInnerWidth : windowInnerHeight,
 	    windowHeight = config.windowHeight = windowInnerWidth < windowInnerHeight ? windowInnerWidth : windowInnerHeight,
-	    gameObjects = config.gameObjects = settings.gameObjects,
+	    displayObjects = config.displayObjects = settings.displayObjects,
 	    levels = config.levels = json.levels,
 	    stageCenterX = 0,
 	    stageCenterY = 0,
@@ -20613,47 +20657,47 @@ function processData(json) {
 		});
 	});
 
-	for (type in gameObjects) {
-		for (property in gameObjects[type].properties) {
-			gameObjects[type].properties[property] = processValue(gameObjects[type].properties[property]);
-			if (property === 'x' || property === 'y' || property === 'speed') gameObjects[type].properties[property] *= resolution;
+	for (type in displayObjects) {
+		for (property in displayObjects[type].properties) {
+			displayObjects[type].properties[property] = processValue(displayObjects[type].properties[property]);
+			if (property === 'x' || property === 'y' || property === 'speed') displayObjects[type].properties[property] *= resolution;
 		}
-		if (!!gameObjects[type].properties.spriteLabels) {
+		if (!!displayObjects[type].properties.spriteLabels) {
 			imagesToLoad.push(spriteImgPath + type + resAppend + '.png');
 			frames = {};
 			for (sprite in json[type + resAppend]) {
 				frames[sprite] = json[type + resAppend][sprite];
 			}
-			gameObjects[type].properties.spriteMeta = {
+			displayObjects[type].properties.spriteMeta = {
 				img: spriteImgPath + type + resAppend + '.png',
 				frames: frames
 			};
 		} else {
 			imagesToLoad.push(spriteImgPath + type + resAppend + '.png');
-			gameObjects[type].properties.image = spriteImgPath + type + resAppend + '.png';
+			displayObjects[type].properties.image = spriteImgPath + type + resAppend + '.png';
 		}
 	}
 	callback();
 }
 
-function processValue(value) {
-	if (typeof value === 'string' && value.indexOf('config.') !== -1) {
-		var values = value.match(/[config\.|a-z|A-Z|0-9]+/g),
-		    operators = value.match(/[\+|\/|\-|\*]/g),
-		    operator = '',
-		    l = values.length;
+function reduceValue(prev, curr, i) {}
 
-		for (var i = 0; i < l; i++) {
-			if (values[i].indexOf('config.') !== -1) {
-				values[i] = config[values[i].replace('config.', '')] * 1;
-			}
-			values[i] *= 1;
-			if (i !== 0) {
-				operator = operators[i - 1];
-				if (operator === '+') value += values[i];else if (operator === '-') value -= values[i];else if (operator === '*') value *= values[i];else if (operator === '/') value /= values[i];
-			} else {
-				value = values[i];
-			}
+function processValue(value) {
+	if (typeof value === 'string' && value.match(/config\./)) {
+		if (value.match(/[0-9]+/)) {
+			(function () {
+				var operator = '',
+				    values = value;
+				value = 0;
+				values.match(/[\+|\/|\-|\*|config\.|a-z|A-Z|0-9]+/g).forEach(function (tmp) {
+					if (tmp.match(/[\+|-|\/|\*]/)) operator = tmp;else {
+						if (tmp.match(/config\.[a-z|A-Z|0-9]/)) tmp = config[tmp.replace(/config\./, '')];else tmp *= 1;
+						if (operator === '+') value += tmp;else if (operator === '-') value -= tmp;else if (operator === '*') value *= tmp;else if (operator === '/') value /= tmp;else value = tmp;
+					}
+				});
+			})();
+		} else {
+			value = config[value.replace(/config\./, '')];
 		}
 	}
 	return value;
@@ -20702,8 +20746,7 @@ Ammunition.prototype = Object.create(Projectile.prototype, {
 });
 
 function onCollision(collidedObject) {
-	if (collidedObject !== this.origin && this.origin.friends.indexOf(collidedObject.type) === -1) {
-
+	if (collidedObject !== this.origin) {
 		if (!!collidedObject.takeDamage) {
 			collidedObject.takeDamage(this.impact);
 		}
@@ -20717,16 +20760,16 @@ module.exports = Ammunition;
 'use strict';
 
 var config = require('../config'),
-    GameObject = require('./gameObject'),
+    DisplayObject = require('./displayObject'),
     aiFunctions = require('../ai'),
     cycle = require('../cycle'),
     utils = require('./utils');
 
 function Character() {
-	GameObject.prototype.constructor.call(this);
+	DisplayObject.prototype.constructor.call(this);
 }
 
-Character.prototype = Object.create(GameObject.prototype, {
+Character.prototype = Object.create(DisplayObject.prototype, {
 	'dead': {
 		set: function set(dead) {
 			this._dead = dead;
@@ -20738,6 +20781,14 @@ Character.prototype = Object.create(GameObject.prototype, {
 		get: function get() {
 			if (typeof this._dead === 'undefined') return this._dead = false;
 			return this._dead;
+		}
+	},
+	'destroy': {
+		value: function value() {
+			if (!!this.ai) {
+				this.ai.destroy();
+			}
+			DisplayObject.prototype.destroy.call(this);
 		}
 	},
 	'health': {
@@ -20785,11 +20836,11 @@ Character.prototype = Object.create(GameObject.prototype, {
 	},
 	'directionLabel': {
 		set: function set(directionLabel) {
-			Object.getOwnPropertyDescriptor(GameObject.prototype, 'directionLabel').set.call(this, directionLabel);
+			Object.getOwnPropertyDescriptor(DisplayObject.prototype, 'directionLabel').set.call(this, directionLabel);
 			if (!!this._firearmType && !this.firearm) this.initFirearm();
 		},
 		get: function get() {
-			return Object.getOwnPropertyDescriptor(GameObject.prototype, 'directionLabel').get.call(this);
+			return Object.getOwnPropertyDescriptor(DisplayObject.prototype, 'directionLabel').get.call(this);
 		}
 	},
 	'initFirearm': {
@@ -20800,35 +20851,35 @@ Character.prototype = Object.create(GameObject.prototype, {
 	},
 	'x': {
 		set: function set(x) {
-			Object.getOwnPropertyDescriptor(GameObject.prototype, 'x').set.call(this, x);
+			Object.getOwnPropertyDescriptor(DisplayObject.prototype, 'x').set.call(this, x);
 			if (!!this.firearm) this.firearm.x = this.firearmOffset[this.display].x + x;
 		},
 		get: function get() {
-			return Object.getOwnPropertyDescriptor(GameObject.prototype, 'x').get.call(this);
+			return Object.getOwnPropertyDescriptor(DisplayObject.prototype, 'x').get.call(this);
 		}
 	},
 	'y': {
 		set: function set(y) {
-			Object.getOwnPropertyDescriptor(GameObject.prototype, 'y').set.call(this, y);
+			Object.getOwnPropertyDescriptor(DisplayObject.prototype, 'y').set.call(this, y);
 			if (!!this.firearm) this.firearm.y = this.firearmOffset[this.display].y + y;
 		},
 		get: function get() {
-			return Object.getOwnPropertyDescriptor(GameObject.prototype, 'y').get.call(this);
+			return Object.getOwnPropertyDescriptor(DisplayObject.prototype, 'y').get.call(this);
 		}
 	},
 	'direction': {
 		set: function set(angle) {
-			Object.getOwnPropertyDescriptor(GameObject.prototype, 'direction').set.call(this, angle);
+			Object.getOwnPropertyDescriptor(DisplayObject.prototype, 'direction').set.call(this, angle);
 			if (!!this.firearm) this.updateFirearmDisplay();
 		},
 		get: function get() {
-			return Object.getOwnPropertyDescriptor(GameObject.prototype, 'direction').get.call(this);
+			return Object.getOwnPropertyDescriptor(DisplayObject.prototype, 'direction').get.call(this);
 		}
 	}
 });
 
 function initFirearm() {
-	this._firearm = utils.createGameObject(this._firearmType);
+	this._firearm = utils.createDisplayObject(this._firearmType);
 	this._firearm.x = this.x;
 	this._firearm.y = this.y;
 	this.updateFirearmDisplay();
@@ -20869,7 +20920,10 @@ function onCollision(collidedObject) {
 	if (!!this.ai) {
 		this.ai.onCollision();
 	}
-	if (!collidedObject !== 'wall' && !!this.melee && this.friends.indexOf(collidedObject.type) === -1) {
+	if (!collidedObject !== 'wall' && !!this.melee && typeof this.friends.find(function (friend) {
+		return friend === collidedObject.type;
+	}) === 'undefined') {
+
 		if (!!collidedObject.takeDamage) collidedObject.takeDamage(this.melee);
 	}
 }
@@ -20917,74 +20971,28 @@ function takeDamage(amount) {
 
 module.exports = Character;
 
-},{"../ai":168,"../config":171,"../cycle":173,"./gameObject":178,"./utils":181}],177:[function(require,module,exports){
-'use strict';
-
-var GameObject = require('./gameObject'),
-    utils = require('./utils');
-
-function Firearm() {
-	GameObject.prototype.constructor.call(this);
-}
-
-Firearm.prototype = Object.create(GameObject.prototype, {
-	'ammunition': {
-		get: function get() {
-			return this._ammunition;
-		},
-		set: function set(ammunition) {
-			this._ammunition = ammunition;
-		}
-	},
-	'fire': {
-		value: fire
-	}
-
-});
-
-function fire(origin) {
-	var _this = this;
-
-	var point = this.getEdgePointFromDirection(origin.direction);
-	var ammunition = utils.createGameObject(this.ammunition, {
-		origin: origin,
-		direction: origin.direction
-	});
-	ammunition.x = point.x;
-	ammunition.y = point.y;
-	ammunition.ignoreObject(origin);
-	origin.ignoreObject(ammunition);
-	ammunition.stage = true;
-	ammunition.applyForce({ speed: ammunition.speed, direction: ammunition.direction });
-	this.display = this.display.replace(/_.+/, '_firing');
-	setTimeout(function () {
-		_this.display = _this.display.replace(/_.+/, '_off');
-	}, 100);
-}
-
-module.exports = Firearm;
-
-},{"./gameObject":178,"./utils":181}],178:[function(require,module,exports){
+},{"../ai":168,"../config":171,"../cycle":173,"./displayObject":177,"./utils":181}],177:[function(require,module,exports){
 'use strict';
 
 var Sprite = require('./sprite'),
     config = require('../config'),
     geom = require('../geom'),
     cycle = require('../cycle'),
-    gameObjects = [],
+    displayObjects = [],
     id = require('../id');
 
-function GameObject() {
+function DisplayObject() {
 	this._sprites = Object.create(null);
-	gameObjects.push(this);
+	displayObjects.push(this);
 	this.id = id();
 	this.moveCycle = false;
+	this.cycleMove = this.move.bind(this);
 }
 
-GameObject.cleanup = cleanup;
-GameObject.clear = clear;
+DisplayObject.cleanup = cleanup;
+DisplayObject.clear = clear;
 
-Object.defineProperties(GameObject.prototype, {
+Object.defineProperties(DisplayObject.prototype, {
 	'move': {
 		value: move
 	},
@@ -20999,6 +21007,7 @@ Object.defineProperties(GameObject.prototype, {
 					sprites[label].destroy();
 				}
 				this.destroyed = true;
+				cycle.removeUpdate(this.cycleMove);
 			}
 		}
 	},
@@ -21039,7 +21048,7 @@ Object.defineProperties(GameObject.prototype, {
 					sprite.stage = true;
 					this.boundingBox = sprite.boundingBox;
 					if (!this.moveCycle) {
-						cycle.addGameObjectUpdateFunction(this, this.move.bind(this));
+						cycle.addUpdate(this.cycleMove);
 						this.moveCycle = true;
 					}
 				}
@@ -21167,7 +21176,7 @@ Object.defineProperties(GameObject.prototype, {
 					sprite.stage = true;
 					this.boundingBox = sprite.boundingBox;
 					if (!this.moveCycle) {
-						cycle.addGameObjectUpdateFunction(this, this.move.bind(this));
+						cycle.addUpdate(this.cycleMove);
 						this.moveCycle = true;
 					}
 				} else {
@@ -21233,10 +21242,10 @@ function applyForce(velocity) {
 	this.velocity = thisVelocity;
 }
 
-function onCollision(gameObject, x, y, newX, newY, collidedObject) {
-	gameObject.velocity.dX = newX - x;
-	gameObject.velocity.dY = newY - y;
-	if (!!gameObject.onCollision) gameObject.onCollision(collidedObject);
+function onCollision(displayObject, x, y, newX, newY, collidedObject) {
+	displayObject.velocity.dX = newX - x;
+	displayObject.velocity.dY = newY - y;
+	if (!!displayObject.onCollision) displayObject.onCollision(collidedObject);
 }
 
 function move() {
@@ -21258,7 +21267,7 @@ function move() {
 		onCollision(this, boundingBox.x, boundingBox.y, collisionCheck.x, collisionCheck.y, 'wall');
 	}
 
-	gameObjects.forEach(function (objectToCheck) {
+	displayObjects.forEach(function (objectToCheck) {
 		var doesNotInteractWith = false;
 		if (!!_this.noInteraction) {
 			doesNotInteractWith = typeof _this.noInteraction.find(function (type) {
@@ -21335,15 +21344,15 @@ function getEdgePointFromDirection(direction) {
 
 function cleanup() {
 	var tmp = new Array();
-	gameObjects.forEach(function (gameObject) {
-		if (!gameObject.destroyed) tmp.push(gameObject);
+	displayObjects.forEach(function (displayObject) {
+		if (!displayObject.destroyed) tmp.push(displayObject);
 	});
-	gameObjects = tmp;
+	displayObjects = tmp;
 }
 
 function clear() {
-	gameObjects.forEach(function (gameObject) {
-		gameObject.destroyed = true;
+	displayObjects.forEach(function (displayObject) {
+		displayObject.destroyed = true;
 	});
 }
 
@@ -21357,7 +21366,7 @@ function initSprites() {
 	this.spriteLabels.forEach(function (spriteLabel) {
 		var frameData = new Array();
 		for (var key in frames) {
-			if (key.indexOf(spriteLabel) != -1) {
+			if (key.match(new RegExp(spriteLabel.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')))) {
 				frameData.push(frames[key]);
 			}
 		}
@@ -21373,27 +21382,29 @@ function initSprites() {
 		if (!!this.stage) {
 			sprite.stage = true;
 			if (!this.moveCycle) {
-				cycle.addGameObjectUpdateFunction(this, this.move.bind(this));
+				cycle.addUpdate(this.cycleMove);
 				this.moveCycle = true;
 			}
 		}
 	}
 }
 
-function ignoreObject(gameObject) {
-	this.ignoreObjectList.push(gameObject);
+function ignoreObject(displayObject) {
+	this.ignoreObjectList.push(displayObject);
 }
 
+DisplayObject.getDisplayObjects = function () {
+	return displayObjects;
+};
+
 if (config.dev) {
-	window.getGameObjectTotal = function () {
-		return gameObjects.length;
+	window.getDisplayObjectTotal = function () {
+		return displayObjects.length;
 	};
-	window.getGameObjects = function () {
-		return gameObjects;
-	};
-	window.updateGameObject = function (type, properties) {
-		var object = gameObjects.find(function (gameObject) {
-			if (gameObject.type === type) return true;
+	window.getDisplayObjects = DisplayObject.getDisplayObjects;
+	window.updateDisplayObject = function (type, properties) {
+		var object = displayObjects.find(function (displayObject) {
+			if (displayObject.type === type) return true;
 			return false;
 		});
 		if (!!object) {
@@ -21402,36 +21413,98 @@ if (config.dev) {
 			}
 		}
 	};
-	window.updateGameObjectsFromConfig = function () {
-		var configGameObjects = config.gameObjects,
+	window.updateDisplayObjectsFromConfig = function () {
+		var configDisplayObjects = config.displayObjects,
 		    configObject = null,
 		    properties = null,
 		    property = null;
-		gameObjects.forEach(function (gameObject) {
-			configObject = configGameObjects[gameObject.type];
+		displayObjects.forEach(function (displayObject) {
+			configObject = configDisplayObjects[displayObject.type];
 			properties = configObject.properties;
 			for (property in properties) {
-				gameObject[property] = properties[property];
+				displayObject[property] = properties[property];
 			}
 		});
 	};
 }
 
-module.exports = GameObject;
+module.exports = DisplayObject;
 
-},{"../config":171,"../cycle":173,"../geom":182,"../id":183,"./sprite":180}],179:[function(require,module,exports){
+},{"../config":171,"../cycle":173,"../geom":182,"../id":183,"./sprite":180}],178:[function(require,module,exports){
+'use strict';
+
+var DisplayObject = require('./displayObject'),
+    utils = require('./utils'),
+    cycle = require('../cycle');
+
+function Firearm() {
+	DisplayObject.prototype.constructor.call(this);
+}
+
+Firearm.prototype = Object.create(DisplayObject.prototype, {
+	'ammunition': {
+		get: function get() {
+			return this._ammunition;
+		},
+		set: function set(ammunition) {
+			this._ammunition = ammunition;
+		}
+	},
+	'fire': {
+		value: fire
+	},
+	'endFire': {
+		value: endFire
+	}
+});
+
+function fire(character) {
+	var point = this.getEdgePointFromDirection(character.direction);
+	var ammunition = utils.createDisplayObject(this.ammunition, {
+		origin: character,
+		direction: character.direction
+	});
+	ammunition.x = point.x;
+	ammunition.y = point.y;
+	ammunition.ignoreObject(character);
+	character.ignoreObject(ammunition);
+	var friendsString = character.friends.join(',');
+	DisplayObject.getDisplayObjects().forEach(function (displayObject) {
+		if (friendsString.match(new RegExp(displayObject.type.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')))) {
+			ammunition.ignoreObject(displayObject);
+			displayObject.ignoreObject(ammunition);
+		}
+	});
+	ammunition.stage = true;
+	ammunition.applyForce({ speed: ammunition.speed, direction: ammunition.direction });
+	this.display = this.display.replace(/_.+/, '_firing');
+	console.log('this.cycleEndFire', this.cycleEndFire);
+	if (!!this.cycleEndFire) cycle.endWait(this.cycleEndFire);
+	this.cycleEndFire = this.endFire.bind(this);
+	cycle.wait(this.cycleEndFire, 3);
+}
+
+function endFire() {
+	console.log('end fire');
+	delete this.cycleEndFire;
+	this.display = this.display.replace(/_.+/, '_off');
+}
+
+module.exports = Firearm;
+
+},{"../cycle":173,"./displayObject":177,"./utils":181}],179:[function(require,module,exports){
 'use strict';
 
 var Sprite = require('./sprite'),
     config = require('../config'),
-    GameObject = require('./gameObject'),
+    DisplayObject = require('./displayObject'),
     cycle = require('../cycle');
 
 function Projectile() {
-	GameObject.prototype.constructor.call(this);
+	DisplayObject.prototype.constructor.call(this);
 }
 
-Projectile.prototype = Object.create(GameObject.prototype, {
+Projectile.prototype = Object.create(DisplayObject.prototype, {
 	'origin': {
 		set: function set(origin) {
 			this._origin = origin;
@@ -21451,7 +21524,7 @@ function onCollision(collidedObject) {
 
 module.exports = Projectile;
 
-},{"../config":171,"../cycle":173,"./gameObject":178,"./sprite":180}],180:[function(require,module,exports){
+},{"../config":171,"../cycle":173,"./displayObject":177,"./sprite":180}],180:[function(require,module,exports){
 'use strict';
 
 var config = require('../config'),
@@ -21689,7 +21762,7 @@ Sprite.draw = function () {
 
 Sprite.setHosting = function (isHosting) {
 	hosting = isHosting;
-	if (hosting) cycle.addServerUpdate(sendUpdate);else socket.on('sprite update', receiveUpdate);
+	if (hosting) cycle.addServer(sendUpdate);else socket.on('sprite update', receiveUpdate);
 };
 
 function addUpdate(values) {
@@ -21746,7 +21819,7 @@ var Character = void 0,
     Projectile = void 0,
     Firearm = void 0,
     Ammunition = void 0,
-    GameObject = void 0,
+    DisplayObject = void 0,
     config = require('../config');
 
 module.exports = {
@@ -21755,40 +21828,40 @@ module.exports = {
 		Projectile = require('./projectile');
 		Firearm = require('./firearm');
 		Ammunition = require('./ammunition');
-		GameObject = require('./gameObject');
+		DisplayObject = require('./displayObject');
 	},
-	createGameObject: function createGameObject(type, additionalProperties) {
-		var gameObject = null,
+	createDisplayObject: function createDisplayObject(type, additionalProperties) {
+		var displayObject = null,
 		    property = null,
 		    value = null,
-		    gameObjectData = config.gameObjects[type],
-		    properties = gameObjectData.properties,
-		    className = gameObjectData.className;
+		    displayObjectData = config.displayObjects[type],
+		    properties = displayObjectData.properties,
+		    className = displayObjectData.className;
 		if (className === 'Character') {
-			gameObject = new Character();
-		} else if (className === 'GameObject') {
-			gameObject = new GameObject();
+			displayObject = new Character();
+		} else if (className === 'DisplayObject') {
+			displayObject = new DisplayObject();
 		} else if (className === 'Projectile') {
-			gameObject = new Projectile();
+			displayObject = new Projectile();
 		} else if (className === 'Ammunition') {
-			gameObject = new Ammunition();
+			displayObject = new Ammunition();
 		} else if (className === 'Firearm') {
-			gameObject = new Firearm();
+			displayObject = new Firearm();
 		} else {
 			return false;
 		}
-		gameObject.type = type;
+		displayObject.type = type;
 		for (property in properties) {
-			gameObject[property] = properties[property];
+			displayObject[property] = properties[property];
 		}
 		for (property in additionalProperties) {
-			gameObject[property] = additionalProperties[property];
+			displayObject[property] = additionalProperties[property];
 		}
-		return gameObject;
+		return displayObject;
 	}
 };
 
-},{"../config":171,"./ammunition":175,"./character":176,"./firearm":177,"./gameObject":178,"./projectile":179}],182:[function(require,module,exports){
+},{"../config":171,"./ammunition":175,"./character":176,"./displayObject":177,"./firearm":178,"./projectile":179}],182:[function(require,module,exports){
 'use strict';
 
 var pi = Math.PI,
@@ -22052,7 +22125,6 @@ function onRelease(e) {
 }
 
 function callback(angle, amount) {
-	var counter = cycle.getCounter();
 	var pi = Math.PI,
 	    l = callbacks.length;
 	element.className = 'active';

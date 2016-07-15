@@ -1,16 +1,16 @@
 'use strict';
 
 let config = require('../config'),
-	GameObject = require('./gameObject'),
+	DisplayObject = require('./displayObject'),
 	aiFunctions = require('../ai'),
 	cycle = require('../cycle'),
 	utils = require('./utils');
 
 function Character() {
-	GameObject.prototype.constructor.call(this);
+	DisplayObject.prototype.constructor.call(this);
 }
 
-Character.prototype = Object.create(GameObject.prototype, {
+Character.prototype = Object.create(DisplayObject.prototype, {
 	'dead': {
 		set: function(dead) {
 			this._dead = dead;
@@ -24,6 +24,14 @@ Character.prototype = Object.create(GameObject.prototype, {
 			if(typeof this._dead === 'undefined')
 				return this._dead = false;
 			return this._dead;
+		}
+	},
+	'destroy': {
+		value: function() {
+			if(!!this.ai) {
+				this.ai.destroy();
+			}
+			DisplayObject.prototype.destroy.call(this);
 		}
 	},
 	'health': {
@@ -73,12 +81,12 @@ Character.prototype = Object.create(GameObject.prototype, {
 	},
 	'directionLabel': {
 		set: function(directionLabel) {
-			Object.getOwnPropertyDescriptor(GameObject.prototype, 'directionLabel').set.call(this, directionLabel);
+			Object.getOwnPropertyDescriptor(DisplayObject.prototype, 'directionLabel').set.call(this, directionLabel);
 			if(!!this._firearmType && !this.firearm)
 				this.initFirearm();
 		},
 		get: function() {
-			return Object.getOwnPropertyDescriptor(GameObject.prototype, 'directionLabel').get.call(this);
+			return Object.getOwnPropertyDescriptor(DisplayObject.prototype, 'directionLabel').get.call(this);
 		}
 	},
 	'initFirearm': {
@@ -89,38 +97,38 @@ Character.prototype = Object.create(GameObject.prototype, {
 	},
 	'x': {
 		set: function(x) {
-			Object.getOwnPropertyDescriptor(GameObject.prototype, 'x').set.call(this, x);
+			Object.getOwnPropertyDescriptor(DisplayObject.prototype, 'x').set.call(this, x);
 			if(!!this.firearm)
 				this.firearm.x = this.firearmOffset[this.display].x + x;
 		},
 		get: function() {
-			return Object.getOwnPropertyDescriptor(GameObject.prototype, 'x').get.call(this);
+			return Object.getOwnPropertyDescriptor(DisplayObject.prototype, 'x').get.call(this);
 		}
 	},
 	'y': {
 		set: function(y) {
-			Object.getOwnPropertyDescriptor(GameObject.prototype, 'y').set.call(this, y);
+			Object.getOwnPropertyDescriptor(DisplayObject.prototype, 'y').set.call(this, y);
 			if(!!this.firearm)
 				this.firearm.y = this.firearmOffset[this.display].y + y;
 		},
 		get: function() {
-			return Object.getOwnPropertyDescriptor(GameObject.prototype, 'y').get.call(this);
+			return Object.getOwnPropertyDescriptor(DisplayObject.prototype, 'y').get.call(this);
 		}
 	},
 	'direction': {
 		set: function(angle) {
-			Object.getOwnPropertyDescriptor(GameObject.prototype, 'direction').set.call(this, angle);
+			Object.getOwnPropertyDescriptor(DisplayObject.prototype, 'direction').set.call(this, angle);
 			if(!!this.firearm)
 				this.updateFirearmDisplay();
 		},
 		get: function() {
-			return Object.getOwnPropertyDescriptor(GameObject.prototype, 'direction').get.call(this);
+			return Object.getOwnPropertyDescriptor(DisplayObject.prototype, 'direction').get.call(this);
 		}
 	}
 });
 
 function initFirearm() {
-	this._firearm = utils.createGameObject(this._firearmType);
+	this._firearm = utils.createDisplayObject(this._firearmType);
 	this._firearm.x = this.x;
 	this._firearm.y = this.y;
 	this.updateFirearmDisplay();
@@ -167,9 +175,15 @@ function onCollision(collidedObject) {
 	if(!!this.ai) {
 		this.ai.onCollision();
 	}
-	if(!collidedObject !== 'wall' && !!this.melee && this.friends.indexOf(collidedObject.type) === -1) {
+	if(!collidedObject !== 'wall' 
+		&& !!this.melee 
+		&& typeof this.friends.find( friend => {
+				return friend===collidedObject.type
+			}) === 'undefined') {
+				
 		if(!!collidedObject.takeDamage)
 			collidedObject.takeDamage(this.melee);
+		
 	}
 }
 

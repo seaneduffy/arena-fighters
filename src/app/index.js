@@ -7,11 +7,11 @@ components = require('./components'),
 dataLoader = require('../data'),
 config = require('../config'),
 resources = require('../resources'),
-utils = require('../gameObject/utils'),
+utils = require('../displayObject/utils'),
 socket = require('../socket'),
 cycle = require('../cycle'),
-Sprite = require('../gameObject/sprite'),
-GameObject = require('../gameObject/gameObject'),
+Sprite = require('../displayObject/sprite'),
+DisplayObject = require('../displayObject/displayObject'),
 
 controls = null,
 
@@ -26,8 +26,8 @@ gameComponent = ReactDOM.render(React.createElement(components.Game), document.g
 			utils.init();
 			controls = require('../controls');
 			controls(onJoystick, onFire);
-			cycle.addUIUpdateFunction(Sprite.draw);
-			cycle.addCleanup(GameObject.cleanup);
+			cycle.addUpdate(Sprite.draw);
+			cycle.addCleanup(DisplayObject.cleanup);
 			cycle.addCleanup(Sprite.cleanup);
 			components.addHandlers(
 				handleStartSinglePlayerGame,
@@ -48,16 +48,16 @@ gameComponent = ReactDOM.render(React.createElement(components.Game), document.g
 function startLevel(index) {
 	let levelData = config.levels[index];
 	if(config.hosting || config.gameType === 'single') {
-		let gameObject = null, type = null, properties = null;
+		let displayObject = null, type = null, properties = null;
 		levelData.forEach( level => {
 			if(level.type !== 'player2' || config.gameType === 'two') {
-				gameObject = utils.createGameObject(level.type, level.properties);
-				if(!!gameObject) {
-					gameObject.stage = true;
+				displayObject = utils.createDisplayObject(level.type, level.properties);
+				if(!!displayObject) {
+					displayObject.stage = true;
 					if(level.type === 'player1')
-						config.player1 = gameObject;
+						config.player1 = displayObject;
 					else if(level.type === 'player2')
-						config.player2 = gameObject;
+						config.player2 = displayObject;
 				}
 			}
 		} );
@@ -154,7 +154,7 @@ function handleCreateGame() {
 }
 function handleEndGame(e) {
 	cycle.stop();
-	GameObject.clear();
+	DisplayObject.clear();
 	gameComponent.setState({gameActive:false});
 }
 function handleConfirmPlayerName() {

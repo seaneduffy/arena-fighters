@@ -22,7 +22,7 @@ function processData(json) {
 		resolution = 1,
 		windowWidth = config.windowWidth = windowInnerWidth > windowInnerHeight ? windowInnerWidth : windowInnerHeight,
 		windowHeight = config.windowHeight = windowInnerWidth < windowInnerHeight ? windowInnerWidth : windowInnerHeight,
-		gameObjects = config.gameObjects = settings.gameObjects,
+		displayObjects = config.displayObjects = settings.displayObjects,
 		levels = config.levels = json.levels,
 		stageCenterX = 0,
 		stageCenterY = 0,
@@ -107,55 +107,61 @@ function processData(json) {
 		});
 	});
 
-	for(type in gameObjects) {
-		for(property in gameObjects[type].properties) {
-			gameObjects[type].properties[property] = processValue(gameObjects[type].properties[property]);
+	for(type in displayObjects) {
+		for(property in displayObjects[type].properties) {
+			displayObjects[type].properties[property] = processValue(displayObjects[type].properties[property]);
 			if(property === 'x' || property === 'y' || property === 'speed')
-				gameObjects[type].properties[property] *= resolution;
+				displayObjects[type].properties[property] *= resolution;
 		}
-		if(!!gameObjects[type].properties.spriteLabels) {
+		if(!!displayObjects[type].properties.spriteLabels) {
 			imagesToLoad.push(spriteImgPath+type+resAppend+'.png');
 			frames = {};
 			for(sprite in json[type+resAppend]) {
 				frames[sprite] = json[type+resAppend][sprite];
 			}
-			gameObjects[type].properties.spriteMeta = {
+			displayObjects[type].properties.spriteMeta = {
 				img: spriteImgPath+type+resAppend+'.png',
 				frames: frames
 			};
 		} else {
 			imagesToLoad.push(spriteImgPath+type+resAppend+'.png');
-			gameObjects[type].properties.image = spriteImgPath+type+resAppend+'.png';
+			displayObjects[type].properties.image = spriteImgPath+type+resAppend+'.png';
 		}
 	}
 	callback();
 }
 
-function processValue(value) {
-	if(typeof value === 'string' && value.indexOf('config.') !== -1) {
-		let values = value.match(/[config\.|a-z|A-Z|0-9]+/g),
-			operators = value.match(/[\+|\/|\-|\*]/g),
-			operator = '',
-			l = values.length;
+function reduceValue(prev, curr, i) {
 	
-		for(let i=0; i<l; i++) {
-			if(values[i].indexOf('config.') !== -1) {
-				values[i] = config[values[i].replace('config.','')] * 1;
-			}
-			values[i] *= 1;
-			if(i !== 0) {
-				operator = operators[i-1];
-				if(operator === '+')
-					value += values[i];
-				else if(operator === '-')
-					value -= values[i];
-				else if(operator === '*')
-					value *= values[i];
-				else if(operator === '/')
-					value /= values[i];
-			} else {
-				value = values[i];
-			}
+}
+
+function processValue(value) {
+	if(typeof value === 'string' && value.match(/config\./)) {
+		if(value.match(/[0-9]+/)) {
+			let operator = '',
+				values = value;
+			value = 0;
+			values.match(/[\+|\/|\-|\*|config\.|a-z|A-Z|0-9]+/g).forEach( function(tmp){
+				if(tmp.match(/[\+|-|\/|\*]/))
+					operator = tmp;
+				else {
+					if(tmp.match(/config\.[a-z|A-Z|0-9]/))
+						tmp = config[tmp.replace(/config\./,'')];
+					else
+						tmp *= 1;
+					if(operator === '+')
+						value += tmp;
+					else if(operator === '-')
+						value -= tmp;
+					else if(operator === '*')
+						value *= tmp;
+					else if(operator === '/')
+						value /= tmp;
+					else value = tmp;
+				} 
+			} );
+		} else {
+			value = config[value.replace(/config\./,'')];
 		}
 	}
 	return value;

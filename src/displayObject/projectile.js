@@ -1,13 +1,13 @@
 let Sprite = require('./sprite'),
 	config = require('../config'),
-	GameObject = require('./gameObject'),
+	DisplayObject = require('./displayObject'),
 	cycle = require('../cycle');
 
 function Projectile() {
-	GameObject.prototype.constructor.call(this);
+	DisplayObject.prototype.constructor.call(this);
 }
 
-Projectile.prototype = Object.create(GameObject.prototype, {
+Projectile.prototype = Object.create(DisplayObject.prototype, {
 	'origin': {
 		set: function(origin) {
 			this._origin = origin;
