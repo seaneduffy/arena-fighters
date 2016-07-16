@@ -19763,11 +19763,12 @@ function Grunt(character) {
 Grunt.prototype = Object.create(Ai.prototype, {
 	'move': {
 		value: function value() {
-			var v = this._character.velocity;
+			var v = this._character.velocity,
+			    direction = geom.getAngle(this._character.x, this._character.y, this._closestPlayer.x, this._closestPlayer.y);
 			if (!!this._closestPlayer) {
-				this._character.walk(1, geom.getAngle(this._character.x, this._character.y, this._closestPlayer.x, this._closestPlayer.y));
+				this._character.walk(1, direction);
 			} else {
-				if (v.dX !== 0 || v.dY !== 0) this._character.walk(0, -1);
+				if (v.dX !== 0 || v.dY !== 0) this._character.walk(0, direction);
 			}
 		}
 	},
@@ -19807,16 +19808,17 @@ Devil.prototype = Object.create(Ai.prototype, {
 			var counter = cycle.getCounter();
 			this.counter = this.counter || 0;
 			if (this.counter >= this._character.moveTime) {
+				var direction = geom.getAngle(this._character.x, this._character.y, this._closestPlayer.x, this._closestPlayer.y);
 				if (this.jump) {
 					var v = this._character.velocity;
 					if (!!this._closestPlayer) {
-						this._character.walk(1, geom.getAngle(this._character.x, this._character.y, this._closestPlayer.x, this._closestPlayer.y));
+						this._character.walk(1, direction);
 					} else {
-						if (v.dX !== 0 || v.dY !== 0) this._character.walk(0, -1);
+						if (v.dX !== 0 || v.dY !== 0) this._character.walk(0, direction);
 					}
 					this.jump = false;
 				} else {
-					this._character.walk(0, -1);
+					this._character.walk(0, direction);
 					this.jump = true;
 				}
 				this.counter = 0;
@@ -20292,6 +20294,7 @@ var config = {
 	"jsonUri": "/data.json",
 	"fireBtnImage": "/img/fire.png",
 	"joystickImage": "/img/joystick.png",
+	"pi": Math.PI,
 	"UP": 0,
 	"LEFT": 3 * Math.PI / 2,
 	"RIGHT": Math.PI / 2,
@@ -20301,7 +20304,8 @@ var config = {
 	"DOWN_LEFT": 5 * Math.PI / 4,
 	"DOWN_RIGHT": 3 * Math.PI / 4,
 	"CENTER": -1,
-	"dev": true
+	"dev": true,
+	"console": true
 };
 
 module.exports = config;
@@ -20482,8 +20486,6 @@ function cycle() {
 						return funcObj.func === removeFunc;
 					}) === 'undefined') {
 						arr.push(func);
-					} else {
-						console.log('removed in array');
 					}
 				});
 				waitFunctions = arr;
@@ -20529,11 +20531,9 @@ module.exports = {
 		frameRate = rate;
 	},
 	wait: function wait(func, time) {
-		console.log('wait');
 		waitFunctions.push({ func: func, counter: counter + time });
 	},
 	endWait: function endWait(func) {
-		console.log('end wait');
 		waitToRemove.push(func);
 	}
 };
@@ -20564,7 +20564,8 @@ function processData(json) {
 	    resAppend = '',
 	    stageWidth = 0,
 	    stageHeight = 0,
-	    wallPadding = processValue(settings.wallPadding),
+	    scaleValues = settings.scaleValues.join(','),
+	    wallPadding = 0,
 	    sdWidth = processValue(settings.sdWidth),
 	    sdHeight = processValue(settings.sdHeight),
 	    mdWidth = processValue(settings.mdWidth),
@@ -20583,7 +20584,8 @@ function processData(json) {
 	    property = '',
 	    type = '',
 	    sprite = '',
-	    frames = null;
+	    frames = null,
+	    image = '';
 
 	cycle.setFrameRate(settings.frameRate);
 
@@ -20619,7 +20621,7 @@ function processData(json) {
 	config.domElement.style.height = stageHeight * resolution + 'px';
 	config.joystickMin = settings.joystickMin * resolution;
 	config.joystickMax = settings.joystickMax * resolution;
-	wallPadding *= resolution;
+	wallPadding = processValue(settings.wallPadding) * resolution;
 
 	config.topWall = {
 		x: 0,
@@ -20651,7 +20653,7 @@ function processData(json) {
 			if (!!levelData.properties) {
 				for (property in levelData.properties) {
 					levelData.properties[property] = processValue(levelData.properties[property]);
-					if (property === 'x' || property === 'y' || property === 'speed') levelData.properties[property] *= resolution;
+					if (scaleValues.match(new RegExp(property))) levelData.properties[property] *= resolution;
 				}
 			}
 		});
@@ -20660,7 +20662,7 @@ function processData(json) {
 	for (type in displayObjects) {
 		for (property in displayObjects[type].properties) {
 			displayObjects[type].properties[property] = processValue(displayObjects[type].properties[property]);
-			if (property === 'x' || property === 'y' || property === 'speed') displayObjects[type].properties[property] *= resolution;
+			if (scaleValues.match(new RegExp(property))) displayObjects[type].properties[property] *= resolution;
 		}
 		if (!!displayObjects[type].properties.spriteLabels) {
 			imagesToLoad.push(spriteImgPath + type + resAppend + '.png');
@@ -20672,9 +20674,12 @@ function processData(json) {
 				img: spriteImgPath + type + resAppend + '.png',
 				frames: frames
 			};
-		} else {
-			imagesToLoad.push(spriteImgPath + type + resAppend + '.png');
-			displayObjects[type].properties.image = spriteImgPath + type + resAppend + '.png';
+		}
+		if (!!displayObjects[type].properties.image) {
+			image = displayObjects[type].properties.image;
+			image = spriteImgPath + image + resAppend + '.png';
+			displayObjects[type].properties.image = image;
+			imagesToLoad.push(image);
 		}
 	}
 	callback();
@@ -20741,18 +20746,16 @@ Ammunition.prototype = Object.create(Projectile.prototype, {
 		}
 	},
 	'onCollision': {
-		value: onCollision
+		value: function value(collidedObject) {
+			if (collidedObject !== this.origin) {
+				if (!!collidedObject.takeDamage) {
+					collidedObject.takeDamage(this.impact);
+				}
+				Projectile.prototype.onCollision.call(this, collidedObject);
+			}
+		}
 	}
 });
-
-function onCollision(collidedObject) {
-	if (collidedObject !== this.origin) {
-		if (!!collidedObject.takeDamage) {
-			collidedObject.takeDamage(this.impact);
-		}
-		Projectile.prototype.onCollision.call(this, collidedObject);
-	}
-};
 
 module.exports = Ammunition;
 
@@ -20775,7 +20778,6 @@ Character.prototype = Object.create(DisplayObject.prototype, {
 			this._dead = dead;
 			if (dead) {
 				this.destroy();
-				if (!!this.firearm) this.firearm.destroy();
 			}
 		},
 		get: function get() {
@@ -20788,6 +20790,7 @@ Character.prototype = Object.create(DisplayObject.prototype, {
 			if (!!this.ai) {
 				this.ai.destroy();
 			}
+			if (!!this.firearm) this.firearm.destroy();
 			DisplayObject.prototype.destroy.call(this);
 		}
 	},
@@ -20852,7 +20855,6 @@ Character.prototype = Object.create(DisplayObject.prototype, {
 	'x': {
 		set: function set(x) {
 			Object.getOwnPropertyDescriptor(DisplayObject.prototype, 'x').set.call(this, x);
-			if (!!this.firearm) this.firearm.x = this.firearmOffset[this.display].x + x;
 		},
 		get: function get() {
 			return Object.getOwnPropertyDescriptor(DisplayObject.prototype, 'x').get.call(this);
@@ -20861,7 +20863,6 @@ Character.prototype = Object.create(DisplayObject.prototype, {
 	'y': {
 		set: function set(y) {
 			Object.getOwnPropertyDescriptor(DisplayObject.prototype, 'y').set.call(this, y);
-			if (!!this.firearm) this.firearm.y = this.firearmOffset[this.display].y + y;
 		},
 		get: function get() {
 			return Object.getOwnPropertyDescriptor(DisplayObject.prototype, 'y').get.call(this);
@@ -20914,6 +20915,8 @@ function updateFirearmDisplay() {
 		this._firearm.z = z;
 		this._firearm.stage = true;
 	}
+	this.firearm.x = this.firearmOffset[this.display].x + this.x;
+	this.firearm.y = this.firearmOffset[this.display].y + this.y;
 }
 
 function onCollision(collidedObject) {
@@ -20929,35 +20932,38 @@ function onCollision(collidedObject) {
 }
 
 function walk(power, direction) {
-	var display = this.display;
+
 	this.direction = direction;
-	if (direction < 0) {
-		this.display = display.replace('walking', 'standing');
+
+	var directionLabel = this.directionLabel;
+
+	if (directionLabel === config.UP) {
+		this.display = '$up_walking';
+	} else if (directionLabel === config.DOWN) {
+		this.display = '$down_walking';
+	} else if (directionLabel === config.LEFT) {
+		this.display = '$left_walking';
+	} else if (directionLabel === config.RIGHT) {
+		this.display = '$right_walking';
+	} else if (directionLabel === config.UP_LEFT) {
+		this.display = '$upleft_walking';
+	} else if (directionLabel === config.UP_RIGHT) {
+		this.display = '$upright_walking';
+	} else if (directionLabel === config.DOWN_LEFT) {
+		this.display = '$downleft_walking';
+	} else if (directionLabel === config.DOWN_RIGHT) {
+		this.display = '$downright_walking';
+	}
+
+	if (power <= 0) {
+		this.display = this.display.replace('walking', 'standing');
 		this.velocity = {
-			speed: 0,
-			direction: -1,
 			dX: 0,
-			dY: 0
+			dY: 0,
+			direction: direction,
+			speed: 0
 		};
 	} else {
-		var directionLabel = this.directionLabel;
-		if (directionLabel === config.UP) {
-			this.display = '$up_walking';
-		} else if (directionLabel === config.DOWN) {
-			this.display = '$down_walking';
-		} else if (directionLabel === config.LEFT) {
-			this.display = '$left_walking';
-		} else if (directionLabel === config.RIGHT) {
-			this.display = '$right_walking';
-		} else if (directionLabel === config.UP_LEFT) {
-			this.display = '$upleft_walking';
-		} else if (directionLabel === config.UP_RIGHT) {
-			this.display = '$upright_walking';
-		} else if (directionLabel === config.DOWN_LEFT) {
-			this.display = '$downleft_walking';
-		} else if (directionLabel === config.DOWN_RIGHT) {
-			this.display = '$downright_walking';
-		}
 		this.applyForce({
 			direction: direction,
 			speed: this.speed * power
@@ -21216,35 +21222,45 @@ Object.defineProperties(DisplayObject.prototype, {
 			};
 		},
 		set: function set(velocity) {
-			this._velocity = velocity;
+			this._velocity = processVelocity(velocity);
 		}
 	},
 	'applyForce': {
 		value: applyForce
+	},
+	'processVelocity': {
+		value: processVelocity
 	}
 });
 
-function applyForce(velocity) {
-
-	var thisVelocity = this.velocity;
-	if (!!thisVelocity.dX && !!thisVelocity.dY) {
-		var tmp = geom.getXYFromVector(0, 0, thisVelocity.direction, thisVelocity.speed);
-		thisVelocity.dX = tmp.x;
-		thisVelocity.dY = tmp.y;
-	}
-	if (typeof velocity.dX === 'undefined' || typeof velocity.dY === 'undefined') {
+function processVelocity(velocity) {
+	if (typeof velocity.dX !== 'undefined' && typeof velocity.dY != 'undefined' && (typeof velocity.direction === 'undefined' || typeof velocity.speed === 'undefined')) {
+		velocity.direction = geom.getAngle(0, 0, velocity.dX, velocity.dY);
+		velocity.speed = geom.getDistance(0, 0, velocity.dX, velocity.dY);
+	} else if ((typeof velocity.dX === 'undefined' || typeof velocity.dY === 'undefined') && typeof velocity.direction !== 'undefined' && typeof velocity.speed !== 'undefined') {
 		var tmp = geom.getXYFromVector(0, 0, velocity.direction, velocity.speed);
 		velocity.dX = tmp.x;
 		velocity.dY = tmp.y;
 	}
-	thisVelocity.dX = thisVelocity.dX * velocity.dX > 0 ? Math.abs(thisVelocity.dX) >= Math.abs(velocity.dX) ? thisVelocity.dX : velocity.dX : thisVelocity.dX + velocity.dX;
-	thisVelocity.dY = thisVelocity.dY * velocity.dY > 0 ? Math.abs(thisVelocity.dY) >= Math.abs(velocity.dY) ? thisVelocity.dY : velocity.dY : thisVelocity.dY + velocity.dY;
-	this.velocity = thisVelocity;
+	return velocity;
+}
+
+function applyForce(velocity) {
+	var v1 = processVelocity(this.velocity),
+	    v2 = processVelocity(velocity),
+	    dX = v1.dX * v2.dX > 0 ? Math.abs(v1.dX) >= Math.abs(v2.dX) ? v1.dX : v2.dX : v1.dX + v2.dX,
+	    dY = v1.dY * v2.dY > 0 ? Math.abs(v1.dY) >= Math.abs(v2.dY) ? v1.dY : v2.dY : v1.dY + v2.dY;
+	this.velocity = {
+		dX: dX,
+		dY: dY
+	};
 }
 
 function onCollision(displayObject, x, y, newX, newY, collidedObject) {
-	displayObject.velocity.dX = newX - x;
-	displayObject.velocity.dY = newY - y;
+	displayObject.velocity = {
+		dX: newX - x,
+		dY: newY - y
+	};
 	if (!!displayObject.onCollision) displayObject.onCollision(collidedObject);
 }
 
@@ -21453,8 +21469,11 @@ Firearm.prototype = Object.create(DisplayObject.prototype, {
 	'fire': {
 		value: fire
 	},
-	'endFire': {
-		value: endFire
+	'endBlastAnimation': {
+		value: endBlastAnimation
+	},
+	'startBlastAnimation': {
+		value: startBlastAnimation
 	}
 });
 
@@ -21476,17 +21495,22 @@ function fire(character) {
 		}
 	});
 	ammunition.stage = true;
-	ammunition.applyForce({ speed: ammunition.speed, direction: ammunition.direction });
-	this.display = this.display.replace(/_.+/, '_firing');
-	console.log('this.cycleEndFire', this.cycleEndFire);
-	if (!!this.cycleEndFire) cycle.endWait(this.cycleEndFire);
-	this.cycleEndFire = this.endFire.bind(this);
-	cycle.wait(this.cycleEndFire, 3);
+	ammunition.emit();
+	this.startBlastAnimation();
 }
 
-function endFire() {
-	console.log('end fire');
-	delete this.cycleEndFire;
+function startBlastAnimation() {
+	if (!!this.cycleEndBlastAnimation) {
+		cycle.endWait(this.cycleEndBlastAnimation);
+	} else {
+		this.display = this.display.replace(/_.+/, '_firing');
+		this.cycleEndBlastAnimation = this.endBlastAnimation.bind(this);
+	}
+	cycle.wait(this.cycleEndBlastAnimation, 3);
+}
+
+function endBlastAnimation() {
+	delete this.cycleEndBlastAnimation;
 	this.display = this.display.replace(/_.+/, '_off');
 }
 
@@ -21498,7 +21522,8 @@ module.exports = Firearm;
 var Sprite = require('./sprite'),
     config = require('../config'),
     DisplayObject = require('./displayObject'),
-    cycle = require('../cycle');
+    cycle = require('../cycle'),
+    geom = require('../geom');
 
 function Projectile() {
 	DisplayObject.prototype.constructor.call(this);
@@ -21514,17 +21539,56 @@ Projectile.prototype = Object.create(DisplayObject.prototype, {
 		}
 	},
 	'onCollision': {
-		value: onCollision
+		value: function value() {
+			cycle.removeUpdate(this.cycleUpdateVelocity);
+			this.destroy();
+		}
+	},
+	'updateVelocity': {
+		value: function value() {
+			var counter = cycle.getCounter(),
+			    diff = counter - this.startCounter,
+			    per = diff % this.velocityModifierFrequency / this.velocityModifierFrequency,
+			    sin = Math.sin(per * 2 * Math.PI),
+			    amplitude = this.velocityModifierAmplitude * sin,
+			    perpendicularVelocity = geom.getXYFromVector(0, 0, this.perpendicularDirection, amplitude);
+			this.x += perpendicularVelocity.x - this.perpendicularVelocity.x;
+			this.y += perpendicularVelocity.y - this.perpendicularVelocity.y;
+			this.perpendicularVelocity = perpendicularVelocity;
+		}
+	},
+	'velocity': {
+		set: function set(velocity) {
+			this._velocity = this.processVelocity(velocity);
+			var rad2pi = Math.PI * 2,
+			    angle = this.velocity.direction + Math.PI / 2;
+			angle < 0 ? rad2pi + angle : angle;
+			angle = angle > rad2pi ? angle - rad2pi : angle;
+			this.perpendicularDirection = angle;
+			this.perpendicularVelocity = {
+				x: 0,
+				y: 0
+			};
+		},
+		get: function get() {
+			return Object.getOwnPropertyDescriptor(DisplayObject.prototype, 'velocity').get.call(this);
+		}
+	},
+	'emit': {
+		value: function value() {
+			this.applyForce({ speed: this.speed, direction: this.direction });
+			if (!!this.velocityModifierFrequency && !!this.velocityModifierAmplitude) {
+				this.cycleUpdateVelocity = this.updateVelocity.bind(this);
+				this.startCounter = cycle.getCounter();
+				cycle.addUpdate(this.cycleUpdateVelocity);
+			}
+		}
 	}
 });
 
-function onCollision(collidedObject) {
-	this.destroy();
-};
-
 module.exports = Projectile;
 
-},{"../config":171,"../cycle":173,"./displayObject":177,"./sprite":180}],180:[function(require,module,exports){
+},{"../config":171,"../cycle":173,"../geom":182,"./displayObject":177,"./sprite":180}],180:[function(require,module,exports){
 'use strict';
 
 var config = require('../config'),
@@ -21943,6 +22007,7 @@ module.exports = {
 	},
 	getVectorFromXYAngle: function getVectorFromXYAngle(x, y, angle) {
 		var point = {};
+
 		if (angle === 0 || angle === a360) {
 			point.x = 0;
 			point.y = -y;
@@ -22039,7 +22104,7 @@ var config = require('./config'),
     deltaX = null,
     deltaY = null,
     sensitivity = null,
-    windowHeight_maxResDistance = null,
+    maxDistance = null,
     directions = Object.create(null),
     spriteJson = null,
     xobj = new XMLHttpRequest();
@@ -22085,12 +22150,13 @@ function touchMove(e) {
 	touchY = e.touches[0].pageY;
 	deltaX = touchX - centerX;
 	deltaY = touchY - centerY;
-	var amount = geom.getDistance(centerX, centerY, touchX, touchY);
-	if (amount > windowHeight_maxResDistance) amount = windowHeight_maxResDistance;
+	var amount = geom.getDistance(centerX, centerY, touchX, touchY),
+	    angle = geom.getAngle(centerX, centerY, touchX, touchY);
+	if (amount > maxDistance) amount = maxDistance;
 	if (Math.abs(deltaX) > sensitivity || Math.abs(deltaY) > sensitivity) {
-		callback(geom.getAngle(centerX, centerY, touchX, touchY), amount / windowHeight_maxResDistance);
+		callback(angle, amount / maxDistance);
 	} else {
-		callback(-1, 0);
+		callback(angle, 0);
 	}
 }
 
@@ -22137,9 +22203,9 @@ function callback(angle, amount) {
 }
 
 module.exports = {
-	init: function init(_element, _windowHeight_maxResDistance, _sensitivity, json) {
+	init: function init(_element, _maxDistance, _sensitivity, json) {
 		element = _element;
-		windowHeight_maxResDistance = _windowHeight_maxResDistance;
+		maxDistance = _maxDistance;
 		sensitivity = _sensitivity;
 		spriteJson = json;
 		_init();

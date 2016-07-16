@@ -48,7 +48,7 @@ module.exports = {
 			deltaY = y2 - y1;
 		return Math.sqrt(deltaX * deltaX + deltaY * deltaY);
 	},
-	getXYFromVector: function(x, y, angle, distance) {
+	getXYFromVector: function(x, y, angle, distance) {		
 		let point = {}, 
 			tmpAngle = 0, 
 			xModifier = 1,
@@ -93,6 +93,8 @@ module.exports = {
 	},
 	getVectorFromXYAngle: function(x, y, angle) {
 		let point = {};
+		
+		
 		if(angle === 0 || angle === a360) {
 			point.x = 0;
 			point.y = -y;

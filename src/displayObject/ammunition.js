@@ -16,17 +16,15 @@ Ammunition.prototype = Object.create(Projectile.prototype, {
 		}
 	},
 	'onCollision': {
-		value: onCollision
+		value: function(collidedObject) {
+			if(collidedObject !== this.origin) {
+				if(!!collidedObject.takeDamage) {
+					collidedObject.takeDamage(this.impact);
+				}
+				Projectile.prototype.onCollision.call(this, collidedObject);
+			}
+		}
 	}
 });
-
-function onCollision(collidedObject) {
-	if(collidedObject !== this.origin) {
-		if(!!collidedObject.takeDamage) {
-			collidedObject.takeDamage(this.impact);
-		}
-		Projectile.prototype.onCollision.call(this, collidedObject);
-	}
-};
 
 module.exports = Ammunition;

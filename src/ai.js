@@ -68,12 +68,13 @@ function Grunt(character) {
 Grunt.prototype = Object.create(Ai.prototype, {
 	'move': {
 		value: function() {
-			let v = this._character.velocity;
+			let v = this._character.velocity,
+				direction = geom.getAngle(this._character.x, this._character.y, this._closestPlayer.x, this._closestPlayer.y)
 			if(!!this._closestPlayer) {
-				this._character.walk(1, geom.getAngle(this._character.x, this._character.y, this._closestPlayer.x, this._closestPlayer.y));
+				this._character.walk(1, direction);
 			} else {
 				if(v.dX !== 0 || v.dY !== 0)
-					this._character.walk(0,-1);
+					this._character.walk(0, direction);
 			}
 		}
 	},
@@ -119,17 +120,18 @@ Devil.prototype = Object.create(Ai.prototype, {
 			let counter = cycle.getCounter();
 			this.counter = this.counter || 0;
 			if(this.counter >= this._character.moveTime) {
+				let direction = geom.getAngle(this._character.x, this._character.y, this._closestPlayer.x, this._closestPlayer.y);
 				if(this.jump) {
 					let v = this._character.velocity;
 					if(!!this._closestPlayer) {
-						this._character.walk(1, geom.getAngle(this._character.x, this._character.y, this._closestPlayer.x, this._closestPlayer.y));
+						this._character.walk(1, direction);
 					} else {
 						if(v.dX !== 0 || v.dY !== 0)
-							this._character.walk(0,-1);
+							this._character.walk(0,direction);
 					}
 					this.jump = false;
 				} else {
-					this._character.walk(0, -1);
+					this._character.walk(0, direction);
 					this.jump = true;
 				}
 				this.counter = 0;

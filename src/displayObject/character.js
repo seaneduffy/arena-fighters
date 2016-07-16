@@ -16,8 +16,6 @@ Character.prototype = Object.create(DisplayObject.prototype, {
 			this._dead = dead;
 			if(dead) {
 				this.destroy();
-				if(!!this.firearm)
-					this.firearm.destroy();
 			}
 		}, 
 		get: function() {
@@ -31,6 +29,8 @@ Character.prototype = Object.create(DisplayObject.prototype, {
 			if(!!this.ai) {
 				this.ai.destroy();
 			}
+			if(!!this.firearm)
+				this.firearm.destroy();
 			DisplayObject.prototype.destroy.call(this);
 		}
 	},
@@ -98,8 +98,6 @@ Character.prototype = Object.create(DisplayObject.prototype, {
 	'x': {
 		set: function(x) {
 			Object.getOwnPropertyDescriptor(DisplayObject.prototype, 'x').set.call(this, x);
-			if(!!this.firearm)
-				this.firearm.x = this.firearmOffset[this.display].x + x;
 		},
 		get: function() {
 			return Object.getOwnPropertyDescriptor(DisplayObject.prototype, 'x').get.call(this);
@@ -108,8 +106,6 @@ Character.prototype = Object.create(DisplayObject.prototype, {
 	'y': {
 		set: function(y) {
 			Object.getOwnPropertyDescriptor(DisplayObject.prototype, 'y').set.call(this, y);
-			if(!!this.firearm)
-				this.firearm.y = this.firearmOffset[this.display].y + y;
 		},
 		get: function() {
 			return Object.getOwnPropertyDescriptor(DisplayObject.prototype, 'y').get.call(this);
@@ -169,6 +165,8 @@ function updateFirearmDisplay() {
 		this._firearm.z = z;
 		this._firearm.stage = true;
 	}
+	this.firearm.x = this.firearmOffset[this.display].x + this.x;
+	this.firearm.y = this.firearmOffset[this.display].y + this.y;
 }
 
 function onCollision(collidedObject) {
@@ -188,41 +186,42 @@ function onCollision(collidedObject) {
 }
 
 function walk(power, direction) {
-	let display = this.display;
+
 	this.direction = direction;
-	if(direction < 0) {
-		this.display = display.replace('walking', 'standing');
-		this.velocity = {
-			speed: 0,
-			direction: -1,
-			dX: 0,
-			dY: 0
-		};
-		
+
+	let directionLabel = this.directionLabel;
+
+	if(directionLabel === config.UP) {
+		this.display = '$up_walking';
+	} else if(directionLabel === config.DOWN) {
+		this.display = '$down_walking';
+	} else if(directionLabel === config.LEFT) {
+		this.display = '$left_walking';
+	} else if(directionLabel === config.RIGHT) {
+		this.display = '$right_walking';
+	} else if(directionLabel === config.UP_LEFT) {
+		this.display = '$upleft_walking';
+	} else if(directionLabel === config.UP_RIGHT) {
+		this.display = '$upright_walking';
+	} else if(directionLabel === config.DOWN_LEFT) {
+		this.display = '$downleft_walking';
+	} else if(directionLabel === config.DOWN_RIGHT) {
+		this.display = '$downright_walking';
 	}
-	else {
-		let directionLabel = this.directionLabel;
-		if(directionLabel === config.UP) {
-			this.display = '$up_walking';
-		} else if(directionLabel === config.DOWN) {
-			this.display = '$down_walking';
-		} else if(directionLabel === config.LEFT) {
-			this.display = '$left_walking';
-		} else if(directionLabel === config.RIGHT) {
-			this.display = '$right_walking';
-		} else if(directionLabel === config.UP_LEFT) {
-			this.display = '$upleft_walking';
-		} else if(directionLabel === config.UP_RIGHT) {
-			this.display = '$upright_walking';
-		} else if(directionLabel === config.DOWN_LEFT) {
-			this.display = '$downleft_walking';
-		} else if(directionLabel === config.DOWN_RIGHT) {
-			this.display = '$downright_walking';
-		}
+	
+	if(power <= 0) {
+		this.display = this.display.replace('walking', 'standing');
+		this.velocity = {
+			dX: 0,
+			dY: 0,
+			direction: direction,
+			speed: 0
+		};
+	} else {
 		this.applyForce({
 			direction: direction,
 			speed: this.speed * power
-		})
+		});
 	}
 }
 

@@ -10,6 +10,7 @@ let config = {
 	"jsonUri": "/data.json",
 	"fireBtnImage": "/img/fire.png",
 	"joystickImage": "/img/joystick.png",
+	"pi": Math.PI,
 	"UP": 0,
 	"LEFT": 3 * Math.PI / 2,
 	"RIGHT": Math.PI / 2,
@@ -19,7 +20,8 @@ let config = {
 	"DOWN_LEFT": 5 * Math.PI / 4,
 	"DOWN_RIGHT": 3 * Math.PI / 4,
 	"CENTER": -1,
-	"dev": true
+	"dev": true,
+	"console": true
 }
 
 module.exports = config

@@ -268,39 +268,51 @@ Object.defineProperties(DisplayObject.prototype, {
 			};
 		},
 		set: function(velocity) {
-			this._velocity = velocity;
+			this._velocity = processVelocity(velocity);
 		}
 	},
 	'applyForce': {
 		value: applyForce
+	},
+	'processVelocity': {
+		value: processVelocity
 	}
 });
 
-function applyForce(velocity) {	
-
-	let thisVelocity = this.velocity;
-	if(!!thisVelocity.dX && !!thisVelocity.dY) {
-		var tmp = geom.getXYFromVector(0, 0, thisVelocity.direction, thisVelocity.speed);
-		thisVelocity.dX = tmp.x;
-		thisVelocity.dY = tmp.y;
-	}
-	if(typeof velocity.dX === 'undefined' || typeof velocity.dY === 'undefined') {
+function processVelocity(velocity) {
+	if((typeof velocity.dX !== 'undefined' && typeof velocity.dY != 'undefined') 
+		&& (typeof velocity.direction === 'undefined' || typeof velocity.speed === 'undefined')) {
+		velocity.direction = geom.getAngle(0,0,velocity.dX,velocity.dY);
+		velocity.speed = geom.getDistance(0,0,velocity.dX,velocity.dY);
+	} else if((typeof velocity.dX === 'undefined' || typeof velocity.dY === 'undefined') 
+		&& (typeof velocity.direction !== 'undefined' && typeof velocity.speed !== 'undefined')) {
 		var tmp = geom.getXYFromVector(0, 0, velocity.direction, velocity.speed);
 		velocity.dX = tmp.x;
 		velocity.dY = tmp.y;
 	}
-	thisVelocity.dX = thisVelocity.dX * velocity.dX > 0 
-		? (Math.abs(thisVelocity.dX) >= Math.abs(velocity.dX) ? thisVelocity.dX : velocity.dX) 
-		: thisVelocity.dX + velocity.dX;
-	thisVelocity.dY = thisVelocity.dY * velocity.dY > 0 
-		? (Math.abs(thisVelocity.dY) >= Math.abs(velocity.dY) ? thisVelocity.dY : velocity.dY) 
-		: thisVelocity.dY + velocity.dY;
-	this.velocity = thisVelocity;
+	return velocity;
+}
+
+function applyForce(velocity) {	
+	let v1 = processVelocity(this.velocity),
+		v2 = processVelocity(velocity),
+		dX = v1.dX * v2.dX > 0 
+			? (Math.abs(v1.dX) >= Math.abs(v2.dX) ? v1.dX : v2.dX) 
+			: v1.dX + v2.dX,
+		dY = v1.dY * v2.dY > 0 
+		? (Math.abs(v1.dY) >= Math.abs(v2.dY) ? v1.dY : v2.dY) 
+		: v1.dY + v2.dY;
+	this.velocity = {
+		dX: dX,
+		dY: dY
+	};
 }
 
 function onCollision(displayObject, x, y, newX, newY, collidedObject) {
-	displayObject.velocity.dX = newX - x;
-	displayObject.velocity.dY = newY - y;
+	displayObject.velocity = {
+		dX: newX - x,
+		dY: newY - y
+	}
 	if(!!displayObject.onCollision)
 		displayObject.onCollision(collidedObject);
 }

@@ -11,7 +11,8 @@ function processData(json) {
 		resAppend = '',
 		stageWidth = 0,
 		stageHeight = 0,
-		wallPadding = processValue(settings.wallPadding),
+		scaleValues = settings.scaleValues.join(','),
+		wallPadding = 0,
 		sdWidth = processValue(settings.sdWidth),
 		sdHeight = processValue(settings.sdHeight),
 		mdWidth = processValue(settings.mdWidth),
@@ -30,7 +31,8 @@ function processData(json) {
 		property = '',
 		type = '',
 		sprite = '',
-		frames = null;
+		frames = null,
+		image = '';
 	
 	cycle.setFrameRate(settings.frameRate);
 
@@ -68,7 +70,7 @@ function processData(json) {
 	config.domElement.style.height = stageHeight * resolution + 'px';
 	config.joystickMin = settings.joystickMin * resolution;
 	config.joystickMax = settings.joystickMax * resolution;
-	wallPadding *= resolution;
+	wallPadding = processValue(settings.wallPadding) * resolution;
 	
 	config.topWall = {
 		x: 0,
@@ -100,7 +102,7 @@ function processData(json) {
 			if(!!levelData.properties) {
 				for(property in levelData.properties) {
 					levelData.properties[property] = processValue(levelData.properties[property]);
-					if(property === 'x' || property === 'y' || property === 'speed')
+					if(scaleValues.match(new RegExp(property)))
 						levelData.properties[property] *= resolution;
 				}
 			}
@@ -110,7 +112,7 @@ function processData(json) {
 	for(type in displayObjects) {
 		for(property in displayObjects[type].properties) {
 			displayObjects[type].properties[property] = processValue(displayObjects[type].properties[property]);
-			if(property === 'x' || property === 'y' || property === 'speed')
+			if(scaleValues.match(new RegExp(property)))
 				displayObjects[type].properties[property] *= resolution;
 		}
 		if(!!displayObjects[type].properties.spriteLabels) {
@@ -123,9 +125,12 @@ function processData(json) {
 				img: spriteImgPath+type+resAppend+'.png',
 				frames: frames
 			};
-		} else {
-			imagesToLoad.push(spriteImgPath+type+resAppend+'.png');
-			displayObjects[type].properties.image = spriteImgPath+type+resAppend+'.png';
+		}
+		if(!!displayObjects[type].properties.image) {
+			image = displayObjects[type].properties.image;
+			image = spriteImgPath + image + resAppend + '.png';
+			displayObjects[type].properties.image = image;
+			imagesToLoad.push(image);
 		}
 	}
 	callback();

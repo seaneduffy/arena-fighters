@@ -20,8 +20,11 @@ Firearm.prototype = Object.create(DisplayObject.prototype, {
 	'fire': {
 		value: fire
 	},
-	'endFire': {
-		value: endFire
+	'endBlastAnimation': {
+		value: endBlastAnimation
+	},
+	'startBlastAnimation': {
+		value: startBlastAnimation
 	}
 });
 
@@ -43,16 +46,22 @@ function fire(character){
 		}
 	});
 	ammunition.stage = true;
-	ammunition.applyForce({speed:ammunition.speed, direction:ammunition.direction});
-	this.display = this.display.replace(/_.+/, '_firing');
-	if(!!this.cycleEndFire)
-		cycle.endWait(this.cycleEndFire);
-	this.cycleEndFire = this.endFire.bind(this);
-	cycle.wait(this.cycleEndFire, 3);
+	ammunition.emit();
+	this.startBlastAnimation();
 }
 
-function endFire() {
-	delete this.cycleEndFire;
+function startBlastAnimation() {
+	if(!!this.cycleEndBlastAnimation) {
+		cycle.endWait(this.cycleEndBlastAnimation);
+	} else {
+		this.display = this.display.replace(/_.+/, '_firing');
+		this.cycleEndBlastAnimation = this.endBlastAnimation.bind(this);
+	}
+	cycle.wait(this.cycleEndBlastAnimation, 3);
+}
+
+function endBlastAnimation() {
+	delete this.cycleEndBlastAnimation;
 	this.display = this.display.replace(/_.+/, '_off');
 }
 

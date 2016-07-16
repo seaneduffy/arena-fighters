@@ -1,16 +1,24 @@
 {"settings": {
-	"joystickMin": 0,
+	"joystickMin": 30,
 	"joystickMax": 120,
 	"wallPadding": 50,
-	"stageWidth": 2846,
-	"stageHeight": 1600,
-	"hdWidth": 2846,
-	"hdHeight": 1600,
-	"mdWidth": 1423,
-	"mdHeight": 800,
-	"sdWidth": 712,
-	"sdHeight": 400,
+	"stageWidth": 2200,
+	"stageHeight": 1293,
+	"hdWidth": 2200,
+	"hdHeight": 1293,
+	"mdWidth": 1150,
+	"mdHeight": 647,
+	"sdWidth": 575,
+	"sdHeight": 323,
 	"frameRate": 1,
+	"scaleValues": [
+		"x",
+		"y",
+		"width",
+		"height",
+		"speed",
+		"velocityModifierAmplitude"
+	],
 	"displayObjects": {
 		"player1": {
 			"properties": {
@@ -188,7 +196,25 @@
 				"impact": 1,
 				"noInteraction": [
 					"bullet"
-				]
+				],
+				"image": "bullet"
+			},
+			"className": "Ammunition"
+		},
+		"wave": {
+			"properties": {
+				"display": "default",
+				"speed": 3,
+				"z": 8,
+				"interacts": true,
+				"impact": 3,
+				"noInteraction": [
+					"bullet",
+					"wave"
+				],
+				"image": "bullet",
+				"velocityModifierAmplitude": 5,
+				"velocityModifierFrequency": 40
 			},
 			"className": "Ammunition"
 		},
@@ -212,6 +238,7 @@
 					"$downleft_off",
 					"$downleft_firing"
 				],
+				"image": "pistol",
 				"ammunition": "bullet"
 			},
 			"className": "Firearm"
@@ -223,7 +250,8 @@
 				"y": "config.stageCenterY",
 				"z": 0,
 				"interacts": false,
-				"static": true
+				"static": true,
+				"image": "background1"
 			},
 			"className": "DisplayObject"
 		},
@@ -232,7 +260,8 @@
 				"display": "default",
 				"z": 1,
 				"interacts": true,
-				"static": true
+				"static": true,
+				"image": "obstacle1"
 			},
 			"className": "DisplayObject"
 		}
