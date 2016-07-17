@@ -16,8 +16,8 @@ function Sprite(label, sheetPath, frameData) {
 	this.sheet = resources.get(sheetPath);
 	if(!!frameData) {
 		this.frameData = frameData;
-		this.width = frameData[0].frame.w * config.resolution;
-		this.height = frameData[0].frame.h * config.resolution;
+		this.width = frameData[0].frame.w * config.resolutionScale;
+		this.height = frameData[0].frame.h * config.resolutionScale;
 	} else {
 		this.frameMeta = {
 			x: 0,
@@ -25,11 +25,11 @@ function Sprite(label, sheetPath, frameData) {
 			w: this.sheet.width,
 			h: this.sheet.height
 		}
-		this.width = this.sheet.width * config.resolution;
-		this.height = this.sheet.height * config.resolution;
+		this.width = this.sheet.width * config.resolutionScale;
+		this.height = this.sheet.height * config.resolutionScale;
 	}
 	this.label = label;
-	this.id = id();
+	this.id = id.id();
 	this.draw();
 	sprites.push(this);
 }
@@ -46,7 +46,7 @@ Object.defineProperties(Sprite.prototype, {
 			let boundingBox = this.boundingBox;
 			this.canvas.style.transform = 'translate('+boundingBox.x+'px, '+boundingBox.y+'px)';
 			if(hosting && this.stage) {
-				this.addUpdate({x:x});
+				this.addUpdate();
 			}
 		}
 	},
@@ -61,7 +61,7 @@ Object.defineProperties(Sprite.prototype, {
 			let boundingBox = this.boundingBox;
 			this.canvas.style.transform = 'translate('+boundingBox.x+'px, '+boundingBox.y+'px)';
 			if(hosting && this.stage) {
-				this.addUpdate({y:y});
+				this.addUpdate();
 			}
 		}
 	},
@@ -75,7 +75,7 @@ Object.defineProperties(Sprite.prototype, {
 			this._z = z;
 			this.canvas.style.zIndex = z;
 			if(hosting && this.stage) {
-				this.addUpdate({z:z});
+				this.addUpdate();
 			}
 		}
 	},
@@ -91,18 +91,8 @@ Object.defineProperties(Sprite.prototype, {
 			if(stage) {
 				this.cycleStart = cycle.getCounter();
 			}
-			if(hosting && stage) {
-				this.addUpdate({
-					stage: stage,
-					x: this.x,
-					y: this.y,
-					z: this.z,
-					sheetPath: this.sheetPath,
-					label: this.label,
-					frameData: this.frameData
-				});
-			} else if(hosting && !stage) {
-				this.addUpdate({stage:stage});
+			if(hosting) {
+				this.addUpdate();
 			}
 		}
 	},
@@ -145,17 +135,17 @@ Object.defineProperties(Sprite.prototype, {
 			this._canvas.style.display = 'none';
 			this._canvas.style.position = 'absolute';
 			this._canvas.style.transform = 'translate(0, 0)';
-			this._canvas.setAttribute('width', this.width);
-			this._canvas.setAttribute('height', this.height);
+			this._canvas.setAttribute('width', this.width + 'px');
+			this._canvas.setAttribute('height', this.height + 'px');
 			this.domElement.appendChild(this._canvas);
 			return this._canvas;
 		}
 	},
-	'resolution': {
+	'resolutionScale': {
 		get: function() {
-			if(!!this._resolution)
-				return this._resolution;
-			return this._resolution = config.resolution;
+			if(!!this._resolutionScale)
+				return this._resolutionScale;
+			return this._resolutionScale = config.resolutionScale;
 		}
 	},
 	'context': {
@@ -190,6 +180,9 @@ Object.defineProperties(Sprite.prototype, {
 				availableSprites[this.label] = availableSprites[this.label] || new Array();
 				availableSprites[this.label].push(this);
 				this.destroyed = true;
+				if(hosting) {
+					this.addUpdate();
+				}
 			}
 		}
 	},
@@ -262,42 +255,54 @@ Sprite.setHosting = function(isHosting) {
 		socket.on('sprite update', receiveUpdate);
 }
 
-function addUpdate(values) {
+function addUpdate() {
 	let updateObj = spritesToUpdate.find((obj)=>{
 		return (obj.id === this.id);
-	});
+	}),
+	values = {
+		stage: this.stage,
+		x: this.x,
+		y: this.y,
+		z: this.z,
+		sheetPath: this.sheetPath,
+		label: this.label,
+		frameData: this.frameData,
+		id: this.id,
+		destroyed: this.destroyed
+	};
 	if(typeof updateObj === 'undefined') {
-		updateObj = Object.create(null);
-		updateObj.label = this.label;
-		updateObj.id = this.id;
-		spritesToUpdate.push(updateObj);
+		spritesToUpdate.push(values);
+	} else {
+		for(let property in values)
+			updateObj[property] = values[property];
 	}
-	for(let property in values)
-		updateObj[property] = values[property];
 }
 
 function receiveUpdate(serverSprites) {
-
+	
 	let sprite = null, property;
 	serverSprites.forEach( spriteData => {
 		sprite = sprites.find( s => {
 			return s.id === spriteData.id;
 		});
-		sprite = sprite || Sprite.getSprite(spriteData.label, spriteData.sheetPath, spriteData.frameData);
-		for(property in spriteData) {
-			if(property !== 'sheetPath' 
-				&& property !== 'label' 
-				&& property !== 'frameData')
+		if(typeof sprite === 'undefined' && !spriteData.destroyed) {
+			sprite = Sprite.getSprite(spriteData.label, spriteData.sheetPath, spriteData.frameData);
+		}
+		if(!!sprite) {
+			for(property in spriteData) {
+				if(property !== 'sheetPath' 
+					&& property !== 'label' 
+					&& property !== 'frameData')
 				
-				sprite[property] = spriteData[property];
+					sprite[property] = spriteData[property];
+			}
 		}
 	});
 }
 
 function sendUpdate() {
-	if(spritesToUpdate.length > 0) {
+	if(spritesToUpdate.length > 0)
 		socket.emit('sprite update', spritesToUpdate);
-	}
 	spritesToUpdate = new Array();
 }
 

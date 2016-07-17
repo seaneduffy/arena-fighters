@@ -1,0 +1,21 @@
+{"frames": {
+
+"pause":
+{
+	"frame": {"x":0,"y":0,"w":100,"h":100},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":100,"h":100},
+	"sourceSize": {"w":100,"h":100},
+	"pivot": {"x":0.5,"y":0.5}
+}},
+"meta": {
+	"app": "http://www.codeandweb.com/texturepacker",
+	"version": "1.0",
+	"image": "pause-d10.png",
+	"format": "RGBA8888",
+	"size": {"w":100,"h":100},
+	"scale": "1",
+	"smartupdate": "$TexturePacker:SmartUpdate:021b9e0d0e4ae1cc75368b4dc60be86b:6e8ab2d7369d3522bfaf301d3e699603:49e10ca42e17b4ad282e001c8002fc33$"
+}
+}

@@ -11,6 +11,9 @@ _handleStartSinglePlayerGame = null,
 _handleHostReady = null,
 _handleGuestReady = null,
 _handleEndGame = null,
+_handlePauseGame = null,
+_handleRestartGame = null,
+_handleResumeGame = null,
 	
 GamesList = React.createClass({
 	render: function(){ return (
@@ -41,7 +44,8 @@ Game = React.createClass({
 			hosting: false,
 			playerJoined: false,
 			hostReady: false,
-			gameType: false
+			gameType: false,
+			paused: false
 		}
 	},
 	onPlayerNameChange: function(e) {
@@ -74,10 +78,22 @@ Game = React.createClass({
 	_handleGuestReady: function(e) {
 		_handleGuestReady(e);
 	},
+	_handlePauseGame: function(e) {
+		_handlePauseGame(e);
+	},
+	_handleEndGame: function(e) {
+		_handleEndGame(e);
+	},
+	_handleRestartGame: function(e) {
+		_handleRestartGame(e);
+	},
+	_handleResumeGame: function(e) {
+		_handleResumeGame(e);
+	},
 	render: function() {
 		return (
 		
-<div id="arena-fighters" className={this.state.gameActive ? 'minimal-ui' : ''}>
+<div id="arena-fighters">
 	<div id="menus" className={this.state.gameActive ? 'hidden' : ''}>
 		<div className={this.state.gameType ? 'hidden' : 'menuForm'}>
 			<button onClick={this._handleStartSinglePlayerGame}>1 Player</button>
@@ -124,7 +140,14 @@ Game = React.createClass({
 		<div id="controls">
 			<span id="joystick" className="center"></span>
 			<span id="fire-btn"></span>
-			<span id="end-game-btn" onTouchStart={_handleEndGame}></span>
+			<span id="pause-btn" onTouchStart={this._handlePauseGame}></span>
+			<div id="menu" className={this.state.paused ? '' : 'hidden'}>
+				<div>
+					<span onClick={this._handleRestartGame}>Restart Game</span>
+					<span onClick={this._handleEndGame}>End Game</span>
+					<span onClick={this._handleResumeGame}>Resume</span>
+				</div>
+			</div>
 		</div>
 	</div>
 </div>		
@@ -143,16 +166,22 @@ module.exports = {
 		handleJoinGame,
 		handleHostReady,
 		handleGuestReady,
-		handleEndGame
+		handleEndGame,
+		handlePauseGame,
+		handleRestartGame,
+		handleResumeGame
 	) {
+		_handleStartSinglePlayerGame = handleStartSinglePlayerGame;
 		_handleStartTwoPlayerGame = handleStartTwoPlayerGame;
 		_handleConfirmPlayerName = handleConfirmPlayerName;
 		_handleCreateGame = handleCreateGame;
 		_handleGameListSelect = handleGameListSelect;
 		_handleJoinGame = handleJoinGame;
-		_handleStartSinglePlayerGame = handleStartSinglePlayerGame;
 		_handleHostReady = handleHostReady;
 		_handleGuestReady = handleGuestReady;
 		_handleEndGame = handleEndGame;
+		_handlePauseGame = handlePauseGame;
+		_handleRestartGame = handleRestartGame;
+		_handleResumeGame = handleResumeGame;
 	}
 }

@@ -6,8 +6,6 @@ let config = require('./config'),
 	activeControl = null,
 	fireBtnJson = null;
 
-document.getElementById('controls').addEventListener('touchstart', function(e){e.preventDefault()});
-
 let joystick = require('./joystick');
 joystick.init(document.getElementById('joystick'), config.joystickMax, config.joystickMin, config.joystick);
 joystick.addCallback(onJoystickMove);

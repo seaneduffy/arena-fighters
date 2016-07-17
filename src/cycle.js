@@ -91,7 +91,6 @@ module.exports = {
 	},
 	stop: function() {
 		active = false;
-		counter = 0;
 	},
 	addUpdate: function(func) {
 		updateFunctions.push(func);

@@ -1,15 +1,7 @@
 'use strict';
 
 let config = {
-	"hdImgPath": "/img/sprites/hd/",
-	"hdJsonPath": "/data/sprites/hd/",
-	"mdImgPath": "/img/sprites/md/",
-	"mdJsonPath": "/data/sprites/md/",
-	"sdImgPath": "/img/sprites/sd/",
-	"sdJsonPath": "/data/sprites/sd/",
 	"jsonUri": "/data.json",
-	"fireBtnImage": "/img/fire.png",
-	"joystickImage": "/img/joystick.png",
 	"pi": Math.PI,
 	"UP": 0,
 	"LEFT": 3 * Math.PI / 2,
@@ -21,7 +13,9 @@ let config = {
 	"DOWN_RIGHT": 3 * Math.PI / 4,
 	"CENTER": -1,
 	"dev": true,
-	"console": true
+	"console": true,
+	"dev1": true,
+	"dev2": false
 }
 
 module.exports = config

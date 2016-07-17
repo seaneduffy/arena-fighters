@@ -12,12 +12,15 @@ socket = require('../socket'),
 cycle = require('../cycle'),
 Sprite = require('../displayObject/sprite'),
 DisplayObject = require('../displayObject/displayObject'),
+id = require('../id'),
 
 controls = null,
 
 gameComponent = ReactDOM.render(React.createElement(components.Game), document.getElementById('game'), ()=>{
 	
 	config.domElement = document.getElementById('canvas');
+	config.domElement.style.position = 'relative';
+	config.domElement.style.overflow = 'hidden';
 	
 	initSocket();
 	
@@ -38,8 +41,24 @@ gameComponent = ReactDOM.render(React.createElement(components.Game), document.g
 				handleJoinGame,
 				handleHostReady,
 				handleGuestReady,
-				handleEndGame
+				handleEndGame,
+				handlePauseGame,
+				handleRestartGame,
+				handleResumeGame
 			);
+			
+			if(config.dev1) {
+				config.gameType = 'single';
+				gameComponent.setState({gameType: 'single'});
+				startGame();
+			} else if(config.dev2) {
+				config.gameType = 'two';
+				gameComponent.setState({
+					name: id.id()
+				});
+				handleConfirmPlayerName();
+			}
+			
 		});
 		resources.load(config.imagesToLoad);
 	});
@@ -100,6 +119,19 @@ function onFire() {
 function initSocket() {
 	socket.on('games list', games=>{
 		gameComponent.setState({games: games});
+		if(config.dev2) {
+			if(games.length > 0) {
+				gameComponent.setState({
+					gameId: games[0].id
+				});
+				handleJoinGame();
+			} else {
+				gameComponent.setState({
+					gameName: id.id()
+				});
+				handleCreateGame();
+			}
+		}
 	});
 	socket.on('game created', id=>{
 		Sprite.setHosting(true);
@@ -112,9 +144,17 @@ function initSocket() {
 	socket.on('player joined', playerName=>{
 		gameComponent.setState({guestName: playerName});
 		gameComponent.setState({playerJoined: true});
+		
+		if(config.dev2) {
+			handleHostReady();
+		}
 	});
 	socket.on('host ready', ()=>{
 		gameComponent.setState({hostReady:true});
+		
+		if(config.dev2) {
+			handleGuestReady();
+		}
 	});
 	socket.on('guest ready', ()=>{
 		startGame();
@@ -152,10 +192,24 @@ function handleCreateGame() {
 		gameName: gameComponent.state.gameName
 	});
 }
+function handlePauseGame(e) {
+	cycle.stop()
+	gameComponent.setState({paused: true});
+}
+function handleResumeGame(e) {
+	gameComponent.setState({paused: false});
+	cycle.start();
+}
+function handleRestartGame(e) {
+	cycle.stop();
+	DisplayObject.clear();
+	gameComponent.setState({paused: false});
+	startGame();
+}
 function handleEndGame(e) {
 	cycle.stop();
 	DisplayObject.clear();
-	gameComponent.setState({gameActive:false});
+	gameComponent.setState(gameComponent.getInitialState());
 }
 function handleConfirmPlayerName() {
 	gameComponent.setState({playerNameSet:true});

@@ -19870,7 +19870,10 @@ var React = require('react'),
     _handleStartSinglePlayerGame2 = null,
     _handleHostReady2 = null,
     _handleGuestReady2 = null,
-    _handleEndGame = null,
+    _handleEndGame2 = null,
+    _handlePauseGame2 = null,
+    _handleRestartGame2 = null,
+    _handleResumeGame2 = null,
     GamesList = React.createClass({
 	displayName: 'GamesList',
 
@@ -19913,7 +19916,8 @@ var React = require('react'),
 			hosting: false,
 			playerJoined: false,
 			hostReady: false,
-			gameType: false
+			gameType: false,
+			paused: false
 		};
 	},
 	onPlayerNameChange: function onPlayerNameChange(e) {
@@ -19946,10 +19950,22 @@ var React = require('react'),
 	_handleGuestReady: function _handleGuestReady(e) {
 		_handleGuestReady2(e);
 	},
+	_handlePauseGame: function _handlePauseGame(e) {
+		_handlePauseGame2(e);
+	},
+	_handleEndGame: function _handleEndGame(e) {
+		_handleEndGame2(e);
+	},
+	_handleRestartGame: function _handleRestartGame(e) {
+		_handleRestartGame2(e);
+	},
+	_handleResumeGame: function _handleResumeGame(e) {
+		_handleResumeGame2(e);
+	},
 	render: function render() {
 		return React.createElement(
 			'div',
-			{ id: 'arena-fighters', className: this.state.gameActive ? 'minimal-ui' : '' },
+			{ id: 'arena-fighters' },
 			React.createElement(
 				'div',
 				{ id: 'menus', className: this.state.gameActive ? 'hidden' : '' },
@@ -20092,7 +20108,30 @@ var React = require('react'),
 					{ id: 'controls' },
 					React.createElement('span', { id: 'joystick', className: 'center' }),
 					React.createElement('span', { id: 'fire-btn' }),
-					React.createElement('span', { id: 'end-game-btn', onTouchStart: _handleEndGame })
+					React.createElement('span', { id: 'pause-btn', onTouchStart: this._handlePauseGame }),
+					React.createElement(
+						'div',
+						{ id: 'menu', className: this.state.paused ? '' : 'hidden' },
+						React.createElement(
+							'div',
+							null,
+							React.createElement(
+								'span',
+								{ onClick: this._handleRestartGame },
+								'Restart Game'
+							),
+							React.createElement(
+								'span',
+								{ onClick: this._handleEndGame },
+								'End Game'
+							),
+							React.createElement(
+								'span',
+								{ onClick: this._handleResumeGame },
+								'Resume'
+							)
+						)
+					)
 				)
 			)
 		);
@@ -20101,16 +20140,19 @@ var React = require('react'),
 
 module.exports = {
 	Game: Game,
-	addHandlers: function addHandlers(handleStartSinglePlayerGame, handleStartTwoPlayerGame, handleConfirmPlayerName, handleCreateGame, handleGameListSelect, handleJoinGame, handleHostReady, handleGuestReady, handleEndGame) {
+	addHandlers: function addHandlers(handleStartSinglePlayerGame, handleStartTwoPlayerGame, handleConfirmPlayerName, handleCreateGame, handleGameListSelect, handleJoinGame, handleHostReady, handleGuestReady, handleEndGame, handlePauseGame, handleRestartGame, handleResumeGame) {
+		_handleStartSinglePlayerGame2 = handleStartSinglePlayerGame;
 		_handleStartTwoPlayerGame2 = handleStartTwoPlayerGame;
 		_handleConfirmPlayerName2 = handleConfirmPlayerName;
 		_handleCreateGame2 = handleCreateGame;
 		_handleGameListSelect2 = handleGameListSelect;
 		_handleJoinGame2 = handleJoinGame;
-		_handleStartSinglePlayerGame2 = handleStartSinglePlayerGame;
 		_handleHostReady2 = handleHostReady;
 		_handleGuestReady2 = handleGuestReady;
-		_handleEndGame = handleEndGame;
+		_handleEndGame2 = handleEndGame;
+		_handlePauseGame2 = handlePauseGame;
+		_handleRestartGame2 = handleRestartGame;
+		_handleResumeGame2 = handleResumeGame;
 	}
 };
 
@@ -20128,10 +20170,13 @@ var React = require('react'),
     cycle = require('../cycle'),
     Sprite = require('../displayObject/sprite'),
     DisplayObject = require('../displayObject/displayObject'),
+    id = require('../id'),
     controls = null,
     gameComponent = ReactDOM.render(React.createElement(components.Game), document.getElementById('game'), function () {
 
 	config.domElement = document.getElementById('canvas');
+	config.domElement.style.position = 'relative';
+	config.domElement.style.overflow = 'hidden';
 
 	initSocket();
 
@@ -20143,7 +20188,19 @@ var React = require('react'),
 			cycle.addUpdate(Sprite.draw);
 			cycle.addCleanup(DisplayObject.cleanup);
 			cycle.addCleanup(Sprite.cleanup);
-			components.addHandlers(handleStartSinglePlayerGame, handleStartTwoPlayerGame, handleConfirmPlayerName, handleCreateGame, handleGameListSelect, handleJoinGame, handleHostReady, handleGuestReady, handleEndGame);
+			components.addHandlers(handleStartSinglePlayerGame, handleStartTwoPlayerGame, handleConfirmPlayerName, handleCreateGame, handleGameListSelect, handleJoinGame, handleHostReady, handleGuestReady, handleEndGame, handlePauseGame, handleRestartGame, handleResumeGame);
+
+			if (config.dev1) {
+				config.gameType = 'single';
+				gameComponent.setState({ gameType: 'single' });
+				startGame();
+			} else if (config.dev2) {
+				config.gameType = 'two';
+				gameComponent.setState({
+					name: id.id()
+				});
+				handleConfirmPlayerName();
+			}
 		});
 		resources.load(config.imagesToLoad);
 	});
@@ -20203,6 +20260,19 @@ function onFire() {
 function initSocket() {
 	socket.on('games list', function (games) {
 		gameComponent.setState({ games: games });
+		if (config.dev2) {
+			if (games.length > 0) {
+				gameComponent.setState({
+					gameId: games[0].id
+				});
+				handleJoinGame();
+			} else {
+				gameComponent.setState({
+					gameName: id.id()
+				});
+				handleCreateGame();
+			}
+		}
 	});
 	socket.on('game created', function (id) {
 		Sprite.setHosting(true);
@@ -20215,9 +20285,17 @@ function initSocket() {
 	socket.on('player joined', function (playerName) {
 		gameComponent.setState({ guestName: playerName });
 		gameComponent.setState({ playerJoined: true });
+
+		if (config.dev2) {
+			handleHostReady();
+		}
 	});
 	socket.on('host ready', function () {
 		gameComponent.setState({ hostReady: true });
+
+		if (config.dev2) {
+			handleGuestReady();
+		}
 	});
 	socket.on('guest ready', function () {
 		startGame();
@@ -20254,10 +20332,24 @@ function handleCreateGame() {
 		gameName: gameComponent.state.gameName
 	});
 }
+function handlePauseGame(e) {
+	cycle.stop();
+	gameComponent.setState({ paused: true });
+}
+function handleResumeGame(e) {
+	gameComponent.setState({ paused: false });
+	cycle.start();
+}
+function handleRestartGame(e) {
+	cycle.stop();
+	DisplayObject.clear();
+	gameComponent.setState({ paused: false });
+	startGame();
+}
 function handleEndGame(e) {
 	cycle.stop();
 	DisplayObject.clear();
-	gameComponent.setState({ gameActive: false });
+	gameComponent.setState(gameComponent.getInitialState());
 }
 function handleConfirmPlayerName() {
 	gameComponent.setState({ playerNameSet: true });
@@ -20281,19 +20373,11 @@ function handleGuestReady() {
 	startGame();
 }
 
-},{"../config":171,"../controls":172,"../cycle":173,"../data":174,"../displayObject/displayObject":177,"../displayObject/sprite":180,"../displayObject/utils":181,"../resources":186,"../socket":187,"./components":169,"react":167,"react-dom":29}],171:[function(require,module,exports){
+},{"../config":171,"../controls":172,"../cycle":173,"../data":174,"../displayObject/displayObject":177,"../displayObject/sprite":180,"../displayObject/utils":181,"../id":183,"../resources":186,"../socket":187,"./components":169,"react":167,"react-dom":29}],171:[function(require,module,exports){
 'use strict';
 
 var config = {
-	"hdImgPath": "/img/sprites/hd/",
-	"hdJsonPath": "/data/sprites/hd/",
-	"mdImgPath": "/img/sprites/md/",
-	"mdJsonPath": "/data/sprites/md/",
-	"sdImgPath": "/img/sprites/sd/",
-	"sdJsonPath": "/data/sprites/sd/",
 	"jsonUri": "/data.json",
-	"fireBtnImage": "/img/fire.png",
-	"joystickImage": "/img/joystick.png",
 	"pi": Math.PI,
 	"UP": 0,
 	"LEFT": 3 * Math.PI / 2,
@@ -20305,7 +20389,9 @@ var config = {
 	"DOWN_RIGHT": 3 * Math.PI / 4,
 	"CENTER": -1,
 	"dev": true,
-	"console": true
+	"console": true,
+	"dev1": true,
+	"dev2": false
 };
 
 module.exports = config;
@@ -20342,10 +20428,6 @@ var config = require('./config'),
     fireCallback = null,
     activeControl = null,
     fireBtnJson = null;
-
-document.getElementById('controls').addEventListener('touchstart', function (e) {
-	e.preventDefault();
-});
 
 var joystick = require('./joystick');
 joystick.init(document.getElementById('joystick'), config.joystickMax, config.joystickMin, config.joystick);
@@ -20507,7 +20589,6 @@ module.exports = {
 	},
 	stop: function stop() {
 		active = false;
-		counter = 0;
 	},
 	addUpdate: function addUpdate(func) {
 		updateFunctions.push(func);
@@ -20559,21 +20640,22 @@ var config = require('./config'),
 
 function processData(json) {
 	var settings = json.settings,
+	    scalar = settings.scalar,
+	    maxWidth = config.maxWidth = processValue(settings.maxWidth),
+	    maxHeight = config.maxHeight = processValue(settings.maxHeight),
 	    windowInnerWidth = window.innerWidth,
 	    windowInnerHeight = window.innerHeight,
 	    resAppend = '',
 	    stageWidth = 0,
 	    stageHeight = 0,
-	    scaleValues = settings.scaleValues.join(','),
+	    resValues = ',' + settings.resValues.join(',') + ',',
+	    distanceValues = ',' + settings.distanceValues.join(',') + ',',
+	    scalars = settings.scalars,
 	    wallPadding = 0,
-	    sdWidth = processValue(settings.sdWidth),
-	    sdHeight = processValue(settings.sdHeight),
-	    mdWidth = processValue(settings.mdWidth),
-	    mdHeight = processValue(settings.mdHeight),
-	    hdWidth = processValue(settings.hdWidth),
-	    hdHeight = processValue(settings.hdHeight),
+	    resolutions = processValue(settings.resolutions),
 	    spriteImgPath = '/img/sprites/',
-	    resolution = 1,
+	    resolutionScale = 1,
+	    distanceScale = 1,
 	    windowWidth = config.windowWidth = windowInnerWidth > windowInnerHeight ? windowInnerWidth : windowInnerHeight,
 	    windowHeight = config.windowHeight = windowInnerWidth < windowInnerHeight ? windowInnerWidth : windowInnerHeight,
 	    displayObjects = config.displayObjects = settings.displayObjects,
@@ -20589,22 +20671,17 @@ function processData(json) {
 
 	cycle.setFrameRate(settings.frameRate);
 
-	if (windowWidth <= settings.sdWidth) {
-		stageWidth = settings.sdWidth;
-		stageHeight = settings.sdHeight;
-		resAppend = '-sd';
-	} else if (windowWidth <= settings.mdWidth) {
-		stageWidth = settings.mdWidth;
-		stageHeight = settings.mdHeight;
-		resAppend = '-md';
-	} else {
-		stageWidth = settings.hdWidth;
-		stageHeight = settings.hdHeight;
-		resAppend = '-hd';
-	}
+	for (var resolution in resolutions) {
 
-	config.stageWidth = stageWidth;
-	config.stageHeight = stageHeight;
+		var width = processValue(resolutions[resolution].width),
+		    height = processValue(resolutions[resolution].height);
+		if (width > windowWidth && height > windowHeight) {
+			resAppend = '-' + resolution;
+			stageWidth = config.stageWidth = width;
+			stageHeight = config.stageHeight = height;
+			break;
+		}
+	}
 
 	stageCenterX = config.stageCenterX = stageWidth / 2;
 	stageCenterY = config.stageCenterY = stageHeight / 2;
@@ -20615,36 +20692,37 @@ function processData(json) {
 	config.joystickImage = spriteImgPath + 'joystick' + resAppend + '.png';
 	imagesToLoad.push(config.joystickImage);
 
-	resolution = config.resolution = windowWidth / stageWidth;
+	resolutionScale = config.resolutionScale = windowHeight / stageHeight;
+	distanceScale = config.distanceScale = windowHeight / maxHeight;
 
-	config.domElement.style.width = stageWidth * resolution + 'px';
-	config.domElement.style.height = stageHeight * resolution + 'px';
-	config.joystickMin = settings.joystickMin * resolution;
-	config.joystickMax = settings.joystickMax * resolution;
-	wallPadding = processValue(settings.wallPadding) * resolution;
+	config.domElement.style.width = stageWidth * resolutionScale + 'px';
+	config.domElement.style.height = stageHeight * resolutionScale + 'px';
+	config.joystickMin = settings.joystickMin * resolutionScale;
+	config.joystickMax = settings.joystickMax * resolutionScale;
+	wallPadding = processValue(settings.wallPadding) * resolutionScale;
 
 	config.topWall = {
 		x: 0,
 		y: 0,
-		width: stageWidth * resolution,
+		width: stageWidth * resolutionScale,
 		height: wallPadding
 	};
 	config.leftWall = {
 		x: 0,
 		y: 0,
 		width: wallPadding,
-		height: stageHeight * resolution
+		height: stageHeight * resolutionScale
 	};
 	config.rightWall = {
-		x: stageWidth * resolution - wallPadding,
+		x: stageWidth * resolutionScale - wallPadding,
 		y: 0,
 		width: wallPadding,
-		height: stageHeight * resolution
+		height: stageHeight * resolutionScale
 	};
 	config.bottomWall = {
 		x: 0,
-		y: stageHeight * resolution - wallPadding,
-		width: stageWidth * resolution,
+		y: stageHeight * resolutionScale - wallPadding,
+		width: stageWidth * resolutionScale,
 		height: wallPadding
 	};
 
@@ -20653,7 +20731,9 @@ function processData(json) {
 			if (!!levelData.properties) {
 				for (property in levelData.properties) {
 					levelData.properties[property] = processValue(levelData.properties[property]);
-					if (scaleValues.match(new RegExp(property))) levelData.properties[property] *= resolution;
+					if (resValues.match(new RegExp(property))) levelData.properties[property] *= resolutionScale;
+					if (distanceValues.match(new RegExp(',' + property + ','))) levelData.properties[property] *= distanceScale;
+					if (!!scalars[property]) levelData.properties[property] *= scalars[property];
 				}
 			}
 		});
@@ -20662,7 +20742,9 @@ function processData(json) {
 	for (type in displayObjects) {
 		for (property in displayObjects[type].properties) {
 			displayObjects[type].properties[property] = processValue(displayObjects[type].properties[property]);
-			if (scaleValues.match(new RegExp(property))) displayObjects[type].properties[property] *= resolution;
+			if (resValues.match(new RegExp(',' + property + ','))) displayObjects[type].properties[property] *= resolutionScale;
+			if (distanceValues.match(new RegExp(',' + property + ','))) displayObjects[type].properties[property] *= distanceScale;
+			if (!!scalars[property]) displayObjects[type].properties[property] *= scalars[property];
 		}
 		if (!!displayObjects[type].properties.spriteLabels) {
 			imagesToLoad.push(spriteImgPath + type + resAppend + '.png');
@@ -20684,8 +20766,6 @@ function processData(json) {
 	}
 	callback();
 }
-
-function reduceValue(prev, curr, i) {}
 
 function processValue(value) {
 	if (typeof value === 'string' && value.match(/config\./)) {
@@ -20984,13 +21064,11 @@ var Sprite = require('./sprite'),
     config = require('../config'),
     geom = require('../geom'),
     cycle = require('../cycle'),
-    displayObjects = [],
-    id = require('../id');
+    displayObjects = [];
 
 function DisplayObject() {
 	this._sprites = Object.create(null);
 	displayObjects.push(this);
-	this.id = id();
 	this.moveCycle = false;
 	this.cycleMove = this.move.bind(this);
 }
@@ -21012,6 +21090,7 @@ Object.defineProperties(DisplayObject.prototype, {
 				for (var label in sprites) {
 					sprites[label].destroy();
 				}
+				this.stage = false;
 				this.destroyed = true;
 				cycle.removeUpdate(this.cycleMove);
 			}
@@ -21368,7 +21447,7 @@ function cleanup() {
 
 function clear() {
 	displayObjects.forEach(function (displayObject) {
-		displayObject.destroyed = true;
+		displayObject.destroy();
 	});
 }
 
@@ -21446,7 +21525,7 @@ if (config.dev) {
 
 module.exports = DisplayObject;
 
-},{"../config":171,"../cycle":173,"../geom":182,"../id":183,"./sprite":180}],178:[function(require,module,exports){
+},{"../config":171,"../cycle":173,"../geom":182,"./sprite":180}],178:[function(require,module,exports){
 'use strict';
 
 var DisplayObject = require('./displayObject'),
@@ -21607,8 +21686,8 @@ function Sprite(label, sheetPath, frameData) {
 	this.sheet = resources.get(sheetPath);
 	if (!!frameData) {
 		this.frameData = frameData;
-		this.width = frameData[0].frame.w * config.resolution;
-		this.height = frameData[0].frame.h * config.resolution;
+		this.width = frameData[0].frame.w * config.resolutionScale;
+		this.height = frameData[0].frame.h * config.resolutionScale;
 	} else {
 		this.frameMeta = {
 			x: 0,
@@ -21616,11 +21695,11 @@ function Sprite(label, sheetPath, frameData) {
 			w: this.sheet.width,
 			h: this.sheet.height
 		};
-		this.width = this.sheet.width * config.resolution;
-		this.height = this.sheet.height * config.resolution;
+		this.width = this.sheet.width * config.resolutionScale;
+		this.height = this.sheet.height * config.resolutionScale;
 	}
 	this.label = label;
-	this.id = id();
+	this.id = id.id();
 	this.draw();
 	sprites.push(this);
 }
@@ -21636,7 +21715,7 @@ Object.defineProperties(Sprite.prototype, {
 			var boundingBox = this.boundingBox;
 			this.canvas.style.transform = 'translate(' + boundingBox.x + 'px, ' + boundingBox.y + 'px)';
 			if (hosting && this.stage) {
-				this.addUpdate({ x: x });
+				this.addUpdate();
 			}
 		}
 	},
@@ -21650,7 +21729,7 @@ Object.defineProperties(Sprite.prototype, {
 			var boundingBox = this.boundingBox;
 			this.canvas.style.transform = 'translate(' + boundingBox.x + 'px, ' + boundingBox.y + 'px)';
 			if (hosting && this.stage) {
-				this.addUpdate({ y: y });
+				this.addUpdate();
 			}
 		}
 	},
@@ -21663,7 +21742,7 @@ Object.defineProperties(Sprite.prototype, {
 			this._z = z;
 			this.canvas.style.zIndex = z;
 			if (hosting && this.stage) {
-				this.addUpdate({ z: z });
+				this.addUpdate();
 			}
 		}
 	},
@@ -21678,18 +21757,8 @@ Object.defineProperties(Sprite.prototype, {
 			if (stage) {
 				this.cycleStart = cycle.getCounter();
 			}
-			if (hosting && stage) {
-				this.addUpdate({
-					stage: stage,
-					x: this.x,
-					y: this.y,
-					z: this.z,
-					sheetPath: this.sheetPath,
-					label: this.label,
-					frameData: this.frameData
-				});
-			} else if (hosting && !stage) {
-				this.addUpdate({ stage: stage });
+			if (hosting) {
+				this.addUpdate();
 			}
 		}
 	},
@@ -21729,16 +21798,16 @@ Object.defineProperties(Sprite.prototype, {
 			this._canvas.style.display = 'none';
 			this._canvas.style.position = 'absolute';
 			this._canvas.style.transform = 'translate(0, 0)';
-			this._canvas.setAttribute('width', this.width);
-			this._canvas.setAttribute('height', this.height);
+			this._canvas.setAttribute('width', this.width + 'px');
+			this._canvas.setAttribute('height', this.height + 'px');
 			this.domElement.appendChild(this._canvas);
 			return this._canvas;
 		}
 	},
-	'resolution': {
+	'resolutionScale': {
 		get: function get() {
-			if (!!this._resolution) return this._resolution;
-			return this._resolution = config.resolution;
+			if (!!this._resolutionScale) return this._resolutionScale;
+			return this._resolutionScale = config.resolutionScale;
 		}
 	},
 	'context': {
@@ -21764,6 +21833,9 @@ Object.defineProperties(Sprite.prototype, {
 				availableSprites[this.label] = availableSprites[this.label] || new Array();
 				availableSprites[this.label].push(this);
 				this.destroyed = true;
+				if (hosting) {
+					this.addUpdate();
+				}
 			}
 		}
 	},
@@ -21829,20 +21901,29 @@ Sprite.setHosting = function (isHosting) {
 	if (hosting) cycle.addServer(sendUpdate);else socket.on('sprite update', receiveUpdate);
 };
 
-function addUpdate(values) {
+function addUpdate() {
 	var _this = this;
 
 	var updateObj = spritesToUpdate.find(function (obj) {
 		return obj.id === _this.id;
-	});
+	}),
+	    values = {
+		stage: this.stage,
+		x: this.x,
+		y: this.y,
+		z: this.z,
+		sheetPath: this.sheetPath,
+		label: this.label,
+		frameData: this.frameData,
+		id: this.id,
+		destroyed: this.destroyed
+	};
 	if (typeof updateObj === 'undefined') {
-		updateObj = Object.create(null);
-		updateObj.label = this.label;
-		updateObj.id = this.id;
-		spritesToUpdate.push(updateObj);
-	}
-	for (var property in values) {
-		updateObj[property] = values[property];
+		spritesToUpdate.push(values);
+	} else {
+		for (var property in values) {
+			updateObj[property] = values[property];
+		}
 	}
 }
 
@@ -21854,17 +21935,19 @@ function receiveUpdate(serverSprites) {
 		sprite = sprites.find(function (s) {
 			return s.id === spriteData.id;
 		});
-		sprite = sprite || Sprite.getSprite(spriteData.label, spriteData.sheetPath, spriteData.frameData);
-		for (property in spriteData) {
-			if (property !== 'sheetPath' && property !== 'label' && property !== 'frameData') sprite[property] = spriteData[property];
+		if (typeof sprite === 'undefined' && !spriteData.destroyed) {
+			sprite = Sprite.getSprite(spriteData.label, spriteData.sheetPath, spriteData.frameData);
+		}
+		if (!!sprite) {
+			for (property in spriteData) {
+				if (property !== 'sheetPath' && property !== 'label' && property !== 'frameData') sprite[property] = spriteData[property];
+			}
 		}
 	});
 }
 
 function sendUpdate() {
-	if (spritesToUpdate.length > 0) {
-		socket.emit('sprite update', spritesToUpdate);
-	}
+	if (spritesToUpdate.length > 0) socket.emit('sprite update', spritesToUpdate);
 	spritesToUpdate = new Array();
 }
 
@@ -22073,11 +22156,17 @@ module.exports = {
 },{}],183:[function(require,module,exports){
 "use strict";
 
-module.exports = function guidGenerator() {
-   var S4 = function S4() {
-      return ((1 + Math.random()) * 0x10000 | 0).toString(16).substring(1);
-   };
-   return S4() + S4() + "-" + S4() + "-" + S4() + "-" + S4() + "-" + S4() + S4() + S4();
+var S4 = function S4() {
+	return ((1 + Math.random()) * 0x10000 | 0).toString(16).substring(1);
+};
+
+module.exports = {
+	guid: function guid() {
+		return S4() + S4() + "-" + S4() + "-" + S4() + "-" + S4() + "-" + S4() + S4() + S4();
+	},
+	id: function id() {
+		return S4();
+	}
 };
 
 },{}],184:[function(require,module,exports){

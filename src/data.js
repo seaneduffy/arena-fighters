@@ -6,21 +6,22 @@ let config = require('./config'),
 
 function processData(json) {
 	let settings = json.settings,
+		scalar = settings.scalar,
+		maxWidth = config.maxWidth = processValue(settings.maxWidth),
+		maxHeight = config.maxHeight = processValue(settings.maxHeight),
 		windowInnerWidth = window.innerWidth,
 		windowInnerHeight = window.innerHeight,
 		resAppend = '',
 		stageWidth = 0,
 		stageHeight = 0,
-		scaleValues = settings.scaleValues.join(','),
+		resValues = ','+settings.resValues.join(',')+',',
+		distanceValues = ','+settings.distanceValues.join(',')+',',
+		scalars = settings.scalars,
 		wallPadding = 0,
-		sdWidth = processValue(settings.sdWidth),
-		sdHeight = processValue(settings.sdHeight),
-		mdWidth = processValue(settings.mdWidth),
-		mdHeight = processValue(settings.mdHeight),
-		hdWidth = processValue(settings.hdWidth),
-		hdHeight = processValue(settings.hdHeight),
+		resolutions = processValue(settings.resolutions),
 		spriteImgPath = '/img/sprites/',
-		resolution = 1,
+		resolutionScale = 1,
+		distanceScale = 1,
 		windowWidth = config.windowWidth = windowInnerWidth > windowInnerHeight ? windowInnerWidth : windowInnerHeight,
 		windowHeight = config.windowHeight = windowInnerWidth < windowInnerHeight ? windowInnerWidth : windowInnerHeight,
 		displayObjects = config.displayObjects = settings.displayObjects,
@@ -33,27 +34,20 @@ function processData(json) {
 		sprite = '',
 		frames = null,
 		image = '';
-	
+		
 	cycle.setFrameRate(settings.frameRate);
-
-	if(windowWidth <= settings.sdWidth) {
-		stageWidth = settings.sdWidth;
-		stageHeight = settings.sdHeight;
-		resAppend = '-sd';
-	} else if(windowWidth <= settings.mdWidth) {
-		stageWidth = settings.mdWidth;
-		stageHeight = settings.mdHeight;
-		resAppend = '-md';
-	} else {
-		stageWidth = settings.hdWidth;
-		stageHeight = settings.hdHeight;
-		resAppend = '-hd';
+	
+	for(let resolution in resolutions) {
+		
+		var width = processValue(resolutions[resolution].width),
+			height = processValue(resolutions[resolution].height);
+		if(width > windowWidth && height > windowHeight) {
+			resAppend = '-' + resolution;
+			stageWidth = config.stageWidth = width;
+			stageHeight = config.stageHeight = height;
+			break;
+		}
 	}
-	
-	config.stageWidth = stageWidth;
-	config.stageHeight = stageHeight;
-	
-	
 	
 	stageCenterX = config.stageCenterX = stageWidth / 2;
 	stageCenterY = config.stageCenterY = stageHeight / 2;
@@ -64,36 +58,37 @@ function processData(json) {
 	config.joystickImage = spriteImgPath+'joystick'+resAppend+'.png';
 	imagesToLoad.push(config.joystickImage);
 
-	resolution = config.resolution = windowWidth / stageWidth;
+	resolutionScale = config.resolutionScale = windowHeight / stageHeight;
+	distanceScale = config.distanceScale = windowHeight / maxHeight;
 	
-	config.domElement.style.width = stageWidth * resolution + 'px';
-	config.domElement.style.height = stageHeight * resolution + 'px';
-	config.joystickMin = settings.joystickMin * resolution;
-	config.joystickMax = settings.joystickMax * resolution;
-	wallPadding = processValue(settings.wallPadding) * resolution;
+	config.domElement.style.width = stageWidth * resolutionScale + 'px';
+	config.domElement.style.height = stageHeight * resolutionScale + 'px';
+	config.joystickMin = settings.joystickMin * resolutionScale;
+	config.joystickMax = settings.joystickMax * resolutionScale;
+	wallPadding = processValue(settings.wallPadding) * resolutionScale;
 	
 	config.topWall = {
 		x: 0,
 		y: 0,
-		width: stageWidth * resolution,
+		width: stageWidth * resolutionScale,
 		height: wallPadding
 	};
 	config.leftWall = {
 		x: 0,
 		y: 0,
 		width: wallPadding,
-		height: stageHeight * resolution
+		height: stageHeight * resolutionScale
 	};
 	config.rightWall = {
-		x: stageWidth * resolution - wallPadding,
+		x: stageWidth * resolutionScale - wallPadding,
 		y: 0,
 		width: wallPadding,
-		height: stageHeight * resolution
+		height: stageHeight * resolutionScale
 	};
 	config.bottomWall = {
 		x: 0,
-		y: stageHeight * resolution - wallPadding,
-		width: stageWidth * resolution,
+		y: stageHeight * resolutionScale - wallPadding,
+		width: stageWidth * resolutionScale,
 		height: wallPadding
 	};
 
@@ -102,8 +97,12 @@ function processData(json) {
 			if(!!levelData.properties) {
 				for(property in levelData.properties) {
 					levelData.properties[property] = processValue(levelData.properties[property]);
-					if(scaleValues.match(new RegExp(property)))
-						levelData.properties[property] *= resolution;
+					if(resValues.match(new RegExp(property)))
+						levelData.properties[property] *= resolutionScale;
+					if(distanceValues.match(new RegExp(','+property+',')))
+						levelData.properties[property] *= distanceScale;
+					if(!!scalars[property])
+						levelData.properties[property] *= scalars[property];
 				}
 			}
 		});
@@ -112,8 +111,12 @@ function processData(json) {
 	for(type in displayObjects) {
 		for(property in displayObjects[type].properties) {
 			displayObjects[type].properties[property] = processValue(displayObjects[type].properties[property]);
-			if(scaleValues.match(new RegExp(property)))
-				displayObjects[type].properties[property] *= resolution;
+			if(resValues.match(new RegExp(','+property+',')))
+				displayObjects[type].properties[property] *= resolutionScale;
+			if(distanceValues.match(new RegExp(','+property+',')))
+				displayObjects[type].properties[property] *= distanceScale;
+			if(!!scalars[property])
+				displayObjects[type].properties[property] *= scalars[property];
 		}
 		if(!!displayObjects[type].properties.spriteLabels) {
 			imagesToLoad.push(spriteImgPath+type+resAppend+'.png');
@@ -134,10 +137,6 @@ function processData(json) {
 		}
 	}
 	callback();
-}
-
-function reduceValue(prev, curr, i) {
-	
 }
 
 function processValue(value) {

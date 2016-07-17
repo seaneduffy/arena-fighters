@@ -2,13 +2,11 @@ let Sprite = require('./sprite'),
 	config = require('../config'),
 	geom = require('../geom'),
 	cycle = require('../cycle'),
-	displayObjects = [],
-	id = require('../id');
+	displayObjects = [];
 
 function DisplayObject() {
 	this._sprites = Object.create(null);
 	displayObjects.push(this);
-	this.id = id();
 	this.moveCycle = false;
 	this.cycleMove = this.move.bind(this);
 }
@@ -30,6 +28,7 @@ Object.defineProperties(DisplayObject.prototype, {
 				for(let label in sprites) {
 					sprites[label].destroy();
 				}
+				this.stage = false;
 				this.destroyed = true;
 				cycle.removeUpdate(this.cycleMove);
 			}
@@ -432,7 +431,7 @@ function cleanup() {
 
 function clear() {
 	displayObjects.forEach(displayObject=>{
-		displayObject.destroyed = true;
+		displayObject.destroy();
 	});
 }
 

@@ -6,7 +6,7 @@ module.exports = function(grunt) {
 		let paths = grunt.file.expand("src/data/**/*.json");
 		paths.forEach(path=>{
 			let content = grunt.file.read(path),
-				suffix = path.match(/[h|m|s]d/);
+				suffix = path.match(/d[0-9]/);
 			if(!!suffix) suffix = suffix[0];
 			content = content.replace(/frames/, 
 				path.match(/[a-z|A-Z|0-9]+\.json/)[0].replace('.json','') + 

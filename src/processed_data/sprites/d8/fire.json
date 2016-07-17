@@ -1,0 +1,30 @@
+{"fire-d8": {
+
+"fire_down":
+{
+	"frame": {"x":0,"y":0,"w":160,"h":160},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":160,"h":160},
+	"sourceSize": {"w":160,"h":160},
+	"pivot": {"x":0.5,"y":0.5}
+},
+"fire_up":
+{
+	"frame": {"x":160,"y":0,"w":160,"h":160},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":160,"h":160},
+	"sourceSize": {"w":160,"h":160},
+	"pivot": {"x":0.5,"y":0.5}
+}},
+"meta": {
+	"app": "http://www.codeandweb.com/texturepacker",
+	"version": "1.0",
+	"image": "fire-d8.png",
+	"format": "RGBA8888",
+	"size": {"w":320,"h":160},
+	"scale": "0.8",
+	"smartupdate": "$TexturePacker:SmartUpdate:c0ce18a17559328e45eb799f55841e30:3b22031160d172d5f4e3e4db948d6cd3:71b98b2a783a2af1f09ceb1ea3912707$"
+}
+}

@@ -2,23 +2,66 @@
 	"joystickMin": 30,
 	"joystickMax": 120,
 	"wallPadding": 50,
-	"stageWidth": 2200,
-	"stageHeight": 1293,
-	"hdWidth": 2200,
-	"hdHeight": 1293,
-	"mdWidth": 1150,
-	"mdHeight": 647,
-	"sdWidth": 575,
-	"sdHeight": 323,
+	"maxWidth": 2000,
+	"maxHeight": "config.maxWidth / 1.111111",
+	"resolutions": {
+		"d1": {
+			"width": "config.maxWidth * .1",
+			"height": "config.maxHeight * .1"
+		},
+		"d2": {
+			"width": "config.maxWidth * .2",
+			"height": "config.maxHeight * .2"
+		},
+		"d3": {
+			"width": "config.maxWidth * .3",
+			"height": "config.maxHeight * .3"
+		},
+		"d4": {
+			"width": "config.maxWidth * .4",
+			"height": "config.maxHeight * .4"
+		},
+		"d5": {
+			"width": "config.maxWidth * .5",
+			"height": "config.maxHeight * .5" 
+		},
+		"d6": {
+			"width": "config.maxWidth * .6",
+			"height": "config.maxHeight * .6" 
+		},
+		"d7": {
+			"width": "config.maxWidth * .7",
+			"height": "config.maxHeight * .7" 
+		},
+		"d8": {
+			"width": "config.maxWidth * .8",
+			"height": "config.maxHeight * .8" 
+		},
+		"d9": {
+			"width": "config.maxWidth * .9",
+			"height": "config.maxHeight * .9" 
+		},
+		"d10": {
+			"width": "config.maxWidth",
+			"height": "config.maxHeight" 
+		}
+	},
 	"frameRate": 1,
-	"scaleValues": [
+	"resValues": [
 		"x",
 		"y",
+		"velocityModifierAmplitude",
 		"width",
-		"height",
+		"height"
+	],
+	"distanceValues": [
 		"speed",
 		"velocityModifierAmplitude"
 	],
+	"scalars": {
+		"speed": 2,
+		"velocityModifierAmplitude": 3
+	},
 	"displayObjects": {
 		"player1": {
 			"properties": {
@@ -40,7 +83,7 @@
 					"$right_standing",
 					"$right_walking"
 				],
-				"speed": 5,
+				"speed": 3,
 				"z": 3,
 				"interacts": true,
 				"health": 15,
@@ -89,7 +132,7 @@
 					"$right_standing",
 					"$right_walking"
 				],
-				"speed": 5,
+				"speed": 3,
 				"z": 3,
 				"interacts": true,
 				"health": 15,
@@ -138,7 +181,7 @@
 					"$right_standing",
 					"$right_walking"
 				],
-				"speed": 2,
+				"speed": 1,
 				"actionSpeed": 20,
 				"z": 6,
 				"ai": "grunt",
@@ -172,7 +215,7 @@
 					"$right_standing",
 					"$right_walking"
 				],
-				"speed": 4,
+				"speed": 2,
 				"actionSpeed": 1,
 				"moveTime": 8,
 				"z": 6,
@@ -190,7 +233,7 @@
 		"bullet": {
 			"properties": {
 				"display": "default",
-				"speed": 7,
+				"speed": 4,
 				"z": 8,
 				"interacts": true,
 				"impact": 1,
@@ -213,7 +256,7 @@
 					"wave"
 				],
 				"image": "bullet",
-				"velocityModifierAmplitude": 5,
+				"velocityModifierAmplitude": 2,
 				"velocityModifierFrequency": 40
 			},
 			"className": "Ammunition"
@@ -238,7 +281,6 @@
 					"$downleft_off",
 					"$downleft_firing"
 				],
-				"image": "pistol",
 				"ammunition": "bullet"
 			},
 			"className": "Firearm"

@@ -1,0 +1,21 @@
+{"bullet-d1": {
+
+"bullet":
+{
+	"frame": {"x":0,"y":0,"w":3,"h":3},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":3,"h":3},
+	"sourceSize": {"w":3,"h":3},
+	"pivot": {"x":0.5,"y":0.5}
+}},
+"meta": {
+	"app": "http://www.codeandweb.com/texturepacker",
+	"version": "1.0",
+	"image": "bullet-d1.png",
+	"format": "RGBA8888",
+	"size": {"w":3,"h":3},
+	"scale": "0.1",
+	"smartupdate": "$TexturePacker:SmartUpdate:64490e2eff8f71c1920f5d49f2d545b1:ed9a15f90a7fcf519bddbc6e60680fd3:d9cae68db88f2ed394f1145127baa25f$"
+}
+}
