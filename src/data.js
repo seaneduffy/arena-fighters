@@ -2,23 +2,29 @@
 
 let config = require('./config'),
 	cycle = require('./cycle'),
+	Grunt = require('./displayObject/enemies/grunt'),
+	Devil = require('./displayObject/enemies/devil'),
+	Player = require('./displayObject/player'),
+	Firearm = require('./displayObject/firearm'),
+	Ammunition = require('./displayObject/ammunition'),
+	DisplayObject = require('./displayObject/displayObject'),
 	callback = null;
 
 function processData(json) {
 	let settings = json.settings,
 		scalar = settings.scalar,
-		maxWidth = config.maxWidth = processValue(settings.maxWidth),
-		maxHeight = config.maxHeight = processValue(settings.maxHeight),
+		stageWidth = config.stageWidth = processValue(settings.stageWidth),
+		stageHeight = config.stageHeight = processValue(settings.stageHeight),
 		windowInnerWidth = window.innerWidth,
 		windowInnerHeight = window.innerHeight,
 		resAppend = '',
-		stageWidth = 0,
-		stageHeight = 0,
-		resValues = ','+settings.resValues.join(',')+',',
-		distanceValues = ','+settings.distanceValues.join(',')+',',
-		scalars = settings.scalars,
+		resWidth = 0,
+		resHeight = 0,
+		resValues = config.resValues = ','+settings.resValues.join(',')+',',
+		distanceValues = config.distanceValues = ','+settings.distanceValues.join(',')+',',
+		scalars = config.scalars = settings.scalars,
 		wallPadding = 0,
-		resolutions = processValue(settings.resolutions),
+		resolutions = settings.resolutions,
 		spriteImgPath = '/img/sprites/',
 		resolutionScale = 1,
 		distanceScale = 1,
@@ -39,102 +45,104 @@ function processData(json) {
 	
 	for(let resolution in resolutions) {
 		
-		var width = processValue(resolutions[resolution].width),
-			height = processValue(resolutions[resolution].height);
-		if(width > windowWidth && height > windowHeight) {
+		resWidth = processValue(resolutions[resolution].width),
+		resHeight = processValue(resolutions[resolution].height);
+		if(resWidth > windowWidth && resHeight > windowHeight) {
 			resAppend = '-' + resolution;
-			stageWidth = config.stageWidth = width;
-			stageHeight = config.stageHeight = height;
 			break;
 		}
 	}
 	
 	stageCenterX = config.stageCenterX = stageWidth / 2;
 	stageCenterY = config.stageCenterY = stageHeight / 2;
+
+	resolutionScale = config.resolutionScale = windowHeight / resHeight;
+	distanceScale = config.distanceScale = windowHeight / stageHeight;
+	
+	config.domElement.style.width = resWidth * resolutionScale + 'px';
+	config.domElement.style.height = resHeight * resolutionScale + 'px';
+	
 	config.joystick = json['joystick'+resAppend];
 	config.fire = json['fire'+resAppend];
 	config.fireBtnImage = spriteImgPath+'fire'+resAppend+'.png';
 	imagesToLoad.push(config.fireBtnImage);
 	config.joystickImage = spriteImgPath+'joystick'+resAppend+'.png';
 	imagesToLoad.push(config.joystickImage);
-
-	resolutionScale = config.resolutionScale = windowHeight / stageHeight;
-	distanceScale = config.distanceScale = windowHeight / maxHeight;
+	config.joystickMin = settings.joystickMin * distanceScale;
+	config.joystickMax = settings.joystickMax * distanceScale;
 	
-	config.domElement.style.width = stageWidth * resolutionScale + 'px';
-	config.domElement.style.height = stageHeight * resolutionScale + 'px';
-	config.joystickMin = settings.joystickMin * resolutionScale;
-	config.joystickMax = settings.joystickMax * resolutionScale;
-	wallPadding = processValue(settings.wallPadding) * resolutionScale;
-	
+	wallPadding = processValue(settings.wallPadding) * distanceScale;
 	config.topWall = {
 		x: 0,
 		y: 0,
-		width: stageWidth * resolutionScale,
+		width: stageWidth * distanceScale,
 		height: wallPadding
 	};
 	config.leftWall = {
 		x: 0,
 		y: 0,
 		width: wallPadding,
-		height: stageHeight * resolutionScale
+		height: stageHeight * distanceScale
 	};
 	config.rightWall = {
-		x: stageWidth * resolutionScale - wallPadding,
+		x: stageWidth * distanceScale - wallPadding,
 		y: 0,
 		width: wallPadding,
-		height: stageHeight * resolutionScale
+		height: stageHeight * distanceScale
 	};
 	config.bottomWall = {
 		x: 0,
-		y: stageHeight * resolutionScale - wallPadding,
-		width: stageWidth * resolutionScale,
+		y: stageHeight * distanceScale - wallPadding,
+		width: stageWidth * distanceScale,
 		height: wallPadding
 	};
 
 	levels.forEach(level=>{
 		level.forEach(levelData=>{
 			if(!!levelData.properties) {
+				processConfig(levelData.properties)
 				for(property in levelData.properties) {
 					levelData.properties[property] = processValue(levelData.properties[property]);
-					if(resValues.match(new RegExp(property)))
-						levelData.properties[property] *= resolutionScale;
-					if(distanceValues.match(new RegExp(','+property+',')))
-						levelData.properties[property] *= distanceScale;
-					if(!!scalars[property])
-						levelData.properties[property] *= scalars[property];
 				}
 			}
 		});
 	});
-
+	
+	processConfig(displayObjects);
+	
 	for(type in displayObjects) {
-		for(property in displayObjects[type].properties) {
-			displayObjects[type].properties[property] = processValue(displayObjects[type].properties[property]);
-			if(resValues.match(new RegExp(','+property+',')))
-				displayObjects[type].properties[property] *= resolutionScale;
-			if(distanceValues.match(new RegExp(','+property+',')))
-				displayObjects[type].properties[property] *= distanceScale;
-			if(!!scalars[property])
-				displayObjects[type].properties[property] *= scalars[property];
-		}
-		if(!!displayObjects[type].properties.spriteLabels) {
-			imagesToLoad.push(spriteImgPath+type+resAppend+'.png');
-			frames = {};
-			for(sprite in json[type+resAppend]) {
-				frames[sprite] = json[type+resAppend][sprite];
+		displayObjects[type].forEach(function(displayObjectData){
+			if(type === 'enemy') {
+				if(displayObjectData.id === 'devil')
+					displayObjectData.class = Devil;
+				if(displayObjectData.id === 'grunt')
+					displayObjectData.class = Grunt;
+			} else if(type === 'player')
+				displayObjectData.class = Player;
+			else if(type === 'ammunition')
+				displayObjectData.class = Ammunition;
+			else if(type === 'firearm')
+				displayObjectData.class = Firearm;
+			else if(type === 'displayObject')
+				displayObjectData.class = DisplayObject;
+			if(!!displayObjectData.spriteLabels) {
+				imagesToLoad.push(spriteImgPath+displayObjectData.id+resAppend+'.png');
+				frames = {};
+				for(sprite in json[displayObjectData.id+resAppend]) {
+					frames[sprite] = json[displayObjectData.id+resAppend][sprite];
+				}
+				displayObjectData.spriteMeta = {
+					img: spriteImgPath+displayObjectData.id+resAppend+'.png',
+					frames: frames
+				};
 			}
-			displayObjects[type].properties.spriteMeta = {
-				img: spriteImgPath+type+resAppend+'.png',
-				frames: frames
-			};
-		}
-		if(!!displayObjects[type].properties.image) {
-			image = displayObjects[type].properties.image;
-			image = spriteImgPath + image + resAppend + '.png';
-			displayObjects[type].properties.image = image;
-			imagesToLoad.push(image);
-		}
+			if(!!displayObjectData.image) {
+				displayObjectData.image = spriteImgPath + displayObjectData.image + resAppend + '.png';
+				imagesToLoad.push(displayObjectData.image);
+			}
+			config.displayObjects[displayObjectData.id] = displayObjectData;
+		});
+		delete displayObjects[type];
 	}
 	callback();
 }
@@ -169,6 +177,36 @@ function processValue(value) {
 		}
 	}
 	return value;
+}
+
+function processConfig(obj) {
+	if(typeof obj ==='array') {
+		obj.forEach(function(value, index){
+			if(typeof value === 'number' || typeof value === 'string') {
+				obj[index] = processValue(value);
+			} else {
+				processConfig(value);
+			}
+		});
+	} else if(typeof obj === 'object') {
+		let property = null,
+			value = null;
+		for(property in obj) {
+			value = obj[property];
+			if(typeof value === 'object') {
+				processConfig(value);
+			} else {
+				value = processValue(value);
+				if(config.resValues.match(new RegExp(','+property+',')))
+					value *= config.resolutionScale;
+				if(config.distanceValues.match(new RegExp(','+property+',')))
+					value *= config.distanceScale;
+				if(!!config.scalars[property])
+					value *= config.scalars[property];
+				obj[property] = value;
+			}
+		}
+	}
 }
 
 function loadData(uri) {

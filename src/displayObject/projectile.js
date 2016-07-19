@@ -5,7 +5,7 @@ let Sprite = require('./sprite'),
 	geom = require('../geom');
 	
 function Projectile() {
-	DisplayObject.prototype.constructor.call(this);
+	DisplayObject.call(this);
 }
 
 Projectile.prototype = Object.create(DisplayObject.prototype, {

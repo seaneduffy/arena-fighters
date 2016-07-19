@@ -19858,7 +19858,7 @@ module.exports = {
 	devil: Devil
 };
 
-},{"./config":171,"./cycle":173,"./geom":182}],169:[function(require,module,exports){
+},{"./config":171,"./cycle":173,"./geom":186}],169:[function(require,module,exports){
 'use strict';
 
 var React = require('react'),
@@ -20165,7 +20165,6 @@ var React = require('react'),
     dataLoader = require('../data'),
     config = require('../config'),
     resources = require('../resources'),
-    utils = require('../displayObject/utils'),
     socket = require('../socket'),
     cycle = require('../cycle'),
     Sprite = require('../displayObject/sprite'),
@@ -20182,7 +20181,6 @@ var React = require('react'),
 
 	dataLoader.load(function () {
 		resources.onReady(function () {
-			utils.init();
 			controls = require('../controls');
 			controls(onJoystick, onFire);
 			cycle.addUpdate(Sprite.draw);
@@ -20211,15 +20209,18 @@ function startLevel(index) {
 	if (config.hosting || config.gameType === 'single') {
 		(function () {
 			var displayObject = null,
-			    type = null,
-			    properties = null;
+			    property = null;
 			levelData.forEach(function (level) {
-				if (level.type !== 'player2' || config.gameType === 'two') {
-					displayObject = utils.createDisplayObject(level.type, level.properties);
-					if (!!displayObject) {
-						displayObject.stage = true;
-						if (level.type === 'player1') config.player1 = displayObject;else if (level.type === 'player2') config.player2 = displayObject;
+				if (level.id !== 'player2' || config.gameType === 'two') {
+					displayObject = new config.displayObjects[level.id].class();
+					for (property in config.displayObjects[level.id]) {
+						displayObject[property] = config.displayObjects[level.id][property];
 					}
+					for (var _property in level.properties) {
+						displayObject[_property] = level.properties[_property];
+					}
+					displayObject.stage = true;
+					if (level.id === 'player1') config.player1 = displayObject;else if (level.id === 'player2') config.player2 = displayObject;
 				}
 			});
 		})();
@@ -20228,6 +20229,11 @@ function startLevel(index) {
 
 function startGame() {
 	gameComponent.setState({ gameActive: true });
+	if (config.hosting) {
+		cycle.addServer(Sprite.sendUpdate);
+	} else {
+		socket.on('sprite update', Sprite.receiveUpdate);
+	}
 	cycle.start();
 	startLevel(0);
 }
@@ -20275,8 +20281,6 @@ function initSocket() {
 		}
 	});
 	socket.on('game created', function (id) {
-		Sprite.setHosting(true);
-		config.hosting = true;
 		gameComponent.setState({
 			hosting: true,
 			gameId: id
@@ -20310,7 +20314,6 @@ function initSocket() {
 }
 
 function handleJoinGame() {
-	Sprite.setHosting(false);
 	config.hosting = false;
 	socket.emit('join game', {
 		name: gameComponent.state.playerName,
@@ -20327,6 +20330,7 @@ function handleGameListSelect(event) {
 }
 function handleCreateGame() {
 	gameComponent.setState({ gameCreated: true });
+	config.hosting = true;
 	socket.emit('create game', {
 		name: gameComponent.state.playerName,
 		gameName: gameComponent.state.gameName
@@ -20373,7 +20377,7 @@ function handleGuestReady() {
 	startGame();
 }
 
-},{"../config":171,"../controls":172,"../cycle":173,"../data":174,"../displayObject/displayObject":177,"../displayObject/sprite":180,"../displayObject/utils":181,"../id":183,"../resources":186,"../socket":187,"./components":169,"react":167,"react-dom":29}],171:[function(require,module,exports){
+},{"../config":171,"../controls":172,"../cycle":173,"../data":174,"../displayObject/displayObject":177,"../displayObject/sprite":184,"../id":187,"../resources":190,"../socket":191,"./components":169,"react":167,"react-dom":29}],171:[function(require,module,exports){
 'use strict';
 
 var config = {
@@ -20390,7 +20394,7 @@ var config = {
 	"CENTER": -1,
 	"dev": true,
 	"console": true,
-	"dev1": true,
+	"dev1": false,
 	"dev2": false
 };
 
@@ -20486,7 +20490,7 @@ module.exports = function (_joystickCallback, _fireCallback) {
 	fireCallback = _fireCallback;
 };
 
-},{"./config":171,"./joystick":185}],173:[function(require,module,exports){
+},{"./config":171,"./joystick":189}],173:[function(require,module,exports){
 'use strict';
 
 var config = require('./config'),
@@ -20567,7 +20571,7 @@ function cycle() {
 					if (typeof waitToRemove.find(function (removeFunc) {
 						return funcObj.func === removeFunc;
 					}) === 'undefined') {
-						arr.push(func);
+						arr.push(funcObj);
 					}
 				});
 				waitFunctions = arr;
@@ -20634,25 +20638,33 @@ if (config.dev) {
 },{"./config":171}],174:[function(require,module,exports){
 'use strict';
 
+var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj; };
+
 var config = require('./config'),
     cycle = require('./cycle'),
+    Grunt = require('./displayObject/enemies/grunt'),
+    Devil = require('./displayObject/enemies/devil'),
+    Player = require('./displayObject/player'),
+    Firearm = require('./displayObject/firearm'),
+    Ammunition = require('./displayObject/ammunition'),
+    DisplayObject = require('./displayObject/displayObject'),
     callback = null;
 
 function processData(json) {
 	var settings = json.settings,
 	    scalar = settings.scalar,
-	    maxWidth = config.maxWidth = processValue(settings.maxWidth),
-	    maxHeight = config.maxHeight = processValue(settings.maxHeight),
+	    stageWidth = config.stageWidth = processValue(settings.stageWidth),
+	    stageHeight = config.stageHeight = processValue(settings.stageHeight),
 	    windowInnerWidth = window.innerWidth,
 	    windowInnerHeight = window.innerHeight,
 	    resAppend = '',
-	    stageWidth = 0,
-	    stageHeight = 0,
-	    resValues = ',' + settings.resValues.join(',') + ',',
-	    distanceValues = ',' + settings.distanceValues.join(',') + ',',
-	    scalars = settings.scalars,
+	    resWidth = 0,
+	    resHeight = 0,
+	    resValues = config.resValues = ',' + settings.resValues.join(',') + ',',
+	    distanceValues = config.distanceValues = ',' + settings.distanceValues.join(',') + ',',
+	    scalars = config.scalars = settings.scalars,
 	    wallPadding = 0,
-	    resolutions = processValue(settings.resolutions),
+	    resolutions = settings.resolutions,
 	    spriteImgPath = '/img/sprites/',
 	    resolutionScale = 1,
 	    distanceScale = 1,
@@ -20673,96 +20685,94 @@ function processData(json) {
 
 	for (var resolution in resolutions) {
 
-		var width = processValue(resolutions[resolution].width),
-		    height = processValue(resolutions[resolution].height);
-		if (width > windowWidth && height > windowHeight) {
+		resWidth = processValue(resolutions[resolution].width), resHeight = processValue(resolutions[resolution].height);
+		if (resWidth > windowWidth && resHeight > windowHeight) {
 			resAppend = '-' + resolution;
-			stageWidth = config.stageWidth = width;
-			stageHeight = config.stageHeight = height;
 			break;
 		}
 	}
 
 	stageCenterX = config.stageCenterX = stageWidth / 2;
 	stageCenterY = config.stageCenterY = stageHeight / 2;
+
+	resolutionScale = config.resolutionScale = windowHeight / resHeight;
+	distanceScale = config.distanceScale = windowHeight / stageHeight;
+
+	config.domElement.style.width = resWidth * resolutionScale + 'px';
+	config.domElement.style.height = resHeight * resolutionScale + 'px';
+
 	config.joystick = json['joystick' + resAppend];
 	config.fire = json['fire' + resAppend];
 	config.fireBtnImage = spriteImgPath + 'fire' + resAppend + '.png';
 	imagesToLoad.push(config.fireBtnImage);
 	config.joystickImage = spriteImgPath + 'joystick' + resAppend + '.png';
 	imagesToLoad.push(config.joystickImage);
+	config.joystickMin = settings.joystickMin * distanceScale;
+	config.joystickMax = settings.joystickMax * distanceScale;
 
-	resolutionScale = config.resolutionScale = windowHeight / stageHeight;
-	distanceScale = config.distanceScale = windowHeight / maxHeight;
-
-	config.domElement.style.width = stageWidth * resolutionScale + 'px';
-	config.domElement.style.height = stageHeight * resolutionScale + 'px';
-	config.joystickMin = settings.joystickMin * resolutionScale;
-	config.joystickMax = settings.joystickMax * resolutionScale;
-	wallPadding = processValue(settings.wallPadding) * resolutionScale;
-
+	wallPadding = processValue(settings.wallPadding) * distanceScale;
 	config.topWall = {
 		x: 0,
 		y: 0,
-		width: stageWidth * resolutionScale,
+		width: stageWidth * distanceScale,
 		height: wallPadding
 	};
 	config.leftWall = {
 		x: 0,
 		y: 0,
 		width: wallPadding,
-		height: stageHeight * resolutionScale
+		height: stageHeight * distanceScale
 	};
 	config.rightWall = {
-		x: stageWidth * resolutionScale - wallPadding,
+		x: stageWidth * distanceScale - wallPadding,
 		y: 0,
 		width: wallPadding,
-		height: stageHeight * resolutionScale
+		height: stageHeight * distanceScale
 	};
 	config.bottomWall = {
 		x: 0,
-		y: stageHeight * resolutionScale - wallPadding,
-		width: stageWidth * resolutionScale,
+		y: stageHeight * distanceScale - wallPadding,
+		width: stageWidth * distanceScale,
 		height: wallPadding
 	};
 
 	levels.forEach(function (level) {
 		level.forEach(function (levelData) {
 			if (!!levelData.properties) {
+				processConfig(levelData.properties);
 				for (property in levelData.properties) {
 					levelData.properties[property] = processValue(levelData.properties[property]);
-					if (resValues.match(new RegExp(property))) levelData.properties[property] *= resolutionScale;
-					if (distanceValues.match(new RegExp(',' + property + ','))) levelData.properties[property] *= distanceScale;
-					if (!!scalars[property]) levelData.properties[property] *= scalars[property];
 				}
 			}
 		});
 	});
 
+	processConfig(displayObjects);
+
 	for (type in displayObjects) {
-		for (property in displayObjects[type].properties) {
-			displayObjects[type].properties[property] = processValue(displayObjects[type].properties[property]);
-			if (resValues.match(new RegExp(',' + property + ','))) displayObjects[type].properties[property] *= resolutionScale;
-			if (distanceValues.match(new RegExp(',' + property + ','))) displayObjects[type].properties[property] *= distanceScale;
-			if (!!scalars[property]) displayObjects[type].properties[property] *= scalars[property];
-		}
-		if (!!displayObjects[type].properties.spriteLabels) {
-			imagesToLoad.push(spriteImgPath + type + resAppend + '.png');
-			frames = {};
-			for (sprite in json[type + resAppend]) {
-				frames[sprite] = json[type + resAppend][sprite];
+		displayObjects[type].forEach(function (displayObjectData) {
+			if (type === 'enemy') {
+				if (displayObjectData.id === 'devil') displayObjectData.class = Devil;
+				if (displayObjectData.id === 'grunt') displayObjectData.class = Grunt;
+			} else if (type === 'player') displayObjectData.class = Player;else if (type === 'ammunition') displayObjectData.class = Ammunition;else if (type === 'firearm') displayObjectData.class = Firearm;else if (type === 'displayObject') displayObjectData.class = DisplayObject;
+			if (!!displayObjectData.spriteLabels) {
+				imagesToLoad.push(spriteImgPath + displayObjectData.id + resAppend + '.png');
+				frames = {};
+				for (sprite in json[displayObjectData.id + resAppend]) {
+					frames[sprite] = json[displayObjectData.id + resAppend][sprite];
+				}
+				displayObjectData.spriteMeta = {
+					img: spriteImgPath + displayObjectData.id + resAppend + '.png',
+					frames: frames
+				};
 			}
-			displayObjects[type].properties.spriteMeta = {
-				img: spriteImgPath + type + resAppend + '.png',
-				frames: frames
-			};
-		}
-		if (!!displayObjects[type].properties.image) {
-			image = displayObjects[type].properties.image;
-			image = spriteImgPath + image + resAppend + '.png';
-			displayObjects[type].properties.image = image;
-			imagesToLoad.push(image);
-		}
+			if (!!displayObjectData.image) {
+				displayObjectData.image = spriteImgPath + displayObjectData.image + resAppend + '.png';
+				imagesToLoad.push(displayObjectData.image);
+			}
+			config.displayObjects[displayObjectData.id] = displayObjectData;
+		});
+		delete displayObjects[type];
 	}
 	callback();
 }
@@ -20788,6 +20798,33 @@ function processValue(value) {
 	return value;
 }
 
+function processConfig(obj) {
+	if (typeof obj === 'array') {
+		obj.forEach(function (value, index) {
+			if (typeof value === 'number' || typeof value === 'string') {
+				obj[index] = processValue(value);
+			} else {
+				processConfig(value);
+			}
+		});
+	} else if ((typeof obj === 'undefined' ? 'undefined' : _typeof(obj)) === 'object') {
+		var property = null,
+		    value = null;
+		for (property in obj) {
+			value = obj[property];
+			if ((typeof value === 'undefined' ? 'undefined' : _typeof(value)) === 'object') {
+				processConfig(value);
+			} else {
+				value = processValue(value);
+				if (config.resValues.match(new RegExp(',' + property + ','))) value *= config.resolutionScale;
+				if (config.distanceValues.match(new RegExp(',' + property + ','))) value *= config.distanceScale;
+				if (!!config.scalars[property]) value *= config.scalars[property];
+				obj[property] = value;
+			}
+		}
+	}
+}
+
 function loadData(uri) {
 	var xobj = new XMLHttpRequest();
 	xobj.overrideMimeType("application/json");
@@ -20807,13 +20844,13 @@ module.exports = {
 	}
 };
 
-},{"./config":171,"./cycle":173}],175:[function(require,module,exports){
+},{"./config":171,"./cycle":173,"./displayObject/ammunition":175,"./displayObject/displayObject":177,"./displayObject/enemies/devil":178,"./displayObject/enemies/grunt":180,"./displayObject/firearm":181,"./displayObject/player":182}],175:[function(require,module,exports){
 'use strict';
 
 var Projectile = require('./projectile');
 
 function Ammunition() {
-	Projectile.prototype.constructor.call(this);
+	Projectile.call(this);
 }
 
 Ammunition.prototype = Object.create(Projectile.prototype, {
@@ -20839,14 +20876,13 @@ Ammunition.prototype = Object.create(Projectile.prototype, {
 
 module.exports = Ammunition;
 
-},{"./projectile":179}],176:[function(require,module,exports){
+},{"./projectile":183}],176:[function(require,module,exports){
 'use strict';
 
 var config = require('../config'),
     DisplayObject = require('./displayObject'),
-    aiFunctions = require('../ai'),
-    cycle = require('../cycle'),
-    utils = require('./utils');
+    Firearm = require('./firearm'),
+    cycle = require('../cycle');
 
 function Character() {
 	DisplayObject.prototype.constructor.call(this);
@@ -20867,9 +20903,6 @@ Character.prototype = Object.create(DisplayObject.prototype, {
 	},
 	'destroy': {
 		value: function value() {
-			if (!!this.ai) {
-				this.ai.destroy();
-			}
 			if (!!this.firearm) this.firearm.destroy();
 			DisplayObject.prototype.destroy.call(this);
 		}
@@ -20892,14 +20925,6 @@ Character.prototype = Object.create(DisplayObject.prototype, {
 	'onCollision': {
 		value: onCollision
 	},
-	'ai': {
-		set: function set(ai) {
-			this._ai = new aiFunctions[ai](this);
-		},
-		get: function get() {
-			return this._ai;
-		}
-	},
 	'melee': {
 		set: function set(melee) {
 			this._melee = melee;
@@ -20908,13 +20933,13 @@ Character.prototype = Object.create(DisplayObject.prototype, {
 			return this._melee;
 		}
 	},
-	'firearm': {
-		set: function set(firearm) {
-			this._firearmType = firearm;
+	'firearmType': {
+		set: function set(firearmType) {
+			this._firearmType = firearmType;
 			if (!!this._directionLabel) this.initFirearm();
 		},
 		get: function get() {
-			return this._firearm;
+			return this._firearmType;
 		}
 	},
 	'directionLabel': {
@@ -20951,25 +20976,35 @@ Character.prototype = Object.create(DisplayObject.prototype, {
 	'direction': {
 		set: function set(angle) {
 			Object.getOwnPropertyDescriptor(DisplayObject.prototype, 'direction').set.call(this, angle);
-			if (!!this.firearm) this.updateFirearmDisplay();
 		},
 		get: function get() {
 			return Object.getOwnPropertyDescriptor(DisplayObject.prototype, 'direction').get.call(this);
+		}
+	},
+	'move': {
+		value: function value() {
+			DisplayObject.prototype.move.call(this);
+			if (!!this.firearm) this.updateFirearmDisplay();
 		}
 	}
 });
 
 function initFirearm() {
-	this._firearm = utils.createDisplayObject(this._firearmType);
-	this._firearm.x = this.x;
-	this._firearm.y = this.y;
+	this.firearm = new Firearm();
+	var firearmData = config.displayObjects[this.firearmType],
+	    property = null;
+	for (property in firearmData) {
+		this.firearm[property] = firearmData[property];
+	}
+	this.firearm.x = this.x;
+	this.firearm.y = this.y;
 	this.updateFirearmDisplay();
-	this._firearm.stage = true;
+	this.firearm.stage = true;
 }
 
 function updateFirearmDisplay() {
 	var z = null,
-	    directionLabel = this._directionLabel,
+	    directionLabel = this.directionLabel,
 	    display = this.firearm.display || '$up_off';
 	if (directionLabel === config.UP || directionLabel === config.UP_LEFT || directionLabel === config.UP_RIGHT) z = this.z - 1;else z = this.z + 1;
 	if (directionLabel === config.UP) {
@@ -20990,22 +21025,17 @@ function updateFirearmDisplay() {
 		display = display.replace(/\$.+_/, '$downright_');
 	}
 	this.firearm.display = display;
-	if (z !== this._firearm.z) {
-		this._firearm.stage = false;
-		this._firearm.z = z;
-		this._firearm.stage = true;
+	if (z !== this.firearm.z) {
+		this.firearm.stage = false;
+		this.firearm.z = z;
+		this.firearm.stage = true;
 	}
 	this.firearm.x = this.firearmOffset[this.display].x + this.x;
 	this.firearm.y = this.firearmOffset[this.display].y + this.y;
 }
 
 function onCollision(collidedObject) {
-	if (!!this.ai) {
-		this.ai.onCollision();
-	}
-	if (!collidedObject !== 'wall' && !!this.melee && typeof this.friends.find(function (friend) {
-		return friend === collidedObject.type;
-	}) === 'undefined') {
+	if (!collidedObject !== 'wall' && !!this.melee && !this.friends.join(',').match(new RegExp(collidedObject.id))) {
 
 		if (!!collidedObject.takeDamage) collidedObject.takeDamage(this.melee);
 	}
@@ -21057,7 +21087,7 @@ function takeDamage(amount) {
 
 module.exports = Character;
 
-},{"../ai":168,"../config":171,"../cycle":173,"./displayObject":177,"./utils":181}],177:[function(require,module,exports){
+},{"../config":171,"../cycle":173,"./displayObject":177,"./firearm":181}],177:[function(require,module,exports){
 'use strict';
 
 var Sprite = require('./sprite'),
@@ -21067,16 +21097,19 @@ var Sprite = require('./sprite'),
     displayObjects = [];
 
 function DisplayObject() {
-	this._sprites = Object.create(null);
 	displayObjects.push(this);
-	this.moveCycle = false;
-	this.cycleMove = this.move.bind(this);
 }
 
 DisplayObject.cleanup = cleanup;
 DisplayObject.clear = clear;
 
 Object.defineProperties(DisplayObject.prototype, {
+	'cycleMove': {
+		get: function get() {
+			if (typeof this._cycleMove === 'undefined') return this._cycleMove = this.move.bind(this);
+			return this._cycleMove;
+		}
+	},
 	'move': {
 		value: move
 	},
@@ -21092,7 +21125,6 @@ Object.defineProperties(DisplayObject.prototype, {
 				}
 				this.stage = false;
 				this.destroyed = true;
-				cycle.removeUpdate(this.cycleMove);
 			}
 		}
 	},
@@ -21131,15 +21163,12 @@ Object.defineProperties(DisplayObject.prototype, {
 				this._stage = stage;
 				if (!!sprite) {
 					sprite.stage = true;
-					this.boundingBox = sprite.boundingBox;
-					if (!this.moveCycle) {
-						cycle.addUpdate(this.cycleMove);
-						this.moveCycle = true;
-					}
 				}
+				cycle.addUpdate(this.cycleMove);
 			} else if (!stage && this.stage) {
 				this._stage = false;
 				if (!!sprite) sprite.stage = false;
+				cycle.removeUpdate(this.cycleMove);
 			}
 		}
 	},
@@ -21172,12 +21201,11 @@ Object.defineProperties(DisplayObject.prototype, {
 	},
 	'image': {
 		set: function set(src) {
-			var sprite = Sprite.getSprite(this.type + '-default', src);
+			var sprite = Sprite.getSprite(this.id + '-default', src);
 			sprite.x = this.x;
 			sprite.y = this.y;
 			sprite.z = this.z;
 			this.sprites.default = sprite;
-			this.boundingBox = sprite.boundingBox;
 		}
 	},
 	'sprites': {
@@ -21211,9 +21239,12 @@ Object.defineProperties(DisplayObject.prototype, {
 			for (var label in sprites) {
 				sprites[label].x = x;
 			}
-			if (!!sprites[this.display]) {
-				this.boundingBox = sprites[this.display].boundingBox;
-			}
+			this.boundingBox = {
+				x: x - this.boundingBox.width / 2,
+				y: this.boundingBox.y,
+				width: this.boundingBox.width,
+				height: this.boundingBox.height
+			};
 		},
 		get: function get() {
 			if (!!this._x) return this._x;
@@ -21227,9 +21258,12 @@ Object.defineProperties(DisplayObject.prototype, {
 			for (var label in sprites) {
 				sprites[label].y = y;
 			}
-			if (!!sprites[this.display]) {
-				this.boundingBoy = sprites[this.display].boundingBoy;
-			}
+			this.boundingBox = {
+				x: this.boundingBox.x,
+				y: y - this.boundingBox.height / 2,
+				width: this.boundingBox.width,
+				height: this.boundingBox.height
+			};
 		},
 		get: function get() {
 			if (!!this._y) return this._y;
@@ -21259,14 +21293,6 @@ Object.defineProperties(DisplayObject.prototype, {
 				sprite = sprites[display];
 				if (this.stage && !!sprite) {
 					sprite.stage = true;
-					this.boundingBox = sprite.boundingBox;
-					if (!this.moveCycle) {
-						cycle.addUpdate(this.cycleMove);
-						this.moveCycle = true;
-					}
-				} else {
-					this._display = display;
-					return;
 				}
 			}
 		},
@@ -21276,6 +21302,24 @@ Object.defineProperties(DisplayObject.prototype, {
 	},
 	'boundingBox': {
 		get: function get() {
+			if (typeof this._boundingBox === 'undefined') {
+				var sprite = this.sprites[this.display];
+				if (!!sprite) {
+					this._boundingBox = {
+						x: this.x,
+						y: this.y,
+						width: sprite.width,
+						height: sprite.height
+					};
+				} else {
+					this._boundingBox = {
+						x: this.x,
+						y: this.y,
+						width: 0,
+						height: 0
+					};
+				}
+			}
 			return this._boundingBox;
 		},
 		set: function set(boundingBox) {
@@ -21342,7 +21386,7 @@ function onCollision(displayObject, x, y, newX, newY, collidedObject) {
 	};
 	if (!!displayObject.onCollision) displayObject.onCollision(collidedObject);
 }
-
+var c = 0;
 function move() {
 	var _this = this;
 
@@ -21365,15 +21409,14 @@ function move() {
 	displayObjects.forEach(function (objectToCheck) {
 		var doesNotInteractWith = false;
 		if (!!_this.noInteraction) {
-			doesNotInteractWith = typeof _this.noInteraction.find(function (type) {
-				return type === objectToCheck.type;
+			doesNotInteractWith = typeof _this.noInteraction.find(function (id) {
+				return id === objectToCheck.id;
 			}) !== 'undefined';
 		}
 
 		if (typeof _this.ignoreObjectList.find(function (ignoredObject) {
 			return ignoredObject === objectToCheck;
 		}) === 'undefined' && !doesNotInteractWith && objectToCheck !== _this && objectToCheck.stage && objectToCheck.interacts) {
-
 			if (!!(collisionCheck = checkCollision(boundingBox, objectToCheck.boundingBox, _this.velocity.dX, _this.velocity.dY))) onCollision(_this, boundingBox.x, boundingBox.y, collisionCheck.x, collisionCheck.y, objectToCheck);
 		}
 	});
@@ -21465,23 +21508,17 @@ function initSprites() {
 				frameData.push(frames[key]);
 			}
 		}
-		sprite = Sprite.getSprite(_this2.type + '-' + spriteLabel, spriteSheetPath, frameData);
+		sprite = Sprite.getSprite(_this2.id + '-' + spriteLabel, spriteSheetPath, frameData);
 		sprite.x = _this2.x;
 		sprite.y = _this2.y;
 		sprite.z = _this2.z;
 		sprites[spriteLabel] = sprite;
 	});
-	if (!!this.display) {
-		sprite = sprites[this.display];
-		this.boundingBox = sprite.boundingBox;
-		if (!!this.stage) {
-			sprite.stage = true;
-			if (!this.moveCycle) {
-				cycle.addUpdate(this.cycleMove);
-				this.moveCycle = true;
-			}
-		}
+	if (typeof this.display === 'undefined') {
+		this.display = this.spriteLabels[0];
 	}
+	sprite = sprites[this.display];
+	if (this.stage) sprite.stage = true;
 }
 
 function ignoreObject(displayObject) {
@@ -21497,9 +21534,9 @@ if (config.dev) {
 		return displayObjects.length;
 	};
 	window.getDisplayObjects = DisplayObject.getDisplayObjects;
-	window.updateDisplayObject = function (type, properties) {
+	window.updateDisplayObject = function (id, properties) {
 		var object = displayObjects.find(function (displayObject) {
-			if (displayObject.type === type) return true;
+			if (displayObject.id === id) return true;
 			return false;
 		});
 		if (!!object) {
@@ -21514,7 +21551,7 @@ if (config.dev) {
 		    properties = null,
 		    property = null;
 		displayObjects.forEach(function (displayObject) {
-			configObject = configDisplayObjects[displayObject.type];
+			configObject = configDisplayObjects[displayObject.id];
 			properties = configObject.properties;
 			for (property in properties) {
 				displayObject[property] = properties[property];
@@ -21525,15 +21562,357 @@ if (config.dev) {
 
 module.exports = DisplayObject;
 
-},{"../config":171,"../cycle":173,"../geom":182,"./sprite":180}],178:[function(require,module,exports){
+},{"../config":171,"../cycle":173,"../geom":186,"./sprite":184}],178:[function(require,module,exports){
+'use strict';
+
+var Enemy = require('./enemy'),
+    Character = require('../character'),
+    cycle = require('../../cycle'),
+    geom = require('../../geom'),
+    config = require('../../config');
+
+function Devil() {
+	Enemy.call(this);
+}
+
+Devil.prototype = Object.create(Enemy.prototype, {
+	'readyToJump': {
+		get: function get() {
+			if (typeof this._readyToJump === 'undefined') return this._readyToJump = true;
+			return this._readyToJump;
+		},
+		set: function set(readyToJump) {
+			this._readyToJump = readyToJump;
+		}
+	},
+	'jump': {
+		value: function value(direction) {
+			this.direction = direction;
+
+			var directionLabel = this.directionLabel;
+
+			if (directionLabel === config.UP) {
+				this.display = '$up_walking';
+			} else if (directionLabel === config.DOWN) {
+				this.display = '$down_walking';
+			} else if (directionLabel === config.LEFT) {
+				this.display = '$left_walking';
+			} else if (directionLabel === config.RIGHT) {
+				this.display = '$right_walking';
+			} else if (directionLabel === config.UP_LEFT) {
+				this.display = '$upleft_walking';
+			} else if (directionLabel === config.UP_RIGHT) {
+				this.display = '$upright_walking';
+			} else if (directionLabel === config.DOWN_LEFT) {
+				this.display = '$downleft_walking';
+			} else if (directionLabel === config.DOWN_RIGHT) {
+				this.display = '$downright_walking';
+			}
+
+			this.applyForce({
+				direction: direction,
+				speed: this.speed
+			});
+		}
+	},
+	'stop': {
+		value: function value() {
+			this.display = this.display.replace('walking', 'standing');
+			this.velocity.speed = 0;
+			this.velocity.dX = 0;
+			this.velocity.dY = 0;
+		}
+	},
+	'moveTime': {
+		get: function get() {
+			return this._moveTime;
+		},
+		set: function set(moveTime) {
+			this._moveTime = moveTime;
+		}
+	},
+	'movement': {
+		value: function value() {
+			var counter = cycle.getCounter();
+			this.jumpCounter = this.jumpCounter || 0;
+			if (this.jumpCounter >= this.moveTime + Math.ceil(Math.random() * this.moveTime * 2)) {
+				var direction = geom.getAngle(this.x, this.y, this.closestPlayer.x, this.closestPlayer.y);
+				if (this.readyToJump) {
+					var v = this.velocity;
+					if (!!this.closestPlayer) {
+						this.jump(direction);
+					} else {
+						if (v.dX !== 0 || v.dY !== 0) this.stop();
+					}
+					this.readyToJump = false;
+				} else {
+					this.stop();
+					this.readyToJump = true;
+				}
+				this.jumpCounter = 0;
+			} else {
+				this.jumpCounter++;
+			}
+		}
+	},
+	'onCollision': {
+		value: function value(collidedObject) {
+			/*let v = this._character.velocity,
+   	ran = 0,
+   	angle = 0;
+   if(v.dX === 0 && v.dY !== 0) {
+   	if(Math.round(Math.random()) === 0)
+   		angle = Math.PI;
+   	else
+   		angle = 0;
+   } else if(v.dY === 0 && v.dX !== 0) {
+   	if(Math.round(Math.random()) === 0)
+   		angle = 3 * Math.PI / 2;
+   	else
+   		angle = Math.PI / 2;
+   } else {
+   	let ran = Math.round(Math.random() * 3);
+   	if(ran === 0) {
+   		angle = 0;
+   	} else if(ran === 1) {
+   		angle = Math.PI / 2;
+   	} else if(ran === 2) {
+   		angle = Math.PI;
+   	} else {
+   		angle = 3 * Math.PI / 2;
+   	}
+   }
+   this._character.walk(1, angle);*/
+			Character.prototype.onCollision.call(this, collidedObject);
+		}
+	}
+});
+
+module.exports = Devil;
+
+},{"../../config":171,"../../cycle":173,"../../geom":186,"../character":176,"./enemy":179}],179:[function(require,module,exports){
+'use strict';
+
+var Character = require('../character'),
+    cycle = require('../../cycle'),
+    config = require('../../config'),
+    geom = require('../../geom');
+
+function Enemy() {
+	Character.call(this);
+
+	this.cycleActions = this.actions.bind(this);
+	cycle.addUpdate(this.cycleActions);
+}
+
+Enemy.prototype = Object.create(Character.prototype, {
+	'player1': {
+		get: function get() {
+			if (typeof this._player1 === 'undefined') return this._player1 = config.player1;
+			return this._player1;
+		}
+	},
+	'player2': {
+		get: function get() {
+			if (typeof this._player2 === 'undefined') return this._player2 = config.player2;
+			return this._player2;
+		}
+	},
+	'actionsCounter': {
+		get: function get() {
+			if (typeof this._actionsCounter === 'undefined') return this._actionsCounter = 0;
+			return this._actionsCounter;
+		},
+		set: function set(actionsCounter) {
+			this._actionsCounter = actionsCounter;
+		}
+	},
+	'actions': {
+		value: function value() {
+			if (this.actionsCounter > this.actionSpeed) {
+				this.actionsCounter = 0;
+				this.distancePlayer1 = this.getDistanceToPlayer(this.player1);
+				this.distancePlayer2 = this.getDistanceToPlayer(this.player2);
+				this.closestPlayer = this.getClosestPlayer();
+				if (!!this.movement) {
+					this.movement();
+				}
+				if (!!this.fire && !!this.firearm) {
+					this.fire();
+				}
+			} else {
+				this.actionsCounter++;
+			}
+		}
+	},
+	'getDistanceToPlayer': {
+		value: function value(player) {
+			if (!!player && player.stage) {
+				return geom.getDistance(this.x, this.y, player.x, player.y);
+			} else {
+				return false;
+			}
+		}
+	},
+	'getClosestPlayer': {
+		value: function value() {
+			if (!this.distancePlayer1 && !this.distancePlayer2) {
+				return false;
+			} else if (this.distancePlayer1 && !this.distancePlayer2) {
+				return this.player1;
+			} else if (!this.distancePlayer1 && this.distancePlayer2) {
+				return this.player2;
+			} else {
+				return this.distancePlayer2 < this.distancePlayer1 ? this.player2 : this.player1;
+			}
+		}
+	},
+	'destroy': {
+		value: function value() {
+			cycle.removeUpdate(this.cycleActions);
+			Character.prototype.destroy.call(this);
+		}
+	}
+});
+
+module.exports = Enemy;
+
+},{"../../config":171,"../../cycle":173,"../../geom":186,"../character":176}],180:[function(require,module,exports){
+'use strict';
+
+var Enemy = require('./enemy'),
+    Character = require('../character'),
+    cycle = require('../../cycle'),
+    geom = require('../../geom'),
+    config = require('../../config');
+
+function Grunt() {
+	Enemy.call(this);
+	this.fireCounter = 0;
+}
+
+Grunt.prototype = Object.create(Enemy.prototype, {
+	'movement': {
+		value: function value() {
+			var velocity = this.velocity;
+			if (!!this.closestPlayer) {
+				var direction = geom.getAngle(this.x, this.y, this.closestPlayer.x, this.closestPlayer.y);
+				this.walk(direction);
+			} else if (velocity.dX !== 0 || velocity.dY !== 0) {
+				this.stop();
+			}
+		}
+	},
+	'actions': {
+		value: function value() {
+			if (this.actionsCounter > this.actionSpeed + Math.ceil(Math.random() * 5)) {
+				this.actionsCounter = 0;
+				this.distancePlayer1 = this.getDistanceToPlayer(this.player1);
+				this.distancePlayer2 = this.getDistanceToPlayer(this.player2);
+				this.closestPlayer = this.getClosestPlayer();
+				this.movement();
+				if (this.fireCounter > this.fireSpeed + Math.ceil(Math.random() * 5)) {
+					this.fire();
+					this.fireCounter = 0;
+				} else {
+					this.fireCounter++;
+				}
+			} else {
+				this.actionsCounter++;
+			}
+		}
+	},
+	'fire': {
+		value: function value() {
+			if (!!this.closestPlayer) {
+				//let direction = geom.getAngle(this.x, this.y, this.closestPlayer.x, this.closestPlayer.y);
+				this.firearm.fire(this);
+			}
+		}
+	},
+	'walk': {
+		value: function value(direction) {
+			this.direction = direction;
+
+			var directionLabel = this.directionLabel;
+
+			if (directionLabel === config.UP) {
+				this.display = '$right_standing';
+			} else if (directionLabel === config.DOWN) {
+				this.display = '$left_standing';
+			} else if (directionLabel === config.LEFT) {
+				this.display = '$left_standing';
+			} else if (directionLabel === config.RIGHT) {
+				this.display = '$right_standing';
+			} else if (directionLabel === config.UP_LEFT) {
+				this.display = '$left_standing';
+			} else if (directionLabel === config.UP_RIGHT) {
+				this.display = '$right_standing';
+			} else if (directionLabel === config.DOWN_LEFT) {
+				this.display = '$left_standing';
+			} else if (directionLabel === config.DOWN_RIGHT) {
+				this.display = '$right_standing';
+			}
+
+			this.applyForce({
+				direction: direction,
+				speed: this.speed
+			});
+		}
+	},
+	'stop': {
+		value: function value() {
+			this.display = this.display.replace('standing', 'standing');
+			this.velocity.speed = 0;
+			this.velocity.dX = 0;
+			this.velocity.dY = 0;
+		}
+	},
+	'onCollision': {
+		value: function value(collidedObject) {
+			/*let v = this.velocity,
+   	ran = 0,
+   	angle = 0;
+   if(v.dX === 0 && v.dY !== 0) {
+   	if(Math.round(Math.random()) === 0)
+   		angle = Math.PI;
+   	else
+   		angle = 0;
+   } else if(v.dY === 0 && v.dX !== 0) {
+   	if(Math.round(Math.random()) === 0)
+   		angle = 3 * Math.PI / 2;
+   	else
+   		angle = Math.PI / 2;
+   } else {
+   	let ran = Math.round(Math.random() * 3);
+   	if(ran === 0) {
+   		angle = 0;
+   	} else if(ran === 1) {
+   		angle = Math.PI / 2;
+   	} else if(ran === 2) {
+   		angle = Math.PI;
+   	} else {
+   		angle = 3 * Math.PI / 2;
+   	}
+   }
+   this.walk(1, angle);*/
+			Character.prototype.onCollision.call(this, collidedObject);
+		}
+	}
+});
+
+module.exports = Grunt;
+
+},{"../../config":171,"../../cycle":173,"../../geom":186,"../character":176,"./enemy":179}],181:[function(require,module,exports){
 'use strict';
 
 var DisplayObject = require('./displayObject'),
-    utils = require('./utils'),
-    cycle = require('../cycle');
+    Ammunition = require('./ammunition'),
+    cycle = require('../cycle'),
+    config = require('../config');
 
 function Firearm() {
-	DisplayObject.prototype.constructor.call(this);
+	DisplayObject.call(this);
 }
 
 Firearm.prototype = Object.create(DisplayObject.prototype, {
@@ -21557,18 +21936,24 @@ Firearm.prototype = Object.create(DisplayObject.prototype, {
 });
 
 function fire(character) {
-	var point = this.getEdgePointFromDirection(character.direction);
-	var ammunition = utils.createDisplayObject(this.ammunition, {
-		origin: character,
-		direction: character.direction
-	});
+	var point = this.getEdgePointFromDirection(character.direction),
+	    ammunitionData = config.displayObjects[this.ammunition],
+	    property = null,
+	    ammunition = new Ammunition();
+
+	for (property in ammunitionData) {
+		ammunition[property] = ammunitionData[property];
+	}
+	ammunition.origin = character;
+	ammunition.direction = character.direction;
 	ammunition.x = point.x;
 	ammunition.y = point.y;
 	ammunition.ignoreObject(character);
 	character.ignoreObject(ammunition);
+
 	var friendsString = character.friends.join(',');
 	DisplayObject.getDisplayObjects().forEach(function (displayObject) {
-		if (friendsString.match(new RegExp(displayObject.type.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')))) {
+		if (friendsString.match(new RegExp(displayObject.id.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')))) {
 			ammunition.ignoreObject(displayObject);
 			displayObject.ignoreObject(ammunition);
 		}
@@ -21595,7 +21980,69 @@ function endBlastAnimation() {
 
 module.exports = Firearm;
 
-},{"../cycle":173,"./displayObject":177,"./utils":181}],179:[function(require,module,exports){
+},{"../config":171,"../cycle":173,"./ammunition":175,"./displayObject":177}],182:[function(require,module,exports){
+'use strict';
+
+var config = require('../config'),
+    Character = require('./character'),
+    DisplayObject = require('./displayObject'),
+    aiFunctions = require('../ai'),
+    cycle = require('../cycle'),
+    utils = require('./utils');
+
+function Player() {
+	Character.call(this);
+}
+
+Player.prototype = Object.create(Character.prototype, {
+	'walk': {
+		value: walk
+	}
+});
+
+function walk(power, direction) {
+
+	this.direction = direction;
+
+	var directionLabel = this.directionLabel;
+
+	if (directionLabel === config.UP) {
+		this.display = '$up_walking';
+	} else if (directionLabel === config.DOWN) {
+		this.display = '$down_walking';
+	} else if (directionLabel === config.LEFT) {
+		this.display = '$left_walking';
+	} else if (directionLabel === config.RIGHT) {
+		this.display = '$right_walking';
+	} else if (directionLabel === config.UP_LEFT) {
+		this.display = '$upleft_walking';
+	} else if (directionLabel === config.UP_RIGHT) {
+		this.display = '$upright_walking';
+	} else if (directionLabel === config.DOWN_LEFT) {
+		this.display = '$downleft_walking';
+	} else if (directionLabel === config.DOWN_RIGHT) {
+		this.display = '$downright_walking';
+	}
+
+	if (power <= 0) {
+		this.display = this.display.replace('walking', 'standing');
+		this.velocity = {
+			dX: 0,
+			dY: 0,
+			direction: direction,
+			speed: 0
+		};
+	} else {
+		this.applyForce({
+			direction: direction,
+			speed: this.speed * power
+		});
+	}
+}
+
+module.exports = Player;
+
+},{"../ai":168,"../config":171,"../cycle":173,"./character":176,"./displayObject":177,"./utils":185}],183:[function(require,module,exports){
 'use strict';
 
 var Sprite = require('./sprite'),
@@ -21605,7 +22052,7 @@ var Sprite = require('./sprite'),
     geom = require('../geom');
 
 function Projectile() {
-	DisplayObject.prototype.constructor.call(this);
+	DisplayObject.call(this);
 }
 
 Projectile.prototype = Object.create(DisplayObject.prototype, {
@@ -21667,7 +22114,7 @@ Projectile.prototype = Object.create(DisplayObject.prototype, {
 
 module.exports = Projectile;
 
-},{"../config":171,"../cycle":173,"../geom":182,"./displayObject":177,"./sprite":180}],180:[function(require,module,exports){
+},{"../config":171,"../cycle":173,"../geom":186,"./displayObject":177,"./sprite":184}],184:[function(require,module,exports){
 'use strict';
 
 var config = require('../config'),
@@ -21675,7 +22122,6 @@ var config = require('../config'),
     resources = require('../resources'),
     id = require('../id'),
     socket = require('../socket'),
-    hosting = false,
     sprites = new Array(),
     spritesToUpdate = new Array(),
     availableSprites = Object.create(null);
@@ -21711,10 +22157,9 @@ Object.defineProperties(Sprite.prototype, {
 			return this._x = 0;
 		},
 		set: function set(x) {
-			this._x = x;
-			var boundingBox = this.boundingBox;
-			this.canvas.style.transform = 'translate(' + boundingBox.x + 'px, ' + boundingBox.y + 'px)';
-			if (hosting && this.stage) {
+			this._x = x - this.width / 2;
+			this.canvas.style.transform = 'translate(' + this._x + 'px, ' + this._y + 'px)';
+			if (this.hosting && this.stage) {
 				this.addUpdate();
 			}
 		}
@@ -21725,10 +22170,9 @@ Object.defineProperties(Sprite.prototype, {
 			return this._y = 0;
 		},
 		set: function set(y) {
-			this._y = y;
-			var boundingBox = this.boundingBox;
-			this.canvas.style.transform = 'translate(' + boundingBox.x + 'px, ' + boundingBox.y + 'px)';
-			if (hosting && this.stage) {
+			this._y = y - this.height / 2;
+			this.canvas.style.transform = 'translate(' + this._x + 'px, ' + this._y + 'px)';
+			if (this.hosting && this.stage) {
 				this.addUpdate();
 			}
 		}
@@ -21741,7 +22185,7 @@ Object.defineProperties(Sprite.prototype, {
 		set: function set(z) {
 			this._z = z;
 			this.canvas.style.zIndex = z;
-			if (hosting && this.stage) {
+			if (this.hosting && this.stage) {
 				this.addUpdate();
 			}
 		}
@@ -21757,19 +22201,9 @@ Object.defineProperties(Sprite.prototype, {
 			if (stage) {
 				this.cycleStart = cycle.getCounter();
 			}
-			if (hosting) {
+			if (this.hosting) {
 				this.addUpdate();
 			}
-		}
-	},
-	'boundingBox': {
-		get: function get() {
-			return {
-				x: this.x - this.width / 2,
-				y: this.y - this.height / 2,
-				width: this.width,
-				height: this.height
-			};
 		}
 	},
 	'frame': {
@@ -21833,7 +22267,7 @@ Object.defineProperties(Sprite.prototype, {
 				availableSprites[this.label] = availableSprites[this.label] || new Array();
 				availableSprites[this.label].push(this);
 				this.destroyed = true;
-				if (hosting) {
+				if (this.hosting) {
 					this.addUpdate();
 				}
 			}
@@ -21854,6 +22288,12 @@ Object.defineProperties(Sprite.prototype, {
 		},
 		set: function set(c) {
 			this._cycleStart = c;
+		}
+	},
+	'hosting': {
+		get: function get() {
+			if (typeof this._hosting === 'undefined') return this._hosting = config.hosting;
+			return this._hosting;
 		}
 	}
 });
@@ -21896,11 +22336,6 @@ Sprite.draw = function () {
 	});
 };
 
-Sprite.setHosting = function (isHosting) {
-	hosting = isHosting;
-	if (hosting) cycle.addServer(sendUpdate);else socket.on('sprite update', receiveUpdate);
-};
-
 function addUpdate() {
 	var _this = this;
 
@@ -21927,8 +22362,7 @@ function addUpdate() {
 	}
 }
 
-function receiveUpdate(serverSprites) {
-
+Sprite.receiveUpdate = function (serverSprites) {
 	var sprite = null,
 	    property = void 0;
 	serverSprites.forEach(function (spriteData) {
@@ -21944,12 +22378,12 @@ function receiveUpdate(serverSprites) {
 			}
 		}
 	});
-}
+};
 
-function sendUpdate() {
+Sprite.sendUpdate = function () {
 	if (spritesToUpdate.length > 0) socket.emit('sprite update', spritesToUpdate);
 	spritesToUpdate = new Array();
-}
+};
 
 if (config.dev) {
 	window.getSpriteTotal = function () {
@@ -21959,7 +22393,7 @@ if (config.dev) {
 
 module.exports = Sprite;
 
-},{"../config":171,"../cycle":173,"../id":183,"../resources":186,"../socket":187}],181:[function(require,module,exports){
+},{"../config":171,"../cycle":173,"../id":187,"../resources":190,"../socket":191}],185:[function(require,module,exports){
 'use strict';
 
 var Character = void 0,
@@ -22008,7 +22442,7 @@ module.exports = {
 	}
 };
 
-},{"../config":171,"./ammunition":175,"./character":176,"./displayObject":177,"./firearm":178,"./projectile":179}],182:[function(require,module,exports){
+},{"../config":171,"./ammunition":175,"./character":176,"./displayObject":177,"./firearm":181,"./projectile":183}],186:[function(require,module,exports){
 'use strict';
 
 var pi = Math.PI,
@@ -22153,7 +22587,7 @@ module.exports = {
 	}
 };
 
-},{}],183:[function(require,module,exports){
+},{}],187:[function(require,module,exports){
 "use strict";
 
 var S4 = function S4() {
@@ -22169,7 +22603,7 @@ module.exports = {
 	}
 };
 
-},{}],184:[function(require,module,exports){
+},{}],188:[function(require,module,exports){
 'use strict';
 
 (function () {
@@ -22177,7 +22611,7 @@ module.exports = {
 	require('./app');
 })();
 
-},{"./app":170}],185:[function(require,module,exports){
+},{"./app":170}],189:[function(require,module,exports){
 'use strict';
 
 var config = require('./config'),
@@ -22304,7 +22738,7 @@ module.exports = {
 	}
 };
 
-},{"./config":171,"./cycle":173,"./geom":182}],186:[function(require,module,exports){
+},{"./config":171,"./cycle":173,"./geom":186}],190:[function(require,module,exports){
 "use strict";
 
 var resourceCache = {};
@@ -22366,7 +22800,7 @@ module.exports = {
 	isReady: isReady
 };
 
-},{}],187:[function(require,module,exports){
+},{}],191:[function(require,module,exports){
 "use strict";
 
 var socket = io(),
@@ -22383,4 +22817,4 @@ module.exports = {
 	}
 };
 
-},{}]},{},[184]);
+},{}]},{},[188]);

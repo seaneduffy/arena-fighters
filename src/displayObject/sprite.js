@@ -5,7 +5,6 @@ let config = require('../config'),
 	resources = require('../resources'),
 	id = require('../id'),
 	socket = require('../socket'),
-	hosting = false,
 	sprites = new Array(),
 	spritesToUpdate = new Array(),
 	availableSprites = Object.create(null);
@@ -42,10 +41,9 @@ Object.defineProperties(Sprite.prototype, {
 			return this._x = 0;
 		},
 		set: function(x){
-			this._x = x;
-			let boundingBox = this.boundingBox;
-			this.canvas.style.transform = 'translate('+boundingBox.x+'px, '+boundingBox.y+'px)';
-			if(hosting && this.stage) {
+			this._x = x - this.width / 2;
+			this.canvas.style.transform = 'translate(' + this._x + 'px, ' + this._y + 'px)';
+			if(this.hosting && this.stage) {
 				this.addUpdate();
 			}
 		}
@@ -57,10 +55,9 @@ Object.defineProperties(Sprite.prototype, {
 			return this._y = 0;
 		},
 		set: function(y){
-			this._y = y;
-			let boundingBox = this.boundingBox;
-			this.canvas.style.transform = 'translate('+boundingBox.x+'px, '+boundingBox.y+'px)';
-			if(hosting && this.stage) {
+			this._y = y - this.height / 2;
+			this.canvas.style.transform = 'translate(' + this._x + 'px, ' + this._y + 'px)';
+			if(this.hosting && this.stage) {
 				this.addUpdate();
 			}
 		}
@@ -74,7 +71,7 @@ Object.defineProperties(Sprite.prototype, {
 		set: function(z){
 			this._z = z;
 			this.canvas.style.zIndex = z;
-			if(hosting && this.stage) {
+			if(this.hosting && this.stage) {
 				this.addUpdate();
 			}
 		}
@@ -91,18 +88,8 @@ Object.defineProperties(Sprite.prototype, {
 			if(stage) {
 				this.cycleStart = cycle.getCounter();
 			}
-			if(hosting) {
+			if(this.hosting) {
 				this.addUpdate();
-			}
-		}
-	},
-	'boundingBox': {
-		get: function() {
-			return {
-				x: this.x - this.width / 2,
-				y: this.y - this.height / 2,
-				width: this.width,
-				height: this.height
 			}
 		}
 	},
@@ -180,7 +167,7 @@ Object.defineProperties(Sprite.prototype, {
 				availableSprites[this.label] = availableSprites[this.label] || new Array();
 				availableSprites[this.label].push(this);
 				this.destroyed = true;
-				if(hosting) {
+				if(this.hosting) {
 					this.addUpdate();
 				}
 			}
@@ -204,6 +191,13 @@ Object.defineProperties(Sprite.prototype, {
 		}, 
 		set: function(c) {
 			this._cycleStart = c;
+		}
+	},
+	'hosting': {
+		get: function() {
+			if(typeof this._hosting === 'undefined')
+				return this._hosting = config.hosting;
+			return this._hosting;
 		}
 	}
 });
@@ -247,14 +241,6 @@ Sprite.draw = function() {
 	} );
 }
 
-Sprite.setHosting = function(isHosting) {
-	hosting = isHosting;
-	if(hosting)
-		cycle.addServer(sendUpdate);
-	else 
-		socket.on('sprite update', receiveUpdate);
-}
-
 function addUpdate() {
 	let updateObj = spritesToUpdate.find((obj)=>{
 		return (obj.id === this.id);
@@ -278,8 +264,7 @@ function addUpdate() {
 	}
 }
 
-function receiveUpdate(serverSprites) {
-	
+Sprite.receiveUpdate = function(serverSprites) {
 	let sprite = null, property;
 	serverSprites.forEach( spriteData => {
 		sprite = sprites.find( s => {
@@ -300,7 +285,7 @@ function receiveUpdate(serverSprites) {
 	});
 }
 
-function sendUpdate() {
+Sprite.sendUpdate = function() {
 	if(spritesToUpdate.length > 0)
 		socket.emit('sprite update', spritesToUpdate);
 	spritesToUpdate = new Array();

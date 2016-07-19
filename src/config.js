@@ -14,7 +14,7 @@ let config = {
 	"CENTER": -1,
 	"dev": true,
 	"console": true,
-	"dev1": true,
+	"dev1": false,
 	"dev2": false
 }
 

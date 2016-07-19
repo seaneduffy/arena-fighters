@@ -1,7 +1,7 @@
 {"levels": [
 	[
 		{
-			"type": "player1",
+			"id": "player1",
 			"properties": {
 				"x": "config.stageWidth / 3",
 				"y": "config.stageCenterY",
@@ -10,7 +10,7 @@
 			}
 		},
 		{
-			"type": "player2",
+			"id": "player2",
 			"properties": {
 				"x": "config.stageWidth * 2 / 3",
 				"y": "config.stageCenterY",
@@ -19,37 +19,37 @@
 			}
 		},
 		{
-			"type": "background1"
+			"id": "background1"
 		},
 		{
-			"type": "grunt",
+			"id": "grunt",
 			"properties": {
 				"x": "config.stageCenterX",
 				"y": "-200",
-				"display": "$down_standing",
+				"display": "$right_standing",
 				"direction": "config.DOWN"
 			}
 		},
 		{
-			"type": "grunt",
+			"id": "grunt",
 			"properties": {
 				"x": "config.stageWidth + 200",
 				"y": "config.stageCenterY",
-				"display": "$down_standing",
+				"display": "$right_standing",
 				"direction": "config.DOWN"
 			}
 		},
 		{
-			"type": "grunt",
+			"id": "grunt",
 			"properties": {
 				"x": "config.stageCenterX",
 				"y": "-500",
-				"display": "$down_standing",
+				"display": "$right_standing",
 				"direction": "config.DOWN"
 			}
 		},
 		{
-			"type": "devil",
+			"id": "devil",
 			"properties": {
 				"x": "-200",
 				"y": "config.stageCenterY",
@@ -58,7 +58,7 @@
 			}
 		},
 		{
-			"type": "devil",
+			"id": "devil",
 			"properties": {
 				"x": "-400",
 				"y": "config.stageCenterY",

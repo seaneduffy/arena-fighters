@@ -2,59 +2,57 @@
 	"joystickMin": 30,
 	"joystickMax": 120,
 	"wallPadding": 50,
-	"maxWidth": 2000,
-	"maxHeight": "config.maxWidth / 1.111111",
+	"stageWidth": 2000,
+	"stageHeight": "config.stageWidth / 1.111111",
 	"resolutions": {
 		"d1": {
-			"width": "config.maxWidth * .1",
-			"height": "config.maxHeight * .1"
+			"width": "config.stageWidth * .1",
+			"height": "config.stageHeight * .1"
 		},
 		"d2": {
-			"width": "config.maxWidth * .2",
-			"height": "config.maxHeight * .2"
+			"width": "config.stageWidth * .2",
+			"height": "config.stageHeight * .2"
 		},
 		"d3": {
-			"width": "config.maxWidth * .3",
-			"height": "config.maxHeight * .3"
+			"width": "config.stageWidth * .3",
+			"height": "config.stageHeight * .3"
 		},
 		"d4": {
-			"width": "config.maxWidth * .4",
-			"height": "config.maxHeight * .4"
+			"width": "config.stageWidth * .4",
+			"height": "config.stageHeight * .4"
 		},
 		"d5": {
-			"width": "config.maxWidth * .5",
-			"height": "config.maxHeight * .5" 
+			"width": "config.stageWidth * .5",
+			"height": "config.stageHeight * .5" 
 		},
 		"d6": {
-			"width": "config.maxWidth * .6",
-			"height": "config.maxHeight * .6" 
+			"width": "config.stageWidth * .6",
+			"height": "config.stageHeight * .6" 
 		},
 		"d7": {
-			"width": "config.maxWidth * .7",
-			"height": "config.maxHeight * .7" 
+			"width": "config.stageWidth * .7",
+			"height": "config.stageHeight * .7" 
 		},
 		"d8": {
-			"width": "config.maxWidth * .8",
-			"height": "config.maxHeight * .8" 
+			"width": "config.stageWidth * .8",
+			"height": "config.stageHeight * .8" 
 		},
 		"d9": {
-			"width": "config.maxWidth * .9",
-			"height": "config.maxHeight * .9" 
+			"width": "config.stageWidth * .9",
+			"height": "config.stageHeight * .9" 
 		},
 		"d10": {
-			"width": "config.maxWidth",
-			"height": "config.maxHeight" 
+			"width": "config.stageWidth",
+			"height": "config.stageHeight" 
 		}
 	},
 	"frameRate": 1,
-	"resValues": [
+	"resValues": [],
+	"distanceValues": [
+		"width",
+		"height",
 		"x",
 		"y",
-		"velocityModifierAmplitude",
-		"width",
-		"height"
-	],
-	"distanceValues": [
 		"speed",
 		"velocityModifierAmplitude"
 	],
@@ -63,8 +61,9 @@
 		"velocityModifierAmplitude": 3
 	},
 	"displayObjects": {
-		"player1": {
-			"properties": {
+		"player": [
+			{
+				"id": "player1",
 				"spriteLabels": [
 					"$up_standing",
 					"$up_walking",
@@ -90,7 +89,7 @@
 				"friends": [
 					"player2"
 				],
-				"firearm": "pistol",
+				"firearmType": "pistol",
 				"firearmOffset": {
 					"$up_standing": {"x":-3,"y":-3},
 					"$up_walking": {"x":-3,"y":-3},
@@ -108,12 +107,13 @@
 					"$left_walking": {"x":-15,"y":-4},
 					"$right_standing": {"x":5,"y":-4},
 					"$right_walking": {"x":5,"y":-4}
+				},
+				"boundingBox": {
+					"x": 0, "y": 0, "width": 60, "height": 154
 				}
 			},
-			"className": "Character"
-		},
-		"player2": {
-			"properties": {
+			{
+				"id": "player2",
 				"spriteLabels": [
 					"$up_standing",
 					"$up_walking",
@@ -139,7 +139,7 @@
 				"friends": [
 					"player1"
 				],
-				"firearm": "pistol",
+				"firearmType": "pistol",
 				"firearmOffset": {
 					"$up_standing": {"x":-3,"y":-3},
 					"$up_walking": {"x":-3,"y":-3},
@@ -157,46 +157,108 @@
 					"$left_walking": {"x":-15,"y":-4},
 					"$right_standing": {"x":5,"y":-4},
 					"$right_walking": {"x":5,"y":-4}
+				},
+				"boundingBox": {
+					"x": 0, "y": 0, "width": 60, "height": 154
 				}
-			},
-			"className": "Character"
-		},
-		"grunt": {
-			"properties": {
+			}
+		],
+		"firearm": [
+			{
+				"id": "pistol",
 				"spriteLabels": [
-					"$up_standing",
-					"$up_walking",
-					"$upleft_standing",
-					"$upleft_walking",
-					"$upright_standing",
-					"$upright_walking",
-					"$down_standing",
-					"$down_walking",
-					"$downleft_standing",
-					"$downleft_walking",
-					"$downright_standing",
-					"$downright_walking",
+					"$up_off",
+					"$up_firing",
+					"$upright_off",
+					"$upright_firing",
+					"$upleft_off",
+					"$upleft_firing",
+					"$right_off",
+					"$right_firing",
+					"$left_off",
+					"$left_firing",
+					"$down_off",
+					"$down_firing",
+					"$downright_off",
+					"$downright_firing",
+					"$downleft_off",
+					"$downleft_firing"
+				],
+				"ammunition": "bullet"
+			}
+		],
+		"ammunition": [
+			{
+				"id": "bullet",
+				"display": "default",
+				"speed": 4,
+				"z": 8,
+				"interacts": true,
+				"impact": 1,
+				"noInteraction": [
+					"bullet"
+				],
+				"image": "bullet"
+			},
+			{
+				"id": "wave",
+				"display": "default",
+				"speed": 3,
+				"z": 8,
+				"interacts": true,
+				"impact": 3,
+				"noInteraction": [
+					"bullet",
+					"wave"
+				],
+				"image": "bullet",
+				"velocityModifierAmplitude": 2,
+				"velocityModifierFrequency": 40
+			}
+		],
+		"enemy": [
+			{
+				"id": "grunt",
+				"spriteLabels": [
 					"$left_standing",
-					"$left_walking",
-					"$right_standing",
-					"$right_walking"
+					"$right_standing"
 				],
 				"speed": 1,
-				"actionSpeed": 20,
+				"actionSpeed": 50,
 				"z": 6,
 				"ai": "grunt",
 				"interacts": true,
 				"health": 1,
-				"melee": 1,
 				"friends": [
 					"grunt",
 					"devil"
-				]
+				],
+				"boundingBox": {
+					"x": 0, "y": 0, "width": 70, "height": 170
+				},
+				"firearmType": "pistol",
+				"firearmOffset": {
+					"$up_standing": {"x":-3,"y":-3},
+					"$up_walking": {"x":-3,"y":-3},
+					"$upleft_standing": {"x":1,"y":-3},
+					"$upleft_walking": {"x":1,"y":-3},
+					"$upright_standing": {"x":3,"y":-3},
+					"$upright_walking": {"x":3,"y":-3},
+					"$down_standing": {"x":-1,"y":7},
+					"$down_walking": {"x":-1,"y":7},
+					"$downleft_standing": {"x":0,"y":2},
+					"$downleft_walking": {"x":0,"y":2},
+					"$downright_standing": {"x":3,"y":4},
+					"$downright_walking": {"x":3,"y":4},
+					"$left_standing": {"x":-15,"y":-4},
+					"$left_walking": {"x":-15,"y":-4},
+					"$right_standing": {"x":5,"y":-4},
+					"$right_walking": {"x":5,"y":-4}
+				},
+				"fireSpeed": 1
 			},
-			"className": "Character"
-		},
-		"devil": {
-			"properties": {
+			{
+				"id": "devil",
 				"spriteLabels": [
 					"$up_standing",
 					"$up_walking",
@@ -226,67 +288,15 @@
 				"friends": [
 					"grunt",
 					"devil"
-				]
-			},
-			"className": "Character"
-		},
-		"bullet": {
-			"properties": {
-				"display": "default",
-				"speed": 4,
-				"z": 8,
-				"interacts": true,
-				"impact": 1,
-				"noInteraction": [
-					"bullet"
 				],
-				"image": "bullet"
-			},
-			"className": "Ammunition"
-		},
-		"wave": {
-			"properties": {
-				"display": "default",
-				"speed": 3,
-				"z": 8,
-				"interacts": true,
-				"impact": 3,
-				"noInteraction": [
-					"bullet",
-					"wave"
-				],
-				"image": "bullet",
-				"velocityModifierAmplitude": 2,
-				"velocityModifierFrequency": 40
-			},
-			"className": "Ammunition"
-		},
-		"pistol": {
-			"properties": {
-				"spriteLabels": [
-					"$up_off",
-					"$up_firing",
-					"$upright_off",
-					"$upright_firing",
-					"$upleft_off",
-					"$upleft_firing",
-					"$right_off",
-					"$right_firing",
-					"$left_off",
-					"$left_firing",
-					"$down_off",
-					"$down_firing",
-					"$downright_off",
-					"$downright_firing",
-					"$downleft_off",
-					"$downleft_firing"
-				],
-				"ammunition": "bullet"
-			},
-			"className": "Firearm"
-		},
-		"background1": {
-			"properties": {
+				"boundingBox": {
+					"x": 0, "y": 0, "width": 54, "height": 148
+				}
+			}
+		],
+		"displayObject": [
+			{
+				"id": "background1",
 				"display": "default",
 				"x": "config.stageCenterX",
 				"y": "config.stageCenterY",
@@ -295,17 +305,14 @@
 				"static": true,
 				"image": "background1"
 			},
-			"className": "DisplayObject"
-		},
-		"obstacle1": {
-			"properties": {
+			{
+				"id": "obstacle1",
 				"display": "default",
 				"z": 1,
 				"interacts": true,
 				"static": true,
 				"image": "obstacle1"
-			},
-			"className": "DisplayObject"
-		}
+			}
+		]
 	}
 }}

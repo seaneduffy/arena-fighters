@@ -5,16 +5,20 @@ let Sprite = require('./sprite'),
 	displayObjects = [];
 
 function DisplayObject() {
-	this._sprites = Object.create(null);
 	displayObjects.push(this);
-	this.moveCycle = false;
-	this.cycleMove = this.move.bind(this);
 }
 
 DisplayObject.cleanup = cleanup;
 DisplayObject.clear = clear;
 
 Object.defineProperties(DisplayObject.prototype, {
+	'cycleMove': {
+		get: function() {
+			if(typeof this._cycleMove === 'undefined')
+				return this._cycleMove = this.move.bind(this);
+			return this._cycleMove;
+		}
+	},
 	'move': {
 		value: move
 	},
@@ -30,7 +34,6 @@ Object.defineProperties(DisplayObject.prototype, {
 				}
 				this.stage = false;
 				this.destroyed = true;
-				cycle.removeUpdate(this.cycleMove);
 			}
 		}
 	},
@@ -74,16 +77,13 @@ Object.defineProperties(DisplayObject.prototype, {
 				this._stage = stage;
 				if(!!sprite) {
 					sprite.stage = true;
-					this.boundingBox = sprite.boundingBox;
-					if(!this.moveCycle) {
-						cycle.addUpdate(this.cycleMove);
-						this.moveCycle = true;
-					}
 				}
+				cycle.addUpdate(this.cycleMove);
 			} else if(!stage && this.stage) {
 				this._stage = false;
 				if(!!sprite)
 					sprite.stage = false;
+				cycle.removeUpdate(this.cycleMove);
 			}
 		}
 	},
@@ -132,12 +132,11 @@ Object.defineProperties(DisplayObject.prototype, {
 	},
 	'image': {
 		set: function(src) {
-			let sprite = Sprite.getSprite(this.type + '-default', src);
+			let sprite = Sprite.getSprite(this.id + '-default', src);
 			sprite.x = this.x;
 			sprite.y = this.y;
 			sprite.z = this.z;
 			this.sprites.default = sprite;
-			this.boundingBox = sprite.boundingBox;
 		}
 	},
 	'sprites': {
@@ -174,9 +173,12 @@ Object.defineProperties(DisplayObject.prototype, {
 			for(let label in sprites) {
 				sprites[label].x = x;
 			}
-			if(!!sprites[this.display]) {
-				this.boundingBox = sprites[this.display].boundingBox;
-			}	
+			this.boundingBox = {
+				x: x - this.boundingBox.width / 2,
+				y: this.boundingBox.y,
+				width: this.boundingBox.width,
+				height: this.boundingBox.height
+			}
 		},
 		get: function() {
 			if(!!this._x)
@@ -191,9 +193,12 @@ Object.defineProperties(DisplayObject.prototype, {
 			for(let label in sprites) {
 				sprites[label].y = y;
 			}
-			if(!!sprites[this.display]) {
-				this.boundingBoy = sprites[this.display].boundingBoy;
-			}	
+			this.boundingBox = {
+				x: this.boundingBox.x,
+				y: y - this.boundingBox.height / 2,
+				width: this.boundingBox.width,
+				height: this.boundingBox.height
+			}
 		},
 		get: function() {
 			if(!!this._y)
@@ -225,15 +230,7 @@ Object.defineProperties(DisplayObject.prototype, {
 				sprite = sprites[display];
 				if(this.stage && !!sprite) {
 					sprite.stage = true;
-					this.boundingBox = sprite.boundingBox;
-					if(!this.moveCycle) {
-						cycle.addUpdate(this.cycleMove);
-						this.moveCycle = true;
-					}
-				} else {
-					this._display = display;
-					return;	
-				}
+				}	
 			}
 		},
 		get: function() {
@@ -242,6 +239,24 @@ Object.defineProperties(DisplayObject.prototype, {
 	},
 	'boundingBox': {
 		get: function(){
+			if(typeof this._boundingBox === 'undefined') {
+				let sprite = this.sprites[this.display];
+				if(!!sprite) {
+					this._boundingBox = {
+						x: this.x,
+						y: this.y,
+						width: sprite.width,
+						height: sprite.height
+					}
+				} else {
+					this._boundingBox = {
+						x: this.x,
+						y: this.y,
+						width: 0,
+						height: 0
+					}
+				}
+			}
 			return this._boundingBox;
 		},
 		set: function(boundingBox) {
@@ -315,7 +330,7 @@ function onCollision(displayObject, x, y, newX, newY, collidedObject) {
 	if(!!displayObject.onCollision)
 		displayObject.onCollision(collidedObject);
 }
-
+let c = 0;
 function move() {
 	if(!this._stage || this.static || !this.boundingBox || (this.velocity.dX === 0 && this.velocity.dY ===0)) return;
 	if(!this._interacts) {
@@ -339,8 +354,8 @@ function move() {
 	displayObjects.forEach( objectToCheck => {
 		let doesNotInteractWith = false;
 		if(!!this.noInteraction) {
-			doesNotInteractWith = typeof this.noInteraction.find(type=>{
-				return (type === objectToCheck.type)
+			doesNotInteractWith = typeof this.noInteraction.find(id=>{
+				return (id === objectToCheck.id)
 			}) !== 'undefined';
 		}
 
@@ -349,7 +364,6 @@ function move() {
 			&& objectToCheck !== this 
 			&& objectToCheck.stage 
 			&& objectToCheck.interacts) {
-				
 			if(!!(collisionCheck = checkCollision(boundingBox, objectToCheck.boundingBox, this.velocity.dX, this.velocity.dY)))
 				
 				onCollision(this, boundingBox.x, boundingBox.y, collisionCheck.x, collisionCheck.y, objectToCheck);
@@ -447,23 +461,18 @@ function initSprites() {
 				frameData.push(frames[key]);
 			}
 		}
-		sprite = Sprite.getSprite(this.type + '-' + spriteLabel, spriteSheetPath, frameData);
+		sprite = Sprite.getSprite(this.id + '-' + spriteLabel, spriteSheetPath, frameData);
 		sprite.x = this.x;
 		sprite.y = this.y;
 		sprite.z = this.z;
 		sprites[spriteLabel] = sprite;
 	});
-	if(!!this.display) {
-		sprite = sprites[this.display];
-		this.boundingBox = sprite.boundingBox;
-		if(!!this.stage) {
-			sprite.stage = true;
-			if(!this.moveCycle) {
-				cycle.addUpdate(this.cycleMove);
-				this.moveCycle = true;
-			}
-		}
+	if(typeof this.display === 'undefined') {
+		this.display = this.spriteLabels[0];
 	}
+	sprite = sprites[this.display];
+	if(this.stage)
+		sprite.stage = true;
 }
 
 function ignoreObject(displayObject) {
@@ -479,9 +488,9 @@ if(config.dev) {
 		return displayObjects.length;
 	}
 	window.getDisplayObjects = DisplayObject.getDisplayObjects;
-	window.updateDisplayObject = function(type, properties) {
+	window.updateDisplayObject = function(id, properties) {
 		let object = displayObjects.find( displayObject => {
-			if(displayObject.type === type)
+			if(displayObject.id === id)
 				return true;
 			return false;
 		});
@@ -497,7 +506,7 @@ if(config.dev) {
 			properties = null,
 			property = null;
 		displayObjects.forEach( displayObject => {
-			configObject = configDisplayObjects[displayObject.type];
+			configObject = configDisplayObjects[displayObject.id];
 			properties = configObject.properties;
 			for(property in properties) {
 				displayObject[property] = properties[property];

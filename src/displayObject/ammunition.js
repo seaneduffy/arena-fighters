@@ -1,9 +1,9 @@
 'use strict';
 
-let Projectile = require('./projectile')
+let Projectile = require('./projectile');
 
 function Ammunition() {
-	Projectile.prototype.constructor.call(this);
+	Projectile.call(this);
 }
 
 Ammunition.prototype = Object.create(Projectile.prototype, {

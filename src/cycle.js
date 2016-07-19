@@ -70,7 +70,7 @@ function cycle() {
 					if(typeof waitToRemove.find( removeFunc => {
 						return funcObj.func === removeFunc
 					}) === 'undefined') {
-						arr.push(func);
+						arr.push(funcObj);
 					}
 				});
 				waitFunctions = arr;

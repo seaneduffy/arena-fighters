@@ -1,11 +1,12 @@
 'use strict';
 
 let DisplayObject = require('./displayObject'),
-	utils = require('./utils'),
-	cycle = require('../cycle');
+	Ammunition = require('./ammunition'),
+	cycle = require('../cycle'),
+	config = require('../config');
 
 function Firearm(){
-	DisplayObject.prototype.constructor.call(this);
+	DisplayObject.call(this);
 }
 
 Firearm.prototype = Object.create(DisplayObject.prototype, {
@@ -29,18 +30,24 @@ Firearm.prototype = Object.create(DisplayObject.prototype, {
 });
 
 function fire(character){
-	let point = this.getEdgePointFromDirection(character.direction);
-	let	ammunition = utils.createDisplayObject(this.ammunition, {
-		origin: character,
-		direction: character.direction
-	});
+	let point = this.getEdgePointFromDirection(character.direction),
+		ammunitionData = config.displayObjects[this.ammunition],
+		property = null,
+		ammunition = new Ammunition();
+	
+	for(property in ammunitionData) {
+		ammunition[property] = ammunitionData[property];
+	}
+	ammunition.origin = character;
+	ammunition.direction = character.direction;
 	ammunition.x = point.x;
 	ammunition.y = point.y;
 	ammunition.ignoreObject(character);
 	character.ignoreObject(ammunition);
+	
 	let friendsString = character.friends.join(',');
 	DisplayObject.getDisplayObjects().forEach(displayObject => {
-		if(friendsString.match(new RegExp(displayObject.type.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')))) {
+		if(friendsString.match(new RegExp(displayObject.id.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')))) {
 			ammunition.ignoreObject(displayObject);
 			displayObject.ignoreObject(ammunition);
 		}

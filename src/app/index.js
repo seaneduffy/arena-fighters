@@ -7,7 +7,6 @@ components = require('./components'),
 dataLoader = require('../data'),
 config = require('../config'),
 resources = require('../resources'),
-utils = require('../displayObject/utils'),
 socket = require('../socket'),
 cycle = require('../cycle'),
 Sprite = require('../displayObject/sprite'),
@@ -26,7 +25,6 @@ gameComponent = ReactDOM.render(React.createElement(components.Game), document.g
 	
 	dataLoader.load(()=>{
 		resources.onReady(function(){
-			utils.init();
 			controls = require('../controls');
 			controls(onJoystick, onFire);
 			cycle.addUpdate(Sprite.draw);
@@ -67,17 +65,21 @@ gameComponent = ReactDOM.render(React.createElement(components.Game), document.g
 function startLevel(index) {
 	let levelData = config.levels[index];
 	if(config.hosting || config.gameType === 'single') {
-		let displayObject = null, type = null, properties = null;
+		let displayObject = null, property = null;
 		levelData.forEach( level => {
-			if(level.type !== 'player2' || config.gameType === 'two') {
-				displayObject = utils.createDisplayObject(level.type, level.properties);
-				if(!!displayObject) {
-					displayObject.stage = true;
-					if(level.type === 'player1')
-						config.player1 = displayObject;
-					else if(level.type === 'player2')
-						config.player2 = displayObject;
+			if(level.id !== 'player2' || config.gameType === 'two') {
+				displayObject = new config.displayObjects[level.id].class();
+				for(property in config.displayObjects[level.id]) {
+					displayObject[property] = config.displayObjects[level.id][property];
 				}
+				for(let property in level.properties) {
+					displayObject[property] = level.properties[property];
+				}
+				displayObject.stage = true;
+				if(level.id === 'player1')
+					config.player1 = displayObject;
+				else if(level.id === 'player2')
+					config.player2 = displayObject;
 			}
 		} );
 	}
@@ -85,6 +87,11 @@ function startLevel(index) {
 
 function startGame() {
 	gameComponent.setState({gameActive:true});
+	if(config.hosting) {
+		cycle.addServer(Sprite.sendUpdate);
+	} else {
+		socket.on('sprite update', Sprite.receiveUpdate);
+	}	
 	cycle.start();
 	startLevel(0);
 }
@@ -134,8 +141,6 @@ function initSocket() {
 		}
 	});
 	socket.on('game created', id=>{
-		Sprite.setHosting(true);
-		config.hosting = true;
 		gameComponent.setState({
 			hosting: true,
 			gameId: id
@@ -170,7 +175,6 @@ function initSocket() {
 }
 
 function handleJoinGame() {
-	Sprite.setHosting(false);
 	config.hosting = false;
 	socket.emit('join game', {
 		name: gameComponent.state.playerName,
@@ -187,6 +191,7 @@ function handleGameListSelect(event) {
 }
 function handleCreateGame() {
 	gameComponent.setState({gameCreated: true});
+	config.hosting = true;
 	socket.emit('create game', {
 		name: gameComponent.state.playerName,
 		gameName: gameComponent.state.gameName
