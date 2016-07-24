@@ -17,12 +17,10 @@ Ammunition.prototype = Object.create(Projectile.prototype, {
 	},
 	'onCollision': {
 		value: function(collidedObject) {
-			if(collidedObject !== this.origin) {
-				if(!!collidedObject.takeDamage) {
-					collidedObject.takeDamage(this.impact);
-				}
-				Projectile.prototype.onCollision.call(this, collidedObject);
+			if(!!collidedObject.health) {
+				collidedObject.health -= this.impact;
 			}
+			Projectile.prototype.onCollision.call(this, collidedObject);
 		}
 	}
 });

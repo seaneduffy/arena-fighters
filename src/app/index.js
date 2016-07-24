@@ -1,9 +1,9 @@
 'use strict';
 
-let React = require('react'),
-ReactDOM = require('react-dom'),
+//let React = require('react'),
+//ReactDOM = require('react-dom'),
 
-components = require('./components'),
+let components = require('./components'),
 dataLoader = require('../data'),
 config = require('../config'),
 resources = require('../resources'),
@@ -96,22 +96,11 @@ function startGame() {
 	startLevel(0);
 }
 
-function movePlayer(player, angle, amount) {
-	if(!player.dead)
-		player.walk(amount,angle);
-}
-
-function fire(player) {
-	if(player.dead)
-		return;
-	player.firearm.fire(player);
-}
-
-function onJoystick(angle, amount) {
+function onJoystick(angle, percentage) {
 	if(config.gameType === 'two' && !config.hosting) {
 		socket.emit('joystick', {angle:angle, amount:amount});
 	} else {
-		movePlayer(config.player1, angle, amount);
+		config.player1.joystick(percentage, angle);
 	}
 }
 
@@ -119,7 +108,7 @@ function onFire() {
 	if(config.gameType === 'two' && !config.hosting) {
 		socket.emit('fire');
 	} else {
-		fire(config.player1);
+		config.player1.fire();
 	}
 }
 
@@ -165,10 +154,10 @@ function initSocket() {
 		startGame();
 	});
 	socket.on('joystick', data=>{
-		movePlayer(config.player2, data.angle, data.amount);
+		config.player2.joystick(percentage, angle);
 	});
 	socket.on('fire', ()=>{
-		fire(config.player2);
+		config.player2.fire();
 	});
 	socket.on('end game', ()=>{
 	});

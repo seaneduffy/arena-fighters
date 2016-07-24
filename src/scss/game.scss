@@ -12,7 +12,14 @@ $gameFont: 14em;
 $inputFieldFont: 16em;
 $inputFieldLineHeight: 18em;
 
-
+@mixin noselect {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
 
 html, body, p, ul, li {
 	margin: 0;
@@ -139,9 +146,17 @@ textarea {
 	
 	#gameScreen {
 		position: relative;
+		width: 100vw;
+	}
+	
+	#canvas {
+		position: absolute;
+		z-index: 0;
+		margin: 0 auto;
 	}
 	
 	#controls {
+		@include noselect;
 		position: absolute;
 		top: 0;
 		left: 0;
@@ -150,8 +165,8 @@ textarea {
 		z-index: 100;
 	
 		#joystick {
-			left: 10px;
-			bottom: 10px;
+			left: 1.7em;
+			bottom: 5em;
 			position: absolute;
 			display: block;
 			opacity: .5;
@@ -159,11 +174,19 @@ textarea {
 			&.active {
 				opacity: 1;
 			}
+			
+			.ball {
+				display: block;
+				position: absolute;
+				left: 50%;
+				top: 50%;
+				transform: translate(-50%, -50%);
+			}
 		}
 	
 		#fire-btn {
-			right: 40px;
-			bottom: 40px;
+			right: 2.3em;
+			bottom: 6em;
 			position: absolute;
 			opacity: .5;
 			display: block;

@@ -24,46 +24,42 @@
 		{
 			"id": "grunt",
 			"properties": {
-				"x": "config.stageCenterX",
-				"y": "-200",
-				"display": "$right_standing",
-				"direction": "config.DOWN"
+				"x": 0,
+				"y": "config.stageCenterY",
+				"display": "$down_standing",
+				"direction": "config.RIGHT"
 			}
-		},
+		}
+	],
+	[
 		{
-			"id": "grunt",
+			"id": "player1",
 			"properties": {
-				"x": "config.stageWidth + 200",
+				"x": "config.stageWidth / 3",
 				"y": "config.stageCenterY",
 				"display": "$right_standing",
-				"direction": "config.DOWN"
+				"direction": "config.RIGHT"
 			}
 		},
 		{
-			"id": "grunt",
+			"id": "player2",
 			"properties": {
-				"x": "config.stageCenterX",
-				"y": "-500",
-				"display": "$right_standing",
-				"direction": "config.DOWN"
+				"x": "config.stageWidth * 2 / 3",
+				"y": "config.stageCenterY",
+				"display": "$left_standing",
+				"direction": "config.LEFT"
 			}
+		},
+		{
+			"id": "background1"
 		},
 		{
 			"id": "devil",
 			"properties": {
-				"x": "-200",
+				"x": 0,
 				"y": "config.stageCenterY",
 				"display": "$down_standing",
-				"direction": "config.DOWN"
-			}
-		},
-		{
-			"id": "devil",
-			"properties": {
-				"x": "-400",
-				"y": "config.stageCenterY",
-				"display": "$down_standing",
-				"direction": "config.DOWN"
+				"direction": "config.RIGHT"
 			}
 		}
 	]

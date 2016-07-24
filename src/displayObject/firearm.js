@@ -45,9 +45,8 @@ function fire(character){
 	ammunition.ignoreObject(character);
 	character.ignoreObject(ammunition);
 	
-	let friendsString = character.friends.join(',');
 	DisplayObject.getDisplayObjects().forEach(displayObject => {
-		if(friendsString.match(new RegExp(displayObject.id.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')))) {
+		if(!character.hostiles.match(new RegExp(displayObject.id.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')))) {
 			ammunition.ignoreObject(displayObject);
 			displayObject.ignoreObject(ammunition);
 		}
@@ -64,7 +63,7 @@ function startBlastAnimation() {
 		this.display = this.display.replace(/_.+/, '_firing');
 		this.cycleEndBlastAnimation = this.endBlastAnimation.bind(this);
 	}
-	cycle.wait(this.cycleEndBlastAnimation, 3);
+	cycle.wait(this.cycleEndBlastAnimation, 100);
 }
 
 function endBlastAnimation() {

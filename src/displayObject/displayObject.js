@@ -73,6 +73,7 @@ Object.defineProperties(DisplayObject.prototype, {
 		set: function(stage) {
 			let sprites = this.sprites,
 				sprite = sprites[this.display];
+				
 			if(stage && !this.stage) {
 				this._stage = stage;
 				if(!!sprite) {
@@ -132,7 +133,7 @@ Object.defineProperties(DisplayObject.prototype, {
 	},
 	'image': {
 		set: function(src) {
-			let sprite = Sprite.getSprite(this.id + '-default', src);
+			let sprite = Sprite.getSprite(this.id + '-default', src, null, false, false);
 			sprite.x = this.x;
 			sprite.y = this.y;
 			sprite.z = this.z;
@@ -146,20 +147,20 @@ Object.defineProperties(DisplayObject.prototype, {
 			return this._sprites;
 		}
 	},
-	'spriteLabels': {
-		set: function(spriteLabels) {
-			this._spriteLabels = spriteLabels;
+	'spriteData': {
+		set: function(spriteData) {
+			this._spriteData = spriteData;
 			if(!!this.spriteMeta)
 				this.initSprites();
 		},
 		get: function() {
-			return this._spriteLabels;
+			return this._spriteData;
 		}
 	},
 	'spriteMeta': {
 		set: function(spriteMeta) {
 			this._spriteMeta = spriteMeta;
-			if(!!this.spriteLabels)
+			if(!!this.spriteData)
 				this.initSprites();
 		},
 		get: function() {
@@ -172,12 +173,6 @@ Object.defineProperties(DisplayObject.prototype, {
 			let sprites = this.sprites;
 			for(let label in sprites) {
 				sprites[label].x = x;
-			}
-			this.boundingBox = {
-				x: x - this.boundingBox.width / 2,
-				y: this.boundingBox.y,
-				width: this.boundingBox.width,
-				height: this.boundingBox.height
 			}
 		},
 		get: function() {
@@ -192,12 +187,6 @@ Object.defineProperties(DisplayObject.prototype, {
 			let sprites = this.sprites;
 			for(let label in sprites) {
 				sprites[label].y = y;
-			}
-			this.boundingBox = {
-				x: this.boundingBox.x,
-				y: y - this.boundingBox.height / 2,
-				width: this.boundingBox.width,
-				height: this.boundingBox.height
 			}
 		},
 		get: function() {
@@ -217,7 +206,7 @@ Object.defineProperties(DisplayObject.prototype, {
 		get: function() {
 			if(!!this._z)
 				return this._z;
-			return this._z = 0;
+			return this._z = 10;
 		}
 	},
 	'display': {
@@ -239,28 +228,21 @@ Object.defineProperties(DisplayObject.prototype, {
 	},
 	'boundingBox': {
 		get: function(){
-			if(typeof this._boundingBox === 'undefined') {
-				let sprite = this.sprites[this.display];
-				if(!!sprite) {
-					this._boundingBox = {
-						x: this.x,
-						y: this.y,
-						width: sprite.width,
-						height: sprite.height
-					}
-				} else {
-					this._boundingBox = {
-						x: this.x,
-						y: this.y,
-						width: 0,
-						height: 0
-					}
+			if(!!this.hitbox && !!this.x && !!this.y) {
+				return {
+					x: this.x + this.hitbox.x - this.hitbox.width / 2,
+					y: this.y + this.hitbox.y - this.hitbox.height / 2,
+					width: this.hitbox.width,
+					height: this.hitbox.height
 				}
 			}
-			return this._boundingBox;
-		},
-		set: function(boundingBox) {
-			this._boundingBox = boundingBox;
+			let sprite = this.sprites[this.display];
+			return {
+				x: this.x - sprite.width / 2,
+				y: this.y - sprite.height / 2,
+				width: sprite.width,
+				height: sprite.height
+			}
 		}
 	},
 	'checkCollision': {
@@ -309,16 +291,17 @@ function processVelocity(velocity) {
 
 function applyForce(velocity) {	
 	let v1 = processVelocity(this.velocity),
-		v2 = processVelocity(velocity),
-		dX = v1.dX * v2.dX > 0 
+		v2 = processVelocity(velocity);
+		/*dX = v1.dX * v2.dX > 0 
 			? (Math.abs(v1.dX) >= Math.abs(v2.dX) ? v1.dX : v2.dX) 
 			: v1.dX + v2.dX,
 		dY = v1.dY * v2.dY > 0 
 		? (Math.abs(v1.dY) >= Math.abs(v2.dY) ? v1.dY : v2.dY) 
-		: v1.dY + v2.dY;
+		: v1.dY + v2.dY;*/
+	
 	this.velocity = {
-		dX: dX,
-		dY: dY
+		dX: v1.dX + v2.dX,
+		dY: v1.dY + v2.dY
 	};
 }
 
@@ -330,7 +313,7 @@ function onCollision(displayObject, x, y, newX, newY, collidedObject) {
 	if(!!displayObject.onCollision)
 		displayObject.onCollision(collidedObject);
 }
-let c = 0;
+
 function move() {
 	if(!this._stage || this.static || !this.boundingBox || (this.velocity.dX === 0 && this.velocity.dY ===0)) return;
 	if(!this._interacts) {
@@ -370,10 +353,13 @@ function move() {
 			
 		}
 	} );
+	
 	if(this.velocity.dX !== 0)
 		this.x += this.velocity.dX;
 	if(this.velocity.dY !== 0)
 		this.y += this.velocity.dY;
+	
+	this.z = Math.floor(this.boundingBox.y + this.boundingBox.height);
 }
 
 function checkCollision(boundingBox, objectToCheckBoundingBox, dx, dy) {
@@ -454,21 +440,22 @@ function initSprites() {
 		spriteSheetPath = this.spriteMeta.img,
 		sprite = null,
 		sprites = this.sprites;
-	this.spriteLabels.forEach( spriteLabel => {
-		let frameData = new Array();
+	this.spriteData.forEach( data => {
+		let frameData = new Array(),
+			spriteLabel = data.label;
 		for(let key in frames) {
 			if(key.match(new RegExp(spriteLabel.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')))) {
 				frameData.push(frames[key]);
 			}
 		}
-		sprite = Sprite.getSprite(this.id + '-' + spriteLabel, spriteSheetPath, frameData);
+		sprite = Sprite.getSprite(this.id + '-' + spriteLabel, spriteSheetPath, frameData, data.frameRate, data.loop);
 		sprite.x = this.x;
 		sprite.y = this.y;
 		sprite.z = this.z;
 		sprites[spriteLabel] = sprite;
 	});
 	if(typeof this.display === 'undefined') {
-		this.display = this.spriteLabels[0];
+		this.display = this.spriteData[0].label;
 	}
 	sprite = sprites[this.display];
 	if(this.stage)

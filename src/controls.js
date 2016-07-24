@@ -1,55 +1,48 @@
 'use strict';
 
 let config = require('./config'),
+	cycle = require('./cycle'),
 	joystickCallback = null,
 	fireCallback = null,
-	activeControl = null,
-	fireBtnJson = null;
+	joystick = require('./joystick'),
+	fireBtn = document.getElementById('fire-btn'),
+	controlsJson = config.controls,
+	joystickAngle = 0,
+	joystickAmount = 0,
+	frameRate = config.joystickFrameRate;
 
-let joystick = require('./joystick');
-joystick.init(document.getElementById('joystick'), config.joystickMax, config.joystickMin, config.joystick);
+	document.querySelector('#controls').addEventListener('touchstart', (e)=>{e.preventDefault()});
+
+joystick.init(document.getElementById('joystick'), config.joystickMax, config.joystickMin, controlsJson);
 joystick.addCallback(onJoystickMove);
 
-let fireBtn = document.getElementById('fire-btn');
-fireBtnJson = config.fire;
-fireBtn.style.background = 'url('+config.fireBtnImage+')';
-let imageInfo = fireBtnJson['fire_up'].frame;
-fireBtn.style.width = imageInfo.w + 'px';
-fireBtn.style.height = imageInfo.h + 'px';
-fireBtn.style.backgroundPosition = (-imageInfo.x)+'px '+(-imageInfo.y)+'px';
+fireBtn.style.background = 'url('+config.controlsImage+')';
+fireBtn.style.width = controlsJson['fire_up'].frame.w + 'px';
+fireBtn.style.height = controlsJson['fire_up'].frame.h + 'px';
+fireBtn.style.backgroundPosition = (-controlsJson['fire_up'].frame.x)+'px '+(-controlsJson['fire_up'].frame.y)+'px';
 fireBtn.addEventListener('touchstart', onFire, false);
 fireBtn.addEventListener('touchend', onFireEnd, false);
-
-let joystickActive = false,
-	joystickAngle = -1,
-	joystickAmount = 0;
+	
+cycle.addUpdate(joystickFrame, frameRate);
 
 function joystickFrame() {
-	if(joystickActive) {
-		joystickCallback(joystickAngle, joystickAmount);
-		window.requestAnimationFrame(joystickFrame);
-	}
+	joystickCallback(joystickAngle, joystickAmount);
 }
 
 function onFire() {
 	fireBtn.className = 'active';
+	fireBtn.style.backgroundPosition = (-controlsJson['fire_down'].frame.x)+'px '+(-controlsJson['fire_down'].frame.y)+'px';
 	fireCallback();
 }
 
 function onFireEnd() {
 	fireBtn.className = '';
+	fireBtn.style.backgroundPosition = (-controlsJson['fire_up'].frame.x)+'px '+(-controlsJson['fire_up'].frame.y)+'px';
 }
 
 function onJoystickMove(angle, amount) {
 	joystickAngle = angle;
 	joystickAmount = amount;
-	if(angle === -1) {
-		joystickActive = false;
-		joystickCallback(angle, amount);
-	} else if(!joystickActive) {
-		joystickActive = true;
-		window.requestAnimationFrame(joystickFrame);
-	}
 }
 
 document.addEventListener('keydown', (e)=>{

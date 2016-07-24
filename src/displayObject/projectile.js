@@ -25,7 +25,7 @@ Projectile.prototype = Object.create(DisplayObject.prototype, {
 	},
 	'updateVelocity': {
 		value: function() {
-			let counter = cycle.getCounter(),
+			/*let counter = cycle.getCounter(),
 				diff = counter - this.startCounter,
 				per = diff % this.velocityModifierFrequency / this.velocityModifierFrequency,
 				sin = Math.sin(per * 2 * Math.PI),
@@ -35,7 +35,7 @@ Projectile.prototype = Object.create(DisplayObject.prototype, {
 					amplitude);
 			this.x += perpendicularVelocity.x - this.perpendicularVelocity.x;
 			this.y += perpendicularVelocity.y - this.perpendicularVelocity.y;
-			this.perpendicularVelocity = perpendicularVelocity;
+			this.perpendicularVelocity = perpendicularVelocity;*/
 		}
 	},
 	'velocity': {

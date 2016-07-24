@@ -1,10 +1,10 @@
-/* line 17, ../../src/scss/game.scss */
+/* line 24, ../../src/scss/game.scss */
 html, body, p, ul, li {
   margin: 0;
   padding: 0;
 }
 
-/* line 22, ../../src/scss/game.scss */
+/* line 29, ../../src/scss/game.scss */
 body {
   font-family: sans-serif;
   width: 100vw;
@@ -14,60 +14,60 @@ body {
   font-size: 12px;
 }
 
-/* line 31, ../../src/scss/game.scss */
+/* line 38, ../../src/scss/game.scss */
 input {
   border: 1px solid #c2c2c2;
 }
 
-/* line 35, ../../src/scss/game.scss */
+/* line 42, ../../src/scss/game.scss */
 button {
   border: 1px solid #c2c2c2;
   border-radius: 3px;
   background: #fafafa;
 }
 
-/* line 41, ../../src/scss/game.scss */
+/* line 48, ../../src/scss/game.scss */
 li {
   list-style: none;
 }
 
-/* line 45, ../../src/scss/game.scss */
+/* line 52, ../../src/scss/game.scss */
 .menuForm {
   padding: 20px;
 }
 
-/* line 49, ../../src/scss/game.scss */
+/* line 56, ../../src/scss/game.scss */
 .menuForm label {
   display: block;
 }
 
-/* line 53, ../../src/scss/game.scss */
+/* line 60, ../../src/scss/game.scss */
 .menuForm p {
   margin: 2px 0;
 }
 
-/* line 57, ../../src/scss/game.scss */
+/* line 64, ../../src/scss/game.scss */
 .hidden {
   display: none !important;
 }
 
-/* line 61, ../../src/scss/game.scss */
+/* line 68, ../../src/scss/game.scss */
 .swipe {
   height: 150vh;
 }
 
-/* line 65, ../../src/scss/game.scss */
+/* line 72, ../../src/scss/game.scss */
 #game {
   font-size: 14em;
 }
 
-/* line 69, ../../src/scss/game.scss */
+/* line 76, ../../src/scss/game.scss */
 #menu span {
   width: 350px;
   height: 100px;
 }
 
-/* line 74, ../../src/scss/game.scss */
+/* line 81, ../../src/scss/game.scss */
 #pause-btn {
   top: 5em;
   right: 5em;
@@ -76,7 +76,7 @@ li {
   background: url("/img/sprites/pause-d10.png");
 }
 
-/* line 82, ../../src/scss/game.scss */
+/* line 89, ../../src/scss/game.scss */
 input[type='text'],
 input[type='number'],
 textarea {
@@ -85,19 +85,19 @@ textarea {
 }
 
 @media screen and (max-width: 1800px) {
-  /* line 91, ../../src/scss/game.scss */
+  /* line 98, ../../src/scss/game.scss */
   #game {
     font-size: 2.52em;
   }
 
-  /* line 95, ../../src/scss/game.scss */
+  /* line 102, ../../src/scss/game.scss */
   #menu span {
     width: 315px;
     height: 90px;
     margin-bottom: 54px;
   }
 
-  /* line 101, ../../src/scss/game.scss */
+  /* line 108, ../../src/scss/game.scss */
   #pause-btn {
     top: 4.5em;
     right: 4.5em;
@@ -106,7 +106,7 @@ textarea {
     background: url("/img/sprites/pause-d9.png");
   }
 
-  /* line 109, ../../src/scss/game.scss */
+  /* line 116, ../../src/scss/game.scss */
   input[type='text'],
   input[type='number'],
   textarea {
@@ -115,19 +115,19 @@ textarea {
   }
 }
 @media screen and (max-width: 1600px) {
-  /* line 91, ../../src/scss/game.scss */
+  /* line 98, ../../src/scss/game.scss */
   #game {
     font-size: 2.24em;
   }
 
-  /* line 95, ../../src/scss/game.scss */
+  /* line 102, ../../src/scss/game.scss */
   #menu span {
     width: 280px;
     height: 80px;
     margin-bottom: 48px;
   }
 
-  /* line 101, ../../src/scss/game.scss */
+  /* line 108, ../../src/scss/game.scss */
   #pause-btn {
     top: 4em;
     right: 4em;
@@ -136,7 +136,7 @@ textarea {
     background: url("/img/sprites/pause-d8.png");
   }
 
-  /* line 109, ../../src/scss/game.scss */
+  /* line 116, ../../src/scss/game.scss */
   input[type='text'],
   input[type='number'],
   textarea {
@@ -145,19 +145,19 @@ textarea {
   }
 }
 @media screen and (max-width: 1400px) {
-  /* line 91, ../../src/scss/game.scss */
+  /* line 98, ../../src/scss/game.scss */
   #game {
     font-size: 1.96em;
   }
 
-  /* line 95, ../../src/scss/game.scss */
+  /* line 102, ../../src/scss/game.scss */
   #menu span {
     width: 245px;
     height: 70px;
     margin-bottom: 42px;
   }
 
-  /* line 101, ../../src/scss/game.scss */
+  /* line 108, ../../src/scss/game.scss */
   #pause-btn {
     top: 3.5em;
     right: 3.5em;
@@ -166,7 +166,7 @@ textarea {
     background: url("/img/sprites/pause-d7.png");
   }
 
-  /* line 109, ../../src/scss/game.scss */
+  /* line 116, ../../src/scss/game.scss */
   input[type='text'],
   input[type='number'],
   textarea {
@@ -175,19 +175,19 @@ textarea {
   }
 }
 @media screen and (max-width: 1200px) {
-  /* line 91, ../../src/scss/game.scss */
+  /* line 98, ../../src/scss/game.scss */
   #game {
     font-size: 1.68em;
   }
 
-  /* line 95, ../../src/scss/game.scss */
+  /* line 102, ../../src/scss/game.scss */
   #menu span {
     width: 210px;
     height: 60px;
     margin-bottom: 36px;
   }
 
-  /* line 101, ../../src/scss/game.scss */
+  /* line 108, ../../src/scss/game.scss */
   #pause-btn {
     top: 3em;
     right: 3em;
@@ -196,7 +196,7 @@ textarea {
     background: url("/img/sprites/pause-d6.png");
   }
 
-  /* line 109, ../../src/scss/game.scss */
+  /* line 116, ../../src/scss/game.scss */
   input[type='text'],
   input[type='number'],
   textarea {
@@ -205,19 +205,19 @@ textarea {
   }
 }
 @media screen and (max-width: 1000px) {
-  /* line 91, ../../src/scss/game.scss */
+  /* line 98, ../../src/scss/game.scss */
   #game {
     font-size: 1.4em;
   }
 
-  /* line 95, ../../src/scss/game.scss */
+  /* line 102, ../../src/scss/game.scss */
   #menu span {
     width: 175px;
     height: 50px;
     margin-bottom: 30px;
   }
 
-  /* line 101, ../../src/scss/game.scss */
+  /* line 108, ../../src/scss/game.scss */
   #pause-btn {
     top: 2.5em;
     right: 2.5em;
@@ -226,7 +226,7 @@ textarea {
     background: url("/img/sprites/pause-d5.png");
   }
 
-  /* line 109, ../../src/scss/game.scss */
+  /* line 116, ../../src/scss/game.scss */
   input[type='text'],
   input[type='number'],
   textarea {
@@ -235,19 +235,19 @@ textarea {
   }
 }
 @media screen and (max-width: 800px) {
-  /* line 91, ../../src/scss/game.scss */
+  /* line 98, ../../src/scss/game.scss */
   #game {
     font-size: 1.12em;
   }
 
-  /* line 95, ../../src/scss/game.scss */
+  /* line 102, ../../src/scss/game.scss */
   #menu span {
     width: 140px;
     height: 40px;
     margin-bottom: 24px;
   }
 
-  /* line 101, ../../src/scss/game.scss */
+  /* line 108, ../../src/scss/game.scss */
   #pause-btn {
     top: 2em;
     right: 2em;
@@ -256,7 +256,7 @@ textarea {
     background: url("/img/sprites/pause-d4.png");
   }
 
-  /* line 109, ../../src/scss/game.scss */
+  /* line 116, ../../src/scss/game.scss */
   input[type='text'],
   input[type='number'],
   textarea {
@@ -265,19 +265,19 @@ textarea {
   }
 }
 @media screen and (max-width: 600px) {
-  /* line 91, ../../src/scss/game.scss */
+  /* line 98, ../../src/scss/game.scss */
   #game {
     font-size: 0.84em;
   }
 
-  /* line 95, ../../src/scss/game.scss */
+  /* line 102, ../../src/scss/game.scss */
   #menu span {
     width: 105px;
     height: 30px;
     margin-bottom: 18px;
   }
 
-  /* line 101, ../../src/scss/game.scss */
+  /* line 108, ../../src/scss/game.scss */
   #pause-btn {
     top: 1.5em;
     right: 1.5em;
@@ -286,7 +286,7 @@ textarea {
     background: url("/img/sprites/pause-d3.png");
   }
 
-  /* line 109, ../../src/scss/game.scss */
+  /* line 116, ../../src/scss/game.scss */
   input[type='text'],
   input[type='number'],
   textarea {
@@ -295,19 +295,19 @@ textarea {
   }
 }
 @media screen and (max-width: 400px) {
-  /* line 91, ../../src/scss/game.scss */
+  /* line 98, ../../src/scss/game.scss */
   #game {
     font-size: 0.56em;
   }
 
-  /* line 95, ../../src/scss/game.scss */
+  /* line 102, ../../src/scss/game.scss */
   #menu span {
     width: 70px;
     height: 20px;
     margin-bottom: 12px;
   }
 
-  /* line 101, ../../src/scss/game.scss */
+  /* line 108, ../../src/scss/game.scss */
   #pause-btn {
     top: 1em;
     right: 1em;
@@ -316,7 +316,7 @@ textarea {
     background: url("/img/sprites/pause-d2.png");
   }
 
-  /* line 109, ../../src/scss/game.scss */
+  /* line 116, ../../src/scss/game.scss */
   input[type='text'],
   input[type='number'],
   textarea {
@@ -325,19 +325,19 @@ textarea {
   }
 }
 @media screen and (max-width: 200px) {
-  /* line 91, ../../src/scss/game.scss */
+  /* line 98, ../../src/scss/game.scss */
   #game {
     font-size: 0.28em;
   }
 
-  /* line 95, ../../src/scss/game.scss */
+  /* line 102, ../../src/scss/game.scss */
   #menu span {
     width: 35px;
     height: 10px;
     margin-bottom: 6px;
   }
 
-  /* line 101, ../../src/scss/game.scss */
+  /* line 108, ../../src/scss/game.scss */
   #pause-btn {
     top: 0.5em;
     right: 0.5em;
@@ -346,7 +346,7 @@ textarea {
     background: url("/img/sprites/pause-d1.png");
   }
 
-  /* line 109, ../../src/scss/game.scss */
+  /* line 116, ../../src/scss/game.scss */
   input[type='text'],
   input[type='number'],
   textarea {
@@ -354,13 +354,13 @@ textarea {
     line-height: 0.36em;
   }
 }
-/* line 118, ../../src/scss/game.scss */
+/* line 125, ../../src/scss/game.scss */
 #game {
   width: 100%;
   height: 100%;
   overflow: hidden;
 }
-/* line 124, ../../src/scss/game.scss */
+/* line 131, ../../src/scss/game.scss */
 #game #arena-fighters {
   width: 100%;
   height: 100%;
@@ -368,7 +368,7 @@ textarea {
   justify-content: center;
   align-items: center;
 }
-/* line 132, ../../src/scss/game.scss */
+/* line 139, ../../src/scss/game.scss */
 #game #menus {
   width: 100%;
   height: 100%;
@@ -376,12 +376,25 @@ textarea {
   justify-content: center;
   align-items: center;
 }
-/* line 140, ../../src/scss/game.scss */
+/* line 147, ../../src/scss/game.scss */
 #game #gameScreen {
   position: relative;
+  width: 100vw;
 }
-/* line 144, ../../src/scss/game.scss */
+/* line 152, ../../src/scss/game.scss */
+#game #canvas {
+  position: absolute;
+  z-index: 0;
+  margin: 0 auto;
+}
+/* line 158, ../../src/scss/game.scss */
 #game #controls {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
   position: absolute;
   top: 0;
   left: 0;
@@ -389,42 +402,50 @@ textarea {
   height: 100%;
   z-index: 100;
 }
-/* line 152, ../../src/scss/game.scss */
+/* line 167, ../../src/scss/game.scss */
 #game #controls #joystick {
-  left: 10px;
-  bottom: 10px;
+  left: 1.7em;
+  bottom: 5em;
   position: absolute;
   display: block;
   opacity: .5;
 }
-/* line 159, ../../src/scss/game.scss */
+/* line 174, ../../src/scss/game.scss */
 #game #controls #joystick.active {
   opacity: 1;
 }
-/* line 164, ../../src/scss/game.scss */
+/* line 178, ../../src/scss/game.scss */
+#game #controls #joystick .ball {
+  display: block;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+}
+/* line 187, ../../src/scss/game.scss */
 #game #controls #fire-btn {
-  right: 40px;
-  bottom: 40px;
+  right: 2.3em;
+  bottom: 6em;
   position: absolute;
   opacity: .5;
   display: block;
 }
-/* line 171, ../../src/scss/game.scss */
+/* line 194, ../../src/scss/game.scss */
 #game #controls #fire-btn.active {
   opacity: 1;
 }
-/* line 176, ../../src/scss/game.scss */
+/* line 199, ../../src/scss/game.scss */
 #game #controls #pause-btn {
   position: absolute;
   display: block;
   background-size: cover;
   opacity: .5;
 }
-/* line 182, ../../src/scss/game.scss */
+/* line 205, ../../src/scss/game.scss */
 #game #controls #pause-btn:focus {
   opacity: 1;
 }
-/* line 187, ../../src/scss/game.scss */
+/* line 210, ../../src/scss/game.scss */
 #game #controls #menu {
   position: absolute;
   width: 100%;
@@ -435,16 +456,16 @@ textarea {
   justify-content: center;
   z-index: 0;
 }
-/* line 197, ../../src/scss/game.scss */
+/* line 220, ../../src/scss/game.scss */
 #game #controls #menu > div {
   display: inline-block;
 }
-/* line 201, ../../src/scss/game.scss */
+/* line 224, ../../src/scss/game.scss */
 #game #controls #menu span {
   display: block;
   background: red;
 }
-/* line 205, ../../src/scss/game.scss */
+/* line 228, ../../src/scss/game.scss */
 #game #controls #menu span:last-child {
   margin-bottom: 0;
 }

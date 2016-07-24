@@ -4,6 +4,7 @@ let config = require('./config'),
 	cycle = require('./cycle'),
 	Grunt = require('./displayObject/enemies/grunt'),
 	Devil = require('./displayObject/enemies/devil'),
+	Robot = require('./displayObject/enemies/robot'),
 	Player = require('./displayObject/player'),
 	Firearm = require('./displayObject/firearm'),
 	Ammunition = require('./displayObject/ammunition'),
@@ -40,8 +41,9 @@ function processData(json) {
 		sprite = '',
 		frames = null,
 		image = '';
-		
-	cycle.setFrameRate(settings.frameRate);
+
+	config.frameRate = 1000 / settings.frameRate;
+	cycle.setFrameRate(config.frameRate);
 	
 	for(let resolution in resolutions) {
 		
@@ -62,38 +64,36 @@ function processData(json) {
 	config.domElement.style.width = resWidth * resolutionScale + 'px';
 	config.domElement.style.height = resHeight * resolutionScale + 'px';
 	
-	config.joystick = json['joystick'+resAppend];
-	config.fire = json['fire'+resAppend];
-	config.fireBtnImage = spriteImgPath+'fire'+resAppend+'.png';
-	imagesToLoad.push(config.fireBtnImage);
-	config.joystickImage = spriteImgPath+'joystick'+resAppend+'.png';
-	imagesToLoad.push(config.joystickImage);
+	config.joystickFrameRate = processValue(settings.joystickFrameRate);
+	config.controls = json['controls'+resAppend];
+	config.controlsImage = spriteImgPath+'controls'+resAppend+'.png';
+	imagesToLoad.push(config.controlsImage);
 	config.joystickMin = settings.joystickMin * distanceScale;
 	config.joystickMax = settings.joystickMax * distanceScale;
 	
-	wallPadding = processValue(settings.wallPadding) * distanceScale;
+	wallPadding = processValue(settings.wallPadding);
 	config.topWall = {
 		x: 0,
 		y: 0,
-		width: stageWidth * distanceScale,
+		width: stageWidth,
 		height: wallPadding
 	};
 	config.leftWall = {
 		x: 0,
 		y: 0,
 		width: wallPadding,
-		height: stageHeight * distanceScale
+		height: stageHeight
 	};
 	config.rightWall = {
-		x: stageWidth * distanceScale - wallPadding,
+		x: stageWidth - wallPadding,
 		y: 0,
 		width: wallPadding,
-		height: stageHeight * distanceScale
+		height: stageHeight
 	};
 	config.bottomWall = {
 		x: 0,
-		y: stageHeight * distanceScale - wallPadding,
-		width: stageWidth * distanceScale,
+		y: stageHeight - wallPadding,
+		width: stageWidth,
 		height: wallPadding
 	};
 
@@ -117,6 +117,8 @@ function processData(json) {
 					displayObjectData.class = Devil;
 				if(displayObjectData.id === 'grunt')
 					displayObjectData.class = Grunt;
+				if(displayObjectData.id === 'robot')
+					displayObjectData.class = Robot;
 			} else if(type === 'player')
 				displayObjectData.class = Player;
 			else if(type === 'ammunition')
@@ -125,7 +127,7 @@ function processData(json) {
 				displayObjectData.class = Firearm;
 			else if(type === 'displayObject')
 				displayObjectData.class = DisplayObject;
-			if(!!displayObjectData.spriteLabels) {
+			if(!!displayObjectData.spriteData) {
 				imagesToLoad.push(spriteImgPath+displayObjectData.id+resAppend+'.png');
 				frames = {};
 				for(sprite in json[displayObjectData.id+resAppend]) {
@@ -148,12 +150,14 @@ function processData(json) {
 }
 
 function processValue(value) {
+
 	if(typeof value === 'string' && value.match(/config\./)) {
+		
 		if(value.match(/[0-9]+/)) {
 			let operator = '',
 				values = value;
 			value = 0;
-			values.match(/[\+|\/|\-|\*|config\.|a-z|A-Z|0-9]+/g).forEach( function(tmp){
+			values.match(/[\+|\/|-|\*|config\.|a-z|A-Z|0-9]+/g).forEach( function(tmp){
 				if(tmp.match(/[\+|-|\/|\*]/))
 					operator = tmp;
 				else {
@@ -175,6 +179,8 @@ function processValue(value) {
 		} else {
 			value = config[value.replace(/config\./,'')];
 		}
+	} else if(typeof value === 'string' && value.match(/[0-9]+/) && value.match(/^((?![a-z|A-Z]).)*$/)) {
+		value *= 1;
 	}
 	return value;
 }
@@ -193,14 +199,12 @@ function processConfig(obj) {
 			value = null;
 		for(property in obj) {
 			value = obj[property];
-			if(typeof value === 'object') {
+			if(property === 'hostiles') {
+				obj[property] = new String(',').concat(value.join(',')).concat(',');
+			} else if(typeof value === 'object') {
 				processConfig(value);
 			} else {
 				value = processValue(value);
-				if(config.resValues.match(new RegExp(','+property+',')))
-					value *= config.resolutionScale;
-				if(config.distanceValues.match(new RegExp(','+property+',')))
-					value *= config.distanceScale;
 				if(!!config.scalars[property])
 					value *= config.scalars[property];
 				obj[property] = value;

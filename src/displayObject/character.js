@@ -40,12 +40,6 @@ Character.prototype = Object.create(DisplayObject.prototype, {
 			return this._health;
 		}
 	},
-	'takeDamage': {
-		value: takeDamage
-	},
-	'walk': {
-		value: walk
-	},
 	'onCollision': {
 		value: onCollision
 	},
@@ -163,63 +157,18 @@ function updateFirearmDisplay() {
 		this.firearm.z = z;
 		this.firearm.stage = true;
 	}
-	this.firearm.x = this.firearmOffset[this.display].x + this.x;
-	this.firearm.y = this.firearmOffset[this.display].y + this.y;
+	let spriteDatum = this.spriteData.find(sd=>{return sd.label === this.display});
+	this.firearm.x = spriteDatum.firearmOffset.x + this.x;
+	this.firearm.y = spriteDatum.firearmOffset.y + this.y;
 }
 
 function onCollision(collidedObject) {
-	if(!collidedObject !== 'wall' 
+	if(collidedObject !== 'wall' 
 		&& !!this.melee 
-		&& !this.friends.join(',').match(new RegExp(collidedObject.id))) {
-				
-		if(!!collidedObject.takeDamage)
-			collidedObject.takeDamage(this.melee);
-		
+		&& this.hostiles.match(new RegExp(collidedObject.id))) {
+			
+			this.melee(collidedObject);
 	}
-}
-
-function walk(power, direction) {
-
-	this.direction = direction;
-
-	let directionLabel = this.directionLabel;
-
-	if(directionLabel === config.UP) {
-		this.display = '$up_walking';
-	} else if(directionLabel === config.DOWN) {
-		this.display = '$down_walking';
-	} else if(directionLabel === config.LEFT) {
-		this.display = '$left_walking';
-	} else if(directionLabel === config.RIGHT) {
-		this.display = '$right_walking';
-	} else if(directionLabel === config.UP_LEFT) {
-		this.display = '$upleft_walking';
-	} else if(directionLabel === config.UP_RIGHT) {
-		this.display = '$upright_walking';
-	} else if(directionLabel === config.DOWN_LEFT) {
-		this.display = '$downleft_walking';
-	} else if(directionLabel === config.DOWN_RIGHT) {
-		this.display = '$downright_walking';
-	}
-	
-	if(power <= 0) {
-		this.display = this.display.replace('walking', 'standing');
-		this.velocity = {
-			dX: 0,
-			dY: 0,
-			direction: direction,
-			speed: 0
-		};
-	} else {
-		this.applyForce({
-			direction: direction,
-			speed: this.speed * power
-		});
-	}
-}
-
-function takeDamage(amount) {
-	this.health -= amount;
 }
 
 module.exports = Character;

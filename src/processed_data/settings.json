@@ -1,6 +1,7 @@
 {"settings": {
 	"joystickMin": 30,
-	"joystickMax": 120,
+	"joystickMax": 90,
+	"joystickFrameRate": "config.frameRate * 3",
 	"wallPadding": 50,
 	"stageWidth": 2000,
 	"stageHeight": "config.stageWidth / 1.111111",
@@ -46,7 +47,7 @@
 			"height": "config.stageHeight" 
 		}
 	},
-	"frameRate": 1,
+	"frameRate": 60,
 	"resValues": [],
 	"distanceValues": [
 		"width",
@@ -57,108 +58,234 @@
 		"velocityModifierAmplitude"
 	],
 	"scalars": {
-		"speed": 2,
+		"speed": 5,
 		"velocityModifierAmplitude": 3
 	},
 	"displayObjects": {
 		"player": [
 			{
 				"id": "player1",
-				"spriteLabels": [
-					"$up_standing",
-					"$up_walking",
-					"$upleft_standing",
-					"$upleft_walking",
-					"$upright_standing",
-					"$upright_walking",
-					"$down_standing",
-					"$down_walking",
-					"$downleft_standing",
-					"$downleft_walking",
-					"$downright_standing",
-					"$downright_walking",
-					"$left_standing",
-					"$left_walking",
-					"$right_standing",
-					"$right_walking"
+				"spriteData": [
+					{
+						"label": "$up_standing",
+						"frameRate": "config.frameRate",
+						"loop": false,
+						"firearmOffset": {"x":-1,"y":7}
+					},
+					{
+						"label": "$up_walking",
+						"frameRate": "config.frameRate",
+						"loop": true,
+						"firearmOffset": {"x":-3,"y":-3}
+					},
+					{
+						"label": "$upright_standing",
+						"frameRate": "config.frameRate",
+						"loop": false,
+						"firearmOffset": {"x":3,"y":-3}
+					},
+					{
+						"label": "$upright_walking",
+						"frameRate": "config.frameRate",
+						"loop": true,
+						"firearmOffset": {"x":3,"y":-3}
+					},
+					{
+						"label": "$upleft_standing",
+						"frameRate": "config.frameRate",
+						"loop": false,
+						"firearmOffset": {"x":1,"y":-3}
+					},
+					{
+						"label": "$upleft_walking",
+						"frameRate": "config.frameRate",
+						"loop": true,
+						"firearmOffset": {"x":1,"y":-3}
+					},
+					{
+						"label": "$right_standing",
+						"frameRate": "config.frameRate",
+						"loop": false,
+						"firearmOffset": {"x":-1,"y":7}
+					},
+					{
+						"label": "$right_walking",
+						"frameRate": "config.frameRate",
+						"loop": true,
+						"firearmOffset": {"x":-1,"y":7}
+					},
+					{
+						"label": "$left_standing",
+						"frameRate": "config.frameRate",
+						"loop": false,
+						"firearmOffset": {"x":-15,"y":-4}
+					},
+					{
+						"label": "$left_walking",
+						"frameRate": "config.frameRate",
+						"loop": true,
+						"firearmOffset": {"x":-15,"y":-4}
+					},
+					{
+						"label": "$down_standing",
+						"frameRate": "config.frameRate",
+						"loop": false,
+						"firearmOffset": {"x":-1,"y":7}
+					},
+					{
+						"label": "$down_walking",
+						"frameRate": "config.frameRate",
+						"loop": true,
+						"firearmOffset": {"x":-1,"y":7}
+					},
+					{
+						"label": "$downright_standing",
+						"frameRate": "config.frameRate",
+						"loop": false,
+						"firearmOffset": {"x":3,"y":4}
+					},
+					{
+						"label": "$downright_walking",
+						"frameRate": "config.frameRate",
+						"loop": true,
+						"firearmOffset": {"x":3,"y":4}
+					},
+					{
+						"label": "$downleft_standing",
+						"frameRate": "config.frameRate",
+						"loop": false,
+						"firearmOffset": {"x":0,"y":2}
+					},
+					{
+						"label": "$downleft_walking",
+						"frameRate": "config.frameRate",
+						"loop": true,
+						"firearmOffset": {"x":0,"y":2}
+					}
 				],
-				"speed": 3,
-				"z": 3,
+				"speed": 5,
 				"interacts": true,
 				"health": 15,
-				"friends": [
-					"player2"
+				"hostiles": [
+					"grunt",
+					"devil",
+					"robot"
 				],
 				"firearmType": "pistol",
-				"firearmOffset": {
-					"$up_standing": {"x":-3,"y":-3},
-					"$up_walking": {"x":-3,"y":-3},
-					"$upleft_standing": {"x":1,"y":-3},
-					"$upleft_walking": {"x":1,"y":-3},
-					"$upright_standing": {"x":3,"y":-3},
-					"$upright_walking": {"x":3,"y":-3},
-					"$down_standing": {"x":-1,"y":7},
-					"$down_walking": {"x":-1,"y":7},
-					"$downleft_standing": {"x":0,"y":2},
-					"$downleft_walking": {"x":0,"y":2},
-					"$downright_standing": {"x":3,"y":4},
-					"$downright_walking": {"x":3,"y":4},
-					"$left_standing": {"x":-15,"y":-4},
-					"$left_walking": {"x":-15,"y":-4},
-					"$right_standing": {"x":5,"y":-4},
-					"$right_walking": {"x":5,"y":-4}
-				},
-				"boundingBox": {
+				"hitbox": {
 					"x": 0, "y": 0, "width": 60, "height": 154
 				}
 			},
 			{
 				"id": "player2",
-				"spriteLabels": [
-					"$up_standing",
-					"$up_walking",
-					"$upleft_standing",
-					"$upleft_walking",
-					"$upright_standing",
-					"$upright_walking",
-					"$down_standing",
-					"$down_walking",
-					"$downleft_standing",
-					"$downleft_walking",
-					"$downright_standing",
-					"$downright_walking",
-					"$left_standing",
-					"$left_walking",
-					"$right_standing",
-					"$right_walking"
+				"spriteData": [
+					{
+						"label": "$up_standing",
+						"frameRate": "config.frameRate",
+						"loop": false,
+						"firearmOffset": {"x":-1,"y":7}
+					},
+					{
+						"label": "$up_walking",
+						"frameRate": "config.frameRate",
+						"loop": true,
+						"firearmOffset": {"x":-3,"y":-3}
+					},
+					{
+						"label": "$upright_standing",
+						"frameRate": "config.frameRate",
+						"loop": false,
+						"firearmOffset": {"x":3,"y":-3}
+					},
+					{
+						"label": "$upright_walking",
+						"frameRate": "config.frameRate",
+						"loop": true,
+						"firearmOffset": {"x":3,"y":-3}
+					},
+					{
+						"label": "$upleft_standing",
+						"frameRate": "config.frameRate",
+						"loop": false,
+						"firearmOffset": {"x":1,"y":-3}
+					},
+					{
+						"label": "$upleft_walking",
+						"frameRate": "config.frameRate",
+						"loop": true,
+						"firearmOffset": {"x":1,"y":-3}
+					},
+					{
+						"label": "$right_standing",
+						"frameRate": "config.frameRate",
+						"loop": false,
+						"firearmOffset": {"x":-1,"y":7}
+					},
+					{
+						"label": "$right_walking",
+						"frameRate": "config.frameRate",
+						"loop": true,
+						"firearmOffset": {"x":-1,"y":7}
+					},
+					{
+						"label": "$left_standing",
+						"frameRate": "config.frameRate",
+						"loop": false,
+						"firearmOffset": {"x":-15,"y":-4}
+					},
+					{
+						"label": "$left_walking",
+						"frameRate": "config.frameRate",
+						"loop": true,
+						"firearmOffset": {"x":-15,"y":-4}
+					},
+					{
+						"label": "$down_standing",
+						"frameRate": "config.frameRate",
+						"loop": false,
+						"firearmOffset": {"x":-1,"y":7}
+					},
+					{
+						"label": "$down_walking",
+						"frameRate": "config.frameRate",
+						"loop": true,
+						"firearmOffset": {"x":-1,"y":7}
+					},
+					{
+						"label": "$downright_standing",
+						"frameRate": "config.frameRate",
+						"loop": false,
+						"firearmOffset": {"x":3,"y":4}
+					},
+					{
+						"label": "$downright_walking",
+						"frameRate": "config.frameRate",
+						"loop": true,
+						"firearmOffset": {"x":3,"y":4}
+					},
+					{
+						"label": "$downleft_standing",
+						"frameRate": "config.frameRate",
+						"loop": false,
+						"firearmOffset": {"x":0,"y":2}
+					},
+					{
+						"label": "$downleft_walking",
+						"frameRate": "config.frameRate",
+						"loop": true,
+						"firearmOffset": {"x":0,"y":2}
+					}
 				],
 				"speed": 3,
-				"z": 3,
 				"interacts": true,
 				"health": 15,
-				"friends": [
-					"player1"
+				"hostiles": [
+					"grunt",
+					"devil",
+					"robot"
 				],
 				"firearmType": "pistol",
-				"firearmOffset": {
-					"$up_standing": {"x":-3,"y":-3},
-					"$up_walking": {"x":-3,"y":-3},
-					"$upleft_standing": {"x":1,"y":-3},
-					"$upleft_walking": {"x":1,"y":-3},
-					"$upright_standing": {"x":3,"y":-3},
-					"$upright_walking": {"x":3,"y":-3},
-					"$down_standing": {"x":-1,"y":7},
-					"$down_walking": {"x":-1,"y":7},
-					"$downleft_standing": {"x":0,"y":2},
-					"$downleft_walking": {"x":0,"y":2},
-					"$downright_standing": {"x":3,"y":4},
-					"$downright_walking": {"x":3,"y":4},
-					"$left_standing": {"x":-15,"y":-4},
-					"$left_walking": {"x":-15,"y":-4},
-					"$right_standing": {"x":5,"y":-4},
-					"$right_walking": {"x":5,"y":-4}
-				},
-				"boundingBox": {
+				"hitbox": {
 					"x": 0, "y": 0, "width": 60, "height": 154
 				}
 			}
@@ -166,23 +293,87 @@
 		"firearm": [
 			{
 				"id": "pistol",
-				"spriteLabels": [
-					"$up_off",
-					"$up_firing",
-					"$upright_off",
-					"$upright_firing",
-					"$upleft_off",
-					"$upleft_firing",
-					"$right_off",
-					"$right_firing",
-					"$left_off",
-					"$left_firing",
-					"$down_off",
-					"$down_firing",
-					"$downright_off",
-					"$downright_firing",
-					"$downleft_off",
-					"$downleft_firing"
+				"spriteData": [
+					{
+						"label": "$up_off",
+						"frameRate": "config.frameRate",
+						"loop": false
+					},
+					{
+						"label": "$up_firing",
+						"frameRate": "config.frameRate",
+						"loop": true
+					},
+					{
+						"label": "$upright_off",
+						"frameRate": "config.frameRate",
+						"loop": false
+					},
+					{
+						"label": "$upright_firing",
+						"frameRate": "config.frameRate",
+						"loop": true
+					},
+					{
+						"label": "$upleft_off",
+						"frameRate": "config.frameRate",
+						"loop": false
+					},
+					{
+						"label": "$upleft_firing",
+						"frameRate": "config.frameRate",
+						"loop": true
+					},
+					{
+						"label": "$right_off",
+						"frameRate": "config.frameRate",
+						"loop": false
+					},
+					{
+						"label": "$right_firing",
+						"frameRate": "config.frameRate",
+						"loop": true
+					},
+					{
+						"label": "$left_off",
+						"frameRate": "config.frameRate",
+						"loop": false
+					},
+					{
+						"label": "$left_firing",
+						"frameRate": "config.frameRate",
+						"loop": true
+					},
+					{
+						"label": "$down_off",
+						"frameRate": "config.frameRate",
+						"loop": false
+					},
+					{
+						"label": "$down_firing",
+						"frameRate": "config.frameRate",
+						"loop": true
+					},
+					{
+						"label": "$downright_off",
+						"frameRate": "config.frameRate",
+						"loop": false
+					},
+					{
+						"label": "$downright_firing",
+						"frameRate": "config.frameRate",
+						"loop": true
+					},
+					{
+						"label": "$downleft_off",
+						"frameRate": "config.frameRate",
+						"loop": false
+					},
+					{
+						"label": "$downleft_firing",
+						"frameRate": "config.frameRate",
+						"loop": true
+					}
 				],
 				"ammunition": "bullet"
 			}
@@ -191,8 +382,7 @@
 			{
 				"id": "bullet",
 				"display": "default",
-				"speed": 4,
-				"z": 8,
+				"speed": 8,
 				"interacts": true,
 				"impact": 1,
 				"noInteraction": [
@@ -204,7 +394,6 @@
 				"id": "wave",
 				"display": "default",
 				"speed": 3,
-				"z": 8,
 				"interacts": true,
 				"impact": 3,
 				"noInteraction": [
@@ -219,78 +408,116 @@
 		"enemy": [
 			{
 				"id": "grunt",
-				"spriteLabels": [
-					"$left_standing",
-					"$right_standing"
+				"spriteData": [
+					{
+						"label": "$left_standing",
+						"frameRate": "config.frameRate",
+						"loop": false,
+						"firearmOffset": {"x":-1,"y":7}
+					},
+					{
+						"label": "$left_walking",
+						"frameRate": "config.frameRate",
+						"loop": true,
+						"firearmOffset": {"x":-1,"y":7}
+					},
+					{
+						"label": "$right_standing",
+						"frameRate": "config.frameRate",
+						"loop": false,
+						"firearmOffset": {"x":-1,"y":7}
+					},
+					{
+						"label": "$right_walking",
+						"frameRate": "config.frameRate",
+						"loop": true,
+						"firearmOffset": {"x":-1,"y":7}
+					}
 				],
 				"speed": 1,
 				"actionSpeed": 50,
-				"z": 6,
 				"ai": "grunt",
 				"interacts": true,
 				"health": 1,
-				"friends": [
-					"grunt",
-					"devil"
+				"hostiles": [
+					"player1",
+					"player2"
 				],
-				"boundingBox": {
+				"hitbox": {
 					"x": 0, "y": 0, "width": 70, "height": 170
 				},
 				"firearmType": "pistol",
-				"firearmOffset": {
-					"$up_standing": {"x":-3,"y":-3},
-					"$up_walking": {"x":-3,"y":-3},
-					"$upleft_standing": {"x":1,"y":-3},
-					"$upleft_walking": {"x":1,"y":-3},
-					"$upright_standing": {"x":3,"y":-3},
-					"$upright_walking": {"x":3,"y":-3},
-					"$down_standing": {"x":-1,"y":7},
-					"$down_walking": {"x":-1,"y":7},
-					"$downleft_standing": {"x":0,"y":2},
-					"$downleft_walking": {"x":0,"y":2},
-					"$downright_standing": {"x":3,"y":4},
-					"$downright_walking": {"x":3,"y":4},
-					"$left_standing": {"x":-15,"y":-4},
-					"$left_walking": {"x":-15,"y":-4},
-					"$right_standing": {"x":5,"y":-4},
-					"$right_walking": {"x":5,"y":-4}
-				},
 				"fireSpeed": 1
 			},
 			{
 				"id": "devil",
-				"spriteLabels": [
-					"$up_standing",
-					"$up_walking",
-					"$upleft_standing",
-					"$upleft_walking",
-					"$upright_standing",
-					"$upright_walking",
-					"$down_standing",
-					"$down_walking",
-					"$downleft_standing",
-					"$downleft_walking",
-					"$downright_standing",
-					"$downright_walking",
-					"$left_standing",
-					"$left_walking",
-					"$right_standing",
-					"$right_walking"
+				"spriteData": [
+					{
+						"label": "$down_standing",
+						"frameRate": "config.frameRate",
+						"loop": false
+					},
+					{
+						"label": "$down_jumping",
+						"frameRate": "config.frameRate",
+						"loop": false
+					},
+					{
+						"label": "$down_landing",
+						"frameRate": "config.frameRate",
+						"loop": false
+					}
 				],
-				"speed": 2,
-				"actionSpeed": 1,
-				"moveTime": 8,
-				"z": 6,
-				"ai": "devil",
+				"speed": 7,
+				"jumpFrameDelay": 50,
+				"jumpTime": 20,
 				"interacts": true,
 				"health": 3,
-				"melee": 4,
-				"friends": [
-					"grunt",
-					"devil"
-				],
-				"boundingBox": {
+				"meleeDamage": 4,
+				"meleeHitbox": {
 					"x": 0, "y": 0, "width": 54, "height": 148
+				},
+				"hitbox": {
+					"x": 0, "y": 0, "width": 54, "height": 148
+				},
+				"hostiles": [
+					"player1",
+					"player2"
+				]
+			},
+			{
+				"id": "robot",
+				"spriteData": [
+					{
+						"label": "$down_standing",
+						"frameRate": "config.frameRate",
+						"loop": false
+					},
+					{
+						"label": "$down_walking",
+						"frameRate": "config.frameRate",
+						"loop": true
+					},
+					{
+						"label": "$down_attacking",
+						"frameRate": "config.frameRate * 10",
+						"loop": false
+					}
+				],
+				"speed": 10,
+				"walkFrameDelay": 40,
+				"interacts": true,
+				"health": 6,
+				"meleeDamage": 10,
+				"hostiles": [
+					"player1",
+					"player2"
+				],
+				"hitbox": {
+					"x": 0, "y": 233, "width": 440, "height": 275
+				},
+				"meleeHitbox": {
+					"x": 0, "y": 220, "width": 872, "height": 320
 				}
 			}
 		],
@@ -300,18 +527,18 @@
 				"display": "default",
 				"x": "config.stageCenterX",
 				"y": "config.stageCenterY",
-				"z": 0,
 				"interacts": false,
 				"static": true,
-				"image": "background1"
+				"image": "background1",
+				"z": 0
 			},
 			{
 				"id": "obstacle1",
 				"display": "default",
-				"z": 1,
 				"interacts": true,
 				"static": true,
-				"image": "obstacle1"
+				"image": "obstacle1",
+				"z": 1
 			}
 		]
 	}

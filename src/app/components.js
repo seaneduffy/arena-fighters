@@ -1,8 +1,8 @@
 'use strict';
 
-let React = require('react'),
+//let React = require('react'),
 
-_handleStartTwoPlayerGame = null,
+let _handleStartTwoPlayerGame = null,
 _handleConfirmPlayerName = null,
 _handleCreateGame = null,
 _handleGameListSelect = null,
@@ -138,7 +138,7 @@ Game = React.createClass({
 	<div id="gameScreen" className={this.state.gameActive ? '' : 'hidden'}>
 		<div id="canvas"></div>
 		<div id="controls">
-			<span id="joystick" className="center"></span>
+			<span id="joystick" className="center"><span className="ball"></span></span>
 			<span id="fire-btn"></span>
 			<span id="pause-btn" onTouchStart={this._handlePauseGame}></span>
 			<div id="menu" className={this.state.paused ? '' : 'hidden'}>

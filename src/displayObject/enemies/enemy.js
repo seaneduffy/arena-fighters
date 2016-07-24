@@ -7,9 +7,6 @@ let Character = require('../character'),
 
 function Enemy() {
 	Character.call(this);
-	
-	this.cycleActions = this.actions.bind(this);
-	cycle.addUpdate(this.cycleActions);
 }
 
 Enemy.prototype = Object.create(Character.prototype, {
@@ -25,34 +22,6 @@ Enemy.prototype = Object.create(Character.prototype, {
 			if(typeof this._player2 === 'undefined')
 				return this._player2 = config.player2;
 			return this._player2;
-		}
-	},
-	'actionsCounter': {
-		get: function() {
-			if(typeof this._actionsCounter === 'undefined')
-				return this._actionsCounter = 0;
-			return this._actionsCounter;
-		},
-		set: function(actionsCounter) {
-			this._actionsCounter = actionsCounter;
-		}
-	},
-	'actions': {
-		value: function() {
-			if(this.actionsCounter > this.actionSpeed) {
-				this.actionsCounter = 0;
-				this.distancePlayer1 = this.getDistanceToPlayer(this.player1);
-				this.distancePlayer2 = this.getDistanceToPlayer(this.player2);
-				this.closestPlayer = this.getClosestPlayer();
-				if(!!this.movement) {
-					this.movement();
-				}
-				if(!!this.fire && !!this.firearm) {
-					this.fire();
-				} 
-			} else {
-				this.actionsCounter++;
-			}
 		}
 	},
 	'getDistanceToPlayer': {

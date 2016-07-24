@@ -9,35 +9,56 @@ let config = require('./config'),
 	waitToRemove = new Array(),
 	arr = null,
 	active = false,
-	counter = 0,
-	frameRate = 1;
+	frameRate = 1,
+	startTime = 0;
 
 function cycle() {
 	if(active) {
-		if(counter % frameRate === 0) {
-			updateFunctions.forEach(func=>{ func() });
-			serverFunctions.forEach(func=>{ func() });
-			cleanupFunctions.forEach(func=>{ func() });
-			waitFunctions.forEach(funcObj=>{
-				if(counter >= funcObj.counter) {
+		
+		window.requestAnimationFrame(cycle);
+		
+		let time = Date.now(),
+			elapsedTime = time - startTime;
+		
+		if(elapsedTime >= frameRate) {
+
+			startTime = time;
+			
+			updateFunctions.forEach(funcObj=>{
+				if(funcObj.elapsedTime >= funcObj.rate) {
 					funcObj.func();
-					waitToRemove.push(funcObj.func);
-				}	
+					funcObj.elapsedTime = 0;
+				} else {
+					funcObj.elapsedTime += frameRate;
+				}
 			});
 			
+			serverFunctions.forEach(func=>{ func() });
+			
+			cleanupFunctions.forEach(func=>{ func() });
+			
+			waitFunctions.forEach(funcObj=>{
+				if(funcObj.elapsedTime >= funcObj.endTime) {
+					funcObj.func();
+					waitToRemove.push(funcObj.func);
+				} else {
+					funcObj.elapsedTime += frameRate;
+				}
+			});
+	
 			if(updateToRemove.length > 0) {
 				arr = new Array();
-				updateFunctions.forEach(func=>{ 
+				updateFunctions.forEach(funcObj=>{ 
 					if(typeof updateToRemove.find( removeFunc => {
-						return func === removeFunc
+						return funcObj.func === removeFunc
 					}) === 'undefined') {
-						arr.push(func);
+						arr.push(funcObj);
 					}
 				});
 				updateFunctions = arr;
 				updateToRemove = new Array();
 			}
-			
+	
 			if(serverToRemove.length > 0) {
 				arr = new Array();
 				serverFunctions.forEach(func=>{ 
@@ -50,7 +71,7 @@ function cycle() {
 				serverFunctions = arr;
 				serverToRemove = new Array();
 			}
-			
+	
 			if(cleanupToRemove.length > 0) {
 				arr = new Array();
 				cleanupFunctions.forEach(func=>{ 
@@ -63,7 +84,7 @@ function cycle() {
 				cleanupFunctions = arr;
 				cleanupToRemove = new Array();
 			}
-			
+	
 			if(waitToRemove.length > 0) {
 				arr = new Array();
 				waitFunctions.forEach(funcObj=>{ 
@@ -77,23 +98,24 @@ function cycle() {
 				waitToRemove = new Array();
 			}
 		}
-		counter++;
-		if(active)
-			window.requestAnimationFrame(cycle);
 	}
 }
 
 module.exports = {
-	getCounter: function() {return counter},
 	start: function() {
+		startTime = Date.now();
 		active = true;
 		window.requestAnimationFrame(cycle);
 	},
 	stop: function() {
 		active = false;
 	},
-	addUpdate: function(func) {
-		updateFunctions.push(func);
+	addUpdate: function(func, rate) {
+		updateFunctions.push({
+			func: func,
+			elapsedTime: 0,
+			rate: rate || frameRate
+		});
 	},
 	removeUpdate: function(func) {
 		updateToRemove.push(func);
@@ -113,11 +135,17 @@ module.exports = {
 	setFrameRate: function(rate) {
 		frameRate = rate;
 	},
-	wait: function(func, time) {
-		waitFunctions.push({func:func,counter:counter+time});
+	wait: function(func, endTime, log) {
+		waitFunctions.push({func:func, elapsedTime:0, endTime:endTime, log: log || false});
 	},
 	endWait: function(func) {
-		waitToRemove.push(func);
+		let arr = new Array();
+		waitFunctions.forEach(funcObj=>{ 
+			if(funcObj.func !== func) {
+				arr.push(funcObj);
+			}
+		});
+		waitFunctions = arr;
 	}
 };
 

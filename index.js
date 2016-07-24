@@ -5,6 +5,7 @@ let express = require('express'),
 http = require('http').Server(app);
 
 app.use(express.static('./public'));
+app.use(express.static('./src'));
 app.set('views', __dirname);
 app.set('view engine', 'ejs');
 
