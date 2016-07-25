@@ -302,219 +302,6 @@ module.exports = {
 },{}],2:[function(require,module,exports){
 'use strict';
 
-var components = require('./components'),
-    dataLoader = require('../data'),
-    config = require('../config'),
-    resources = require('../resources'),
-    socket = require('../socket'),
-    cycle = require('../cycle'),
-    Sprite = require('../displayObject/sprite'),
-    DisplayObject = require('../displayObject/displayObject'),
-    id = require('../id'),
-    socketAvailable = null,
-    controls = null,
-    gameComponent = ReactDOM.render(React.createElement(components.Game), document.getElementById('game'), function () {
-
-	config.domElement = document.getElementById('canvas');
-	config.domElement.style.position = 'relative';
-	config.domElement.style.overflow = 'hidden';
-
-	socketAvailable = initSocket();
-
-	dataLoader.load(function () {
-		resources.onReady(function () {
-			controls = require('../controls');
-			controls(onJoystick, onFire);
-			cycle.addUpdate(Sprite.draw);
-			cycle.addCleanup(DisplayObject.cleanup);
-			cycle.addCleanup(Sprite.cleanup);
-			components.addHandlers(handleStartSinglePlayerGame, handleStartTwoPlayerGame, handleConfirmPlayerName, handleCreateGame, handleGameListSelect, handleJoinGame, handleHostReady, handleGuestReady, handleEndGame, handlePauseGame, handleRestartGame, handleResumeGame);
-
-			if (config.dev1) {
-				config.gameType = 'single';
-				gameComponent.setState({ gameType: 'single' });
-				startGame();
-			} else if (config.dev2) {
-				config.gameType = 'two';
-				gameComponent.setState({
-					name: id.id()
-				});
-				handleConfirmPlayerName();
-			}
-		});
-		resources.load(config.imagesToLoad);
-	});
-});
-
-function startLevel(index) {
-	var levelData = config.levels[index];
-	if (config.hosting || config.gameType === 'single') {
-		(function () {
-			var displayObject = null,
-			    property = null;
-			levelData.forEach(function (level) {
-				if (level.id !== 'player2' || config.gameType === 'two') {
-					displayObject = new config.displayObjects[level.id].class();
-					for (property in config.displayObjects[level.id]) {
-						displayObject[property] = config.displayObjects[level.id][property];
-					}
-					for (var _property in level.properties) {
-						displayObject[_property] = level.properties[_property];
-					}
-					displayObject.stage = true;
-					if (level.id === 'player1') config.player1 = displayObject;else if (level.id === 'player2') config.player2 = displayObject;
-				}
-			});
-		})();
-	}
-}
-
-function startGame() {
-	gameComponent.setState({ gameActive: true });
-	if (config.hosting) {
-		cycle.addServer(Sprite.sendUpdate);
-	} else {
-		socket.on('sprite update', Sprite.receiveUpdate);
-	}
-	cycle.start();
-	startLevel(0);
-}
-
-function onJoystick(angle, percentage) {
-	if (config.gameType === 'two' && !config.hosting) {
-		socket.emit('joystick', { angle: angle, amount: amount });
-	} else {
-		config.player1.joystick(percentage, angle);
-	}
-}
-
-function onFire() {
-	if (config.gameType === 'two' && !config.hosting) {
-		socket.emit('fire');
-	} else {
-		config.player1.fire();
-	}
-}
-
-function initSocket() {
-	if (!socket.init()) return false;
-	socket.on('games list', function (games) {
-		gameComponent.setState({ games: games });
-		if (config.dev2) {
-			if (games.length > 0) {
-				gameComponent.setState({
-					gameId: games[0].id
-				});
-				handleJoinGame();
-			} else {
-				gameComponent.setState({
-					gameName: id.id()
-				});
-				handleCreateGame();
-			}
-		}
-	});
-	socket.on('game created', function (id) {
-		gameComponent.setState({
-			hosting: true,
-			gameId: id
-		});
-	});
-	socket.on('player joined', function (playerName) {
-		gameComponent.setState({ guestName: playerName });
-		gameComponent.setState({ playerJoined: true });
-
-		if (config.dev2) {
-			handleHostReady();
-		}
-	});
-	socket.on('host ready', function () {
-		gameComponent.setState({ hostReady: true });
-
-		if (config.dev2) {
-			handleGuestReady();
-		}
-	});
-	socket.on('guest ready', function () {
-		startGame();
-	});
-	socket.on('joystick', function (data) {
-		config.player2.joystick(percentage, angle);
-	});
-	socket.on('fire', function () {
-		config.player2.fire();
-	});
-	socket.on('end game', function () {});
-	return true;
-}
-
-function handleJoinGame() {
-	config.hosting = false;
-	socket.emit('join game', {
-		name: gameComponent.state.playerName,
-		gameId: gameComponent.state.gameId
-	});
-	gameComponent.setState({ gameJoined: true });
-}
-function handleGameListSelect(event) {
-	var element = event.target;
-	gameComponent.setState({
-		gameId: element.getAttribute('data-game-id'),
-		hostName: element.getAttribute('data-player-name')
-	});
-}
-function handleCreateGame() {
-	gameComponent.setState({ gameCreated: true });
-	config.hosting = true;
-	socket.emit('create game', {
-		name: gameComponent.state.playerName,
-		gameName: gameComponent.state.gameName
-	});
-}
-function handlePauseGame(e) {
-	cycle.stop();
-	gameComponent.setState({ paused: true });
-}
-function handleResumeGame(e) {
-	gameComponent.setState({ paused: false });
-	cycle.start();
-}
-function handleRestartGame(e) {
-	cycle.stop();
-	DisplayObject.clear();
-	gameComponent.setState({ paused: false });
-	startGame();
-}
-function handleEndGame(e) {
-	cycle.stop();
-	DisplayObject.clear();
-	gameComponent.setState(gameComponent.getInitialState());
-}
-function handleConfirmPlayerName() {
-	gameComponent.setState({ playerNameSet: true });
-	socket.emit('request games list');
-}
-function handleStartSinglePlayerGame() {
-	config.gameType = 'single';
-	gameComponent.setState({ gameType: 'single' });
-	startGame();
-}
-function handleStartTwoPlayerGame() {
-	config.gameType = 'two';
-	gameComponent.setState({ gameType: 'two' });
-}
-function handleHostReady() {
-	gameComponent.setState({ hostReady: true });
-	socket.emit('host ready');
-}
-function handleGuestReady() {
-	socket.emit('guest ready');
-	startGame();
-}
-
-},{"../config":3,"../controls":4,"../cycle":5,"../data":6,"../displayObject/displayObject":9,"../displayObject/sprite":17,"../id":19,"../resources":22,"../socket":23,"./components":1}],3:[function(require,module,exports){
-'use strict';
-
 var config = {
 	"jsonUri": "/data.json",
 	"pi": Math.PI,
@@ -559,54 +346,70 @@ if (config.dev) {
 	};
 }
 
-},{}],4:[function(require,module,exports){
+},{}],3:[function(require,module,exports){
 'use strict';
 
-var config = require('./config'),
-    cycle = require('./cycle'),
+var config = require('../config'),
+    element = null,
+    json = null,
+    callback = null;
+
+function press() {
+	element.className = 'active';
+	element.style.backgroundPosition = -json['fire_down'].frame.x + 'px ' + -json['fire_down'].frame.y + 'px';
+	callback();
+}
+
+function release() {
+	element.className = '';
+	element.style.backgroundPosition = -json['fire_up'].frame.x + 'px ' + -json['fire_up'].frame.y + 'px';
+}
+
+module.exports = {
+	init: function init(_element, _json, _callback) {
+		element = _element;
+		json = _json;
+		callback = _callback;
+		element.style.background = 'url(' + config.controlsImage + ')';
+		element.style.width = json['fire_up'].frame.w + 'px';
+		element.style.height = json['fire_up'].frame.h + 'px';
+		element.style.backgroundPosition = -json['fire_up'].frame.x + 'px ' + -json['fire_up'].frame.y + 'px';
+		element.addEventListener('touchstart', press, false);
+		element.addEventListener('touchend', release, false);
+	}
+};
+
+},{"../config":2}],4:[function(require,module,exports){
+'use strict';
+
+var config = require('../config'),
+    cycle = require('../cycle'),
     joystickCallback = null,
     fireCallback = null,
     joystick = require('./joystick'),
-    fireBtn = document.getElementById('fire-btn'),
+    fireBtn = require('./fire'),
     controlsJson = config.controls,
     joystickAngle = 0,
     joystickAmount = 0,
-    frameRate = config.joystickFrameRate;
+    joystickFrameRate = config.joystickFrameRate;
 
 document.querySelector('#controls').addEventListener('touchstart', function (e) {
 	e.preventDefault();
 });
 
-joystick.init(document.getElementById('joystick'), config.joystickMax, config.joystickMin, controlsJson);
-joystick.addCallback(onJoystickMove);
+joystick.init(document.getElementById('joystick'), config.joystickMax, config.joystickMin, controlsJson, function (angle, amount) {
+	joystickAngle = angle;
+	joystickAmount = amount;
+});
 
-fireBtn.style.background = 'url(' + config.controlsImage + ')';
-fireBtn.style.width = controlsJson['fire_up'].frame.w + 'px';
-fireBtn.style.height = controlsJson['fire_up'].frame.h + 'px';
-fireBtn.style.backgroundPosition = -controlsJson['fire_up'].frame.x + 'px ' + -controlsJson['fire_up'].frame.y + 'px';
-fireBtn.addEventListener('touchstart', onFire, false);
-fireBtn.addEventListener('touchend', onFireEnd, false);
+cycle.addUpdate(joystickFrame, joystickFrameRate);
 
-cycle.addUpdate(joystickFrame, frameRate);
+fireBtn.init(document.getElementById('fire-btn'), controlsJson, function () {
+	fireCallback();
+});
 
 function joystickFrame() {
 	joystickCallback(joystickAngle, joystickAmount);
-}
-
-function onFire() {
-	fireBtn.className = 'active';
-	fireBtn.style.backgroundPosition = -controlsJson['fire_down'].frame.x + 'px ' + -controlsJson['fire_down'].frame.y + 'px';
-	fireCallback();
-}
-
-function onFireEnd() {
-	fireBtn.className = '';
-	fireBtn.style.backgroundPosition = -controlsJson['fire_up'].frame.x + 'px ' + -controlsJson['fire_up'].frame.y + 'px';
-}
-
-function onJoystickMove(angle, amount) {
-	joystickAngle = angle;
-	joystickAmount = amount;
 }
 
 document.addEventListener('keydown', function (e) {
@@ -620,7 +423,133 @@ module.exports = function (_joystickCallback, _fireCallback) {
 	fireCallback = _fireCallback;
 };
 
-},{"./config":3,"./cycle":5,"./joystick":21}],5:[function(require,module,exports){
+},{"../config":2,"../cycle":6,"./fire":3,"./joystick":5}],5:[function(require,module,exports){
+'use strict';
+
+var config = require('../config'),
+    geom = require('../../utils/geom'),
+    element = null,
+    callback = null,
+    isTouch = checkTouch(),
+    centerX = null,
+    centerY = null,
+    touchX = null,
+    touchY = null,
+    deltaX = null,
+    deltaY = null,
+    sensitivity = null,
+    maxDistance = null,
+    ball = null,
+    directions = Object.create(null),
+    json = null,
+    xobj = new XMLHttpRequest();
+
+function checkTouch() {
+	try {
+		document.createEvent("TouchEvent");
+		return true;
+	} catch (e) {
+		return false;
+	}
+}
+
+function _init() {
+	if (isTouch) {
+		element.addEventListener('touchstart', startTouch, false);
+		element.addEventListener('touchmove', touchMove, false);
+		element.addEventListener('touchend', endTouch, false);
+	} else {
+		element.addEventListener('mousedown', onPress, false);
+		element.addEventListener('mouseup', onRelease, false);
+	}
+	element.style.background = 'url(' + config.controlsImage + ')';
+	var imageInfo = json['bg'].frame;
+	element.style.width = imageInfo.w + 'px';
+	element.style.height = imageInfo.h + 'px';
+	element.style.backgroundPosition = -imageInfo.x + 'px ' + -imageInfo.y + 'px';
+	imageInfo = json['ball'].frame;
+	ball.style.width = imageInfo.w + 'px';
+	ball.style.height = imageInfo.h + 'px';
+	ball.style.background = 'url(' + config.controlsImage + ')';
+	ball.style.backgroundPosition = -imageInfo.x + 'px ' + -imageInfo.y + 'px';
+}
+
+function startTouch(e) {
+	e.preventDefault();
+	centerX = e.touches[0].pageX;
+	centerY = e.touches[0].pageY;
+	element.className = 'active';
+}
+
+function touchMove(e) {
+	touchX = e.touches[0].pageX;
+	touchY = e.touches[0].pageY;
+	deltaX = touchX - centerX;
+	deltaY = touchY - centerY;
+	var amount = geom.getDistance(centerX, centerY, touchX, touchY),
+	    angle = geom.getAngle(centerX, centerY, touchX, touchY),
+	    per = 0;
+	if (amount > maxDistance) amount = maxDistance;
+	if (Math.abs(deltaX) > sensitivity || Math.abs(deltaY) > sensitivity) {
+		var _per = amount / maxDistance;
+		callback(angle, _per);
+	} else {
+		callback(angle, per);
+	}
+	var ballXY = geom.getXYFromVector(0, 0, angle, amount);
+	ball.style.transform = 'translate(' + (ballXY.x - 50) + '%,' + (ballXY.y - 50) + '%)';
+}
+
+function endTouch(e) {
+	callback(-1, 0);
+	element.className = '';
+	ball.style.transform = 'translate(-50%, -50%)';
+}
+
+function onPress(e) {
+	centerX = e.pageX;
+	centerY = e.pageY;
+	element.addEventListener('mousemove', pressMove, false);
+}
+
+function pressMove(e) {
+	var x = e.pageX,
+	    y = e.pageY,
+	    deltaX = x - centerX,
+	    deltaY = y - centerY;
+	var amount = geom.getDistance(centerX, centerY, touchX, touchY),
+	    angle = geom.getAngle(centerX, centerY, touchX, touchY),
+	    per = 0;
+	if (amount > maxDistance) amount = maxDistance;
+	if (Math.abs(deltaX) > sensitivity || Math.abs(deltaY) > sensitivity) {
+		var _per2 = amount / maxDistance;
+		callback(angle, _per2);
+	} else {
+		callback(angle, per);
+	}
+	var ballXY = geom.getXYFromVector(0, 0, angle, amount);
+	ball.style.transform = 'translate(' + (ballXY.x - 50) + '%,' + (ballXY.y - 50) + '%)';
+}
+
+function onRelease(e) {
+	callback(-1, 0);
+	element.className = '';
+	ball.style.transform = 'translate(-50%, -50%)';
+}
+
+module.exports = {
+	init: function init(_element, _maxDistance, _sensitivity, _json, _callback) {
+		element = _element;
+		ball = element.querySelector('.ball');
+		maxDistance = _maxDistance;
+		sensitivity = _sensitivity;
+		json = _json;
+		callback = _callback;
+		_init();
+	}
+};
+
+},{"../../utils/geom":22,"../config":2}],6:[function(require,module,exports){
 'use strict';
 
 var config = require('./config'),
@@ -790,7 +719,7 @@ if (config.dev) {
 	};
 }
 
-},{"./config":3}],6:[function(require,module,exports){
+},{"./config":2}],7:[function(require,module,exports){
 'use strict';
 
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj; };
@@ -1004,7 +933,7 @@ module.exports = {
 	}
 };
 
-},{"./config":3,"./cycle":5,"./displayObject/ammunition":7,"./displayObject/displayObject":9,"./displayObject/enemies/devil":10,"./displayObject/enemies/grunt":12,"./displayObject/enemies/robot":13,"./displayObject/firearm":14,"./displayObject/player":15}],7:[function(require,module,exports){
+},{"./config":2,"./cycle":6,"./displayObject/ammunition":8,"./displayObject/displayObject":10,"./displayObject/enemies/devil":11,"./displayObject/enemies/grunt":13,"./displayObject/enemies/robot":14,"./displayObject/firearm":15,"./displayObject/player":16}],8:[function(require,module,exports){
 'use strict';
 
 var Projectile = require('./projectile');
@@ -1034,7 +963,7 @@ Ammunition.prototype = Object.create(Projectile.prototype, {
 
 module.exports = Ammunition;
 
-},{"./projectile":16}],8:[function(require,module,exports){
+},{"./projectile":17}],9:[function(require,module,exports){
 'use strict';
 
 var config = require('../config'),
@@ -1200,12 +1129,12 @@ function onCollision(collidedObject) {
 
 module.exports = Character;
 
-},{"../config":3,"../cycle":5,"./displayObject":9,"./firearm":14}],9:[function(require,module,exports){
+},{"../config":2,"../cycle":6,"./displayObject":10,"./firearm":15}],10:[function(require,module,exports){
 'use strict';
 
 var Sprite = require('./sprite'),
     config = require('../config'),
-    geom = require('../geom'),
+    geom = require('../../utils/geom'),
     cycle = require('../cycle'),
     displayObjects = [];
 
@@ -1666,13 +1595,13 @@ if (config.dev) {
 
 module.exports = DisplayObject;
 
-},{"../config":3,"../cycle":5,"../geom":18,"./sprite":17}],10:[function(require,module,exports){
+},{"../../utils/geom":22,"../config":2,"../cycle":6,"./sprite":18}],11:[function(require,module,exports){
 'use strict';
 
 var Enemy = require('./enemy'),
     Character = require('../character'),
     cycle = require('../../cycle'),
-    geom = require('../../geom'),
+    geom = require('../../../utils/geom'),
     config = require('../../config');
 
 function Devil() {
@@ -1799,13 +1728,13 @@ Devil.prototype = Object.create(Enemy.prototype, {
 
 module.exports = Devil;
 
-},{"../../config":3,"../../cycle":5,"../../geom":18,"../character":8,"./enemy":11}],11:[function(require,module,exports){
+},{"../../../utils/geom":22,"../../config":2,"../../cycle":6,"../character":9,"./enemy":12}],12:[function(require,module,exports){
 'use strict';
 
 var Character = require('../character'),
     cycle = require('../../cycle'),
     config = require('../../config'),
-    geom = require('../../geom');
+    geom = require('../../../utils/geom');
 
 function Enemy() {
 	Character.call(this);
@@ -1856,13 +1785,13 @@ Enemy.prototype = Object.create(Character.prototype, {
 
 module.exports = Enemy;
 
-},{"../../config":3,"../../cycle":5,"../../geom":18,"../character":8}],12:[function(require,module,exports){
+},{"../../../utils/geom":22,"../../config":2,"../../cycle":6,"../character":9}],13:[function(require,module,exports){
 'use strict';
 
 var Enemy = require('./enemy'),
     Character = require('../character'),
     cycle = require('../../cycle'),
-    geom = require('../../geom'),
+    geom = require('../../../utils/geom'),
     config = require('../../config');
 
 function Grunt() {
@@ -1987,13 +1916,13 @@ Grunt.prototype = Object.create(Enemy.prototype, {
 
 module.exports = Grunt;
 
-},{"../../config":3,"../../cycle":5,"../../geom":18,"../character":8,"./enemy":11}],13:[function(require,module,exports){
+},{"../../../utils/geom":22,"../../config":2,"../../cycle":6,"../character":9,"./enemy":12}],14:[function(require,module,exports){
 'use strict';
 
 var Enemy = require('./enemy'),
     Character = require('../character'),
     cycle = require('../../cycle'),
-    geom = require('../../geom'),
+    geom = require('../../../utils/geom'),
     config = require('../../config');
 
 function Robot() {
@@ -2147,7 +2076,7 @@ Robot.prototype = Object.create(Enemy.prototype, {
 
 module.exports = Robot;
 
-},{"../../config":3,"../../cycle":5,"../../geom":18,"../character":8,"./enemy":11}],14:[function(require,module,exports){
+},{"../../../utils/geom":22,"../../config":2,"../../cycle":6,"../character":9,"./enemy":12}],15:[function(require,module,exports){
 'use strict';
 
 var DisplayObject = require('./displayObject'),
@@ -2223,7 +2152,7 @@ function endBlastAnimation() {
 
 module.exports = Firearm;
 
-},{"../config":3,"../cycle":5,"./ammunition":7,"./displayObject":9}],15:[function(require,module,exports){
+},{"../config":2,"../cycle":6,"./ammunition":8,"./displayObject":10}],16:[function(require,module,exports){
 'use strict';
 
 var config = require('../config'),
@@ -2346,14 +2275,14 @@ function slide() {
 
 module.exports = Player;
 
-},{"../config":3,"../cycle":5,"./character":8,"./displayObject":9}],16:[function(require,module,exports){
+},{"../config":2,"../cycle":6,"./character":9,"./displayObject":10}],17:[function(require,module,exports){
 'use strict';
 
 var Sprite = require('./sprite'),
     config = require('../config'),
     DisplayObject = require('./displayObject'),
     cycle = require('../cycle'),
-    geom = require('../geom');
+    geom = require('../../utils/geom');
 
 function Projectile() {
 	DisplayObject.call(this);
@@ -2420,14 +2349,14 @@ Projectile.prototype = Object.create(DisplayObject.prototype, {
 
 module.exports = Projectile;
 
-},{"../config":3,"../cycle":5,"../geom":18,"./displayObject":9,"./sprite":17}],17:[function(require,module,exports){
+},{"../../utils/geom":22,"../config":2,"../cycle":6,"./displayObject":10,"./sprite":18}],18:[function(require,module,exports){
 'use strict';
 
 var config = require('../config'),
     cycle = require('../cycle'),
-    resources = require('../resources'),
-    id = require('../id'),
-    socket = require('../socket'),
+    resources = require('../../utils/resources'),
+    id = require('../../utils/id'),
+    socket = require('../../socket'),
     sprites = new Array(),
     spritesToUpdate = new Array(),
     availableSprites = Object.create(null);
@@ -2760,7 +2689,249 @@ var decodedState = new Float64Array( decodeBuffer );
 
 module.exports = Sprite;
 
-},{"../config":3,"../cycle":5,"../id":19,"../resources":22,"../socket":23}],18:[function(require,module,exports){
+},{"../../socket":21,"../../utils/id":23,"../../utils/resources":24,"../config":2,"../cycle":6}],19:[function(require,module,exports){
+'use strict';
+
+var components = require('./components'),
+    dataLoader = require('./data'),
+    config = require('./config'),
+    resources = require('../utils/resources'),
+    socket = require('../socket'),
+    cycle = require('./cycle'),
+    Sprite = require('./displayObject/sprite'),
+    DisplayObject = require('./displayObject/displayObject'),
+    id = require('../utils/id'),
+    socketAvailable = null,
+    controls = null,
+    gameComponent = ReactDOM.render(React.createElement(components.Game), document.getElementById('game'), function () {
+
+	config.domElement = document.getElementById('canvas');
+	config.domElement.style.position = 'relative';
+	config.domElement.style.overflow = 'hidden';
+
+	socketAvailable = initSocket();
+
+	dataLoader.load(function () {
+		resources.onReady(function () {
+			controls = require('./controls');
+			controls(onJoystick, onFire);
+			cycle.addUpdate(Sprite.draw);
+			cycle.addCleanup(DisplayObject.cleanup);
+			cycle.addCleanup(Sprite.cleanup);
+			components.addHandlers(handleStartSinglePlayerGame, handleStartTwoPlayerGame, handleConfirmPlayerName, handleCreateGame, handleGameListSelect, handleJoinGame, handleHostReady, handleGuestReady, handleEndGame, handlePauseGame, handleRestartGame, handleResumeGame);
+
+			if (config.dev1) {
+				config.gameType = 'single';
+				gameComponent.setState({ gameType: 'single' });
+				startGame();
+			} else if (config.dev2) {
+				config.gameType = 'two';
+				gameComponent.setState({
+					name: id.id()
+				});
+				handleConfirmPlayerName();
+			}
+		});
+		resources.load(config.imagesToLoad);
+	});
+});
+
+function startLevel(index) {
+	var levelData = config.levels[index];
+	if (config.hosting || config.gameType === 'single') {
+		(function () {
+			var displayObject = null,
+			    property = null;
+			levelData.forEach(function (level) {
+				if (level.id !== 'player2' || config.gameType === 'two') {
+					displayObject = new config.displayObjects[level.id].class();
+					for (property in config.displayObjects[level.id]) {
+						displayObject[property] = config.displayObjects[level.id][property];
+					}
+					for (var _property in level.properties) {
+						displayObject[_property] = level.properties[_property];
+					}
+					displayObject.stage = true;
+					if (level.id === 'player1') config.player1 = displayObject;else if (level.id === 'player2') config.player2 = displayObject;
+				}
+			});
+		})();
+	}
+}
+
+function startGame() {
+	gameComponent.setState({ gameActive: true });
+	if (config.hosting) {
+		cycle.addServer(Sprite.sendUpdate);
+	} else {
+		socket.on('sprite update', Sprite.receiveUpdate);
+	}
+	cycle.start();
+	startLevel(0);
+}
+
+function onJoystick(angle, percentage) {
+	if (config.gameType === 'two' && !config.hosting) {
+		socket.emit('joystick', { angle: angle, amount: amount });
+	} else {
+		config.player1.joystick(percentage, angle);
+	}
+}
+
+function onFire() {
+	if (config.gameType === 'two' && !config.hosting) {
+		socket.emit('fire');
+	} else {
+		config.player1.fire();
+	}
+}
+
+function initSocket() {
+	if (!socket.init()) return false;
+	socket.on('games list', function (games) {
+		gameComponent.setState({ games: games });
+		if (config.dev2) {
+			if (games.length > 0) {
+				gameComponent.setState({
+					gameId: games[0].id
+				});
+				handleJoinGame();
+			} else {
+				gameComponent.setState({
+					gameName: id.id()
+				});
+				handleCreateGame();
+			}
+		}
+	});
+	socket.on('game created', function (id) {
+		gameComponent.setState({
+			hosting: true,
+			gameId: id
+		});
+	});
+	socket.on('player joined', function (playerName) {
+		gameComponent.setState({ guestName: playerName });
+		gameComponent.setState({ playerJoined: true });
+
+		if (config.dev2) {
+			handleHostReady();
+		}
+	});
+	socket.on('host ready', function () {
+		gameComponent.setState({ hostReady: true });
+
+		if (config.dev2) {
+			handleGuestReady();
+		}
+	});
+	socket.on('guest ready', function () {
+		startGame();
+	});
+	socket.on('joystick', function (data) {
+		config.player2.joystick(percentage, angle);
+	});
+	socket.on('fire', function () {
+		config.player2.fire();
+	});
+	socket.on('end game', function () {});
+	return true;
+}
+
+function handleJoinGame() {
+	config.hosting = false;
+	socket.emit('join game', {
+		name: gameComponent.state.playerName,
+		gameId: gameComponent.state.gameId
+	});
+	gameComponent.setState({ gameJoined: true });
+}
+function handleGameListSelect(event) {
+	var element = event.target;
+	gameComponent.setState({
+		gameId: element.getAttribute('data-game-id'),
+		hostName: element.getAttribute('data-player-name')
+	});
+}
+function handleCreateGame() {
+	gameComponent.setState({ gameCreated: true });
+	config.hosting = true;
+	socket.emit('create game', {
+		name: gameComponent.state.playerName,
+		gameName: gameComponent.state.gameName
+	});
+}
+function handlePauseGame(e) {
+	cycle.stop();
+	gameComponent.setState({ paused: true });
+}
+function handleResumeGame(e) {
+	gameComponent.setState({ paused: false });
+	cycle.start();
+}
+function handleRestartGame(e) {
+	cycle.stop();
+	DisplayObject.clear();
+	gameComponent.setState({ paused: false });
+	startGame();
+}
+function handleEndGame(e) {
+	cycle.stop();
+	DisplayObject.clear();
+	gameComponent.setState(gameComponent.getInitialState());
+}
+function handleConfirmPlayerName() {
+	gameComponent.setState({ playerNameSet: true });
+	socket.emit('request games list');
+}
+function handleStartSinglePlayerGame() {
+	config.gameType = 'single';
+	gameComponent.setState({ gameType: 'single' });
+	startGame();
+}
+function handleStartTwoPlayerGame() {
+	config.gameType = 'two';
+	gameComponent.setState({ gameType: 'two' });
+}
+function handleHostReady() {
+	gameComponent.setState({ hostReady: true });
+	socket.emit('host ready');
+}
+function handleGuestReady() {
+	socket.emit('guest ready');
+	startGame();
+}
+
+},{"../socket":21,"../utils/id":23,"../utils/resources":24,"./components":1,"./config":2,"./controls":4,"./cycle":6,"./data":7,"./displayObject/displayObject":10,"./displayObject/sprite":18}],20:[function(require,module,exports){
+'use strict';
+
+(function () {
+	window.init = function () {
+		require('./app');
+	};
+})();
+
+},{"./app":19}],21:[function(require,module,exports){
+"use strict";
+
+var socket = null;
+
+module.exports = {
+	emit: function emit(label, data) {
+		if (!!socket) socket.emit(label, data);
+	},
+	on: function on(label, callback) {
+		if (!!socket) socket.on(label, function (data) {
+			callback(data);
+		});
+	},
+	init: function init() {
+		socket = socket || !!io ? io() : false;
+		return !!socket;
+	}
+};
+
+},{}],22:[function(require,module,exports){
 'use strict';
 
 var pi = Math.PI,
@@ -2905,7 +3076,7 @@ module.exports = {
 	}
 };
 
-},{}],19:[function(require,module,exports){
+},{}],23:[function(require,module,exports){
 "use strict";
 
 var S4 = function S4() {
@@ -2921,144 +3092,7 @@ module.exports = {
 	}
 };
 
-},{}],20:[function(require,module,exports){
-'use strict';
-
-(function () {
-	window.init = function () {
-		require('./app');
-	};
-})();
-
-},{"./app":2}],21:[function(require,module,exports){
-'use strict';
-
-var config = require('./config'),
-    geom = require('./geom'),
-    element = null,
-    callback = null,
-    isTouch = checkTouch(),
-    centerX = null,
-    centerY = null,
-    touchX = null,
-    touchY = null,
-    deltaX = null,
-    deltaY = null,
-    sensitivity = null,
-    maxDistance = null,
-    ball = null,
-    directions = Object.create(null),
-    spriteJson = null,
-    xobj = new XMLHttpRequest();
-
-function checkTouch() {
-	try {
-		document.createEvent("TouchEvent");
-		return true;
-	} catch (e) {
-		return false;
-	}
-}
-
-function _init() {
-	if (isTouch) {
-		element.addEventListener('touchstart', startTouch, false);
-		element.addEventListener('touchmove', touchMove, false);
-		element.addEventListener('touchend', endTouch, false);
-	} else {
-		element.addEventListener('mousedown', onPress, false);
-		element.addEventListener('mouseup', onRelease, false);
-	}
-	element.style.background = 'url(' + config.controlsImage + ')';
-	var imageInfo = spriteJson['bg'].frame;
-	element.style.width = imageInfo.w + 'px';
-	element.style.height = imageInfo.h + 'px';
-	element.style.backgroundPosition = -imageInfo.x + 'px ' + -imageInfo.y + 'px';
-	imageInfo = spriteJson['ball'].frame;
-	ball.style.width = imageInfo.w + 'px';
-	ball.style.height = imageInfo.h + 'px';
-	ball.style.background = 'url(' + config.controlsImage + ')';
-	ball.style.backgroundPosition = -imageInfo.x + 'px ' + -imageInfo.y + 'px';
-}
-
-function startTouch(e) {
-	e.preventDefault();
-	centerX = e.touches[0].pageX;
-	centerY = e.touches[0].pageY;
-	element.className = 'active';
-}
-
-function touchMove(e) {
-	touchX = e.touches[0].pageX;
-	touchY = e.touches[0].pageY;
-	deltaX = touchX - centerX;
-	deltaY = touchY - centerY;
-	var amount = geom.getDistance(centerX, centerY, touchX, touchY),
-	    angle = geom.getAngle(centerX, centerY, touchX, touchY),
-	    per = 0;
-	if (amount > maxDistance) amount = maxDistance;
-	if (Math.abs(deltaX) > sensitivity || Math.abs(deltaY) > sensitivity) {
-		var _per = amount / maxDistance;
-		callback(angle, _per);
-	} else {
-		callback(angle, per);
-	}
-	var ballXY = geom.getXYFromVector(0, 0, angle, amount);
-	ball.style.transform = 'translate(' + (ballXY.x - 50) + '%,' + (ballXY.y - 50) + '%)';
-}
-
-function endTouch(e) {
-	callback(-1, 0);
-	element.className = '';
-	ball.style.transform = 'translate(-50%, -50%)';
-}
-
-function onPress(e) {
-	centerX = e.pageX;
-	centerY = e.pageY;
-	element.addEventListener('mousemove', pressMove, false);
-}
-
-function pressMove(e) {
-	var x = e.pageX,
-	    y = e.pageY,
-	    deltaX = x - centerX,
-	    deltaY = y - centerY;
-	var amount = geom.getDistance(centerX, centerY, touchX, touchY),
-	    angle = geom.getAngle(centerX, centerY, touchX, touchY),
-	    per = 0;
-	if (amount > maxDistance) amount = maxDistance;
-	if (Math.abs(deltaX) > sensitivity || Math.abs(deltaY) > sensitivity) {
-		var _per2 = amount / maxDistance;
-		callback(angle, _per2);
-	} else {
-		callback(angle, per);
-	}
-	var ballXY = geom.getXYFromVector(0, 0, angle, amount);
-	ball.style.transform = 'translate(' + (ballXY.x - 50) + '%,' + (ballXY.y - 50) + '%)';
-}
-
-function onRelease(e) {
-	callback(-1, 0);
-	element.className = '';
-	ball.style.transform = 'translate(-50%, -50%)';
-}
-
-module.exports = {
-	init: function init(_element, _maxDistance, _sensitivity, json) {
-		element = _element;
-		ball = element.querySelector('.ball');
-		maxDistance = _maxDistance;
-		sensitivity = _sensitivity;
-		spriteJson = json;
-		_init();
-	},
-	addCallback: function addCallback(_callback) {
-		callback = _callback;
-	}
-};
-
-},{"./config":3,"./geom":18}],22:[function(require,module,exports){
+},{}],24:[function(require,module,exports){
 "use strict";
 
 var resourceCache = {};
@@ -3118,26 +3152,6 @@ module.exports = {
 	get: get,
 	onReady: onReady,
 	isReady: isReady
-};
-
-},{}],23:[function(require,module,exports){
-"use strict";
-
-var socket = null;
-
-module.exports = {
-	emit: function emit(label, data) {
-		if (!!socket) socket.emit(label, data);
-	},
-	on: function on(label, callback) {
-		if (!!socket) socket.on(label, function (data) {
-			callback(data);
-		});
-	},
-	init: function init() {
-		socket = socket || !!io ? io() : false;
-		return !!socket;
-	}
 };
 
 },{}]},{},[20]);

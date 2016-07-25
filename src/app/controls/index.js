@@ -1,48 +1,31 @@
 'use strict';
 
-let config = require('./config'),
-	cycle = require('./cycle'),
+let config = require('../config'),
+	cycle = require('../cycle'),
 	joystickCallback = null,
 	fireCallback = null,
-	joystick = require('./controls/joystick'),
-	fireBtn = document.getElementById('fire-btn'),
+	joystick = require('./joystick'),
+	fireBtn = require('./fire'),
 	controlsJson = config.controls,
 	joystickAngle = 0,
 	joystickAmount = 0,
-	frameRate = config.joystickFrameRate;
+	joystickFrameRate = config.joystickFrameRate;
 
-	document.querySelector('#controls').addEventListener('touchstart', (e)=>{e.preventDefault()});
+document.querySelector('#controls').addEventListener('touchstart', (e)=>{e.preventDefault()});
 
-joystick.init(document.getElementById('joystick'), config.joystickMax, config.joystickMin, controlsJson);
-joystick.addCallback(onJoystickMove);
+joystick.init(document.getElementById('joystick'), config.joystickMax, config.joystickMin, controlsJson, function(angle, amount){
+	joystickAngle = angle;
+	joystickAmount = amount;
+});
 
-fireBtn.style.background = 'url('+config.controlsImage+')';
-fireBtn.style.width = controlsJson['fire_up'].frame.w + 'px';
-fireBtn.style.height = controlsJson['fire_up'].frame.h + 'px';
-fireBtn.style.backgroundPosition = (-controlsJson['fire_up'].frame.x)+'px '+(-controlsJson['fire_up'].frame.y)+'px';
-fireBtn.addEventListener('touchstart', onFire, false);
-fireBtn.addEventListener('touchend', onFireEnd, false);
-	
-cycle.addUpdate(joystickFrame, frameRate);
+cycle.addUpdate(joystickFrame, joystickFrameRate);
+
+fireBtn.init(document.getElementById('fire-btn'), controlsJson, function(){
+	fireCallback();
+});
 
 function joystickFrame() {
 	joystickCallback(joystickAngle, joystickAmount);
-}
-
-function onFire() {
-	fireBtn.className = 'active';
-	fireBtn.style.backgroundPosition = (-controlsJson['fire_down'].frame.x)+'px '+(-controlsJson['fire_down'].frame.y)+'px';
-	fireCallback();
-}
-
-function onFireEnd() {
-	fireBtn.className = '';
-	fireBtn.style.backgroundPosition = (-controlsJson['fire_up'].frame.x)+'px '+(-controlsJson['fire_up'].frame.y)+'px';
-}
-
-function onJoystickMove(angle, amount) {
-	joystickAngle = angle;
-	joystickAmount = amount;
 }
 
 document.addEventListener('keydown', (e)=>{

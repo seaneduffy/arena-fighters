@@ -13,7 +13,7 @@ let config = require('../config'),
 	maxDistance = null,
 	ball = null,
 	directions = Object.create(null),
-	spriteJson = null,
+	json = null,
 	xobj = new XMLHttpRequest();
 
 function checkTouch() {
@@ -35,11 +35,11 @@ function init() {
 		element.addEventListener('mouseup', onRelease, false);
 	}
 	element.style.background = 'url('+config.controlsImage+')';
-	let imageInfo = spriteJson['bg'].frame;
+	let imageInfo = json['bg'].frame;
 	element.style.width = imageInfo.w + 'px';
 	element.style.height = imageInfo.h + 'px';
 	element.style.backgroundPosition = -imageInfo.x+'px '+-imageInfo.y+'px';
-	imageInfo = spriteJson['ball'].frame;
+	imageInfo = json['ball'].frame;
 	ball.style.width = imageInfo.w + 'px';
 	ball.style.height = imageInfo.h + 'px';
 	ball.style.background = 'url('+config.controlsImage+')';
@@ -110,15 +110,13 @@ function onRelease(e) {
 }
 
 module.exports = {
-	init: function(_element, _maxDistance, _sensitivity, json){
+	init: function(_element, _maxDistance, _sensitivity, _json, _callback){
 		element = _element;
 		ball = element.querySelector('.ball');
 		maxDistance = _maxDistance;
 		sensitivity = _sensitivity;
-		spriteJson = json;
-		init();
-	},
-	addCallback: function(_callback) {
+		json = _json;
 		callback = _callback;
+		init();
 	}
 };
