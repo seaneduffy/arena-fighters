@@ -3,7 +3,7 @@
 let Character = require('../character'),
 	cycle = require('../../cycle'),
 	config = require('../../config'),
-	geom = require('../../geom');
+	geom = require('../../../utils/geom');
 
 function Enemy() {
 	Character.call(this);

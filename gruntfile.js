@@ -19,7 +19,9 @@ module.exports = function(grunt) {
 		browserify: {
 			dist: {
 				options: {
-					transform: [["babelify", { presets: ["react", "es2015"] }]]
+					transform: [["babelify", { presets: ["react", "es2015"] }]],
+					watch: true,
+					keepAlive: true
 				},
 				files: {
 					"public/js/game.js": "src/index.js"

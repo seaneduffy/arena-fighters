@@ -1,31 +1,29 @@
 'use strict';
 
-//let React = require('react'),
-//ReactDOM = require('react-dom'),
-
 let components = require('./components'),
-dataLoader = require('../data'),
-config = require('../config'),
-resources = require('../resources'),
+dataLoader = require('./data'),
+config = require('./config'),
+resources = require('../utils/resources'),
 socket = require('../socket'),
-cycle = require('../cycle'),
-Sprite = require('../displayObject/sprite'),
-DisplayObject = require('../displayObject/displayObject'),
-id = require('../id'),
+cycle = require('./cycle'),
+Sprite = require('./displayObject/sprite'),
+DisplayObject = require('./displayObject/displayObject'),
+id = require('../utils/id'),
 
+socketAvailable = null,
 controls = null,
 
 gameComponent = ReactDOM.render(React.createElement(components.Game), document.getElementById('game'), ()=>{
-	
+
 	config.domElement = document.getElementById('canvas');
 	config.domElement.style.position = 'relative';
 	config.domElement.style.overflow = 'hidden';
 	
-	initSocket();
+	socketAvailable = initSocket();
 	
 	dataLoader.load(()=>{
 		resources.onReady(function(){
-			controls = require('../controls');
+			controls = require('./controls');
 			controls(onJoystick, onFire);
 			cycle.addUpdate(Sprite.draw);
 			cycle.addCleanup(DisplayObject.cleanup);
@@ -113,6 +111,8 @@ function onFire() {
 }
 
 function initSocket() {
+	if(!socket.init())
+		return false;
 	socket.on('games list', games=>{
 		gameComponent.setState({games: games});
 		if(config.dev2) {
@@ -161,6 +161,7 @@ function initSocket() {
 	});
 	socket.on('end game', ()=>{
 	});
+	return true;
 }
 
 function handleJoinGame() {

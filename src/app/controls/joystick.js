@@ -1,5 +1,5 @@
-let config = require('./config'),
-	geom = require('./geom'),
+let config = require('../config'),
+	geom = require('../../utils/geom'),
 	element = null,
 	callback = null,
 	isTouch = checkTouch(),

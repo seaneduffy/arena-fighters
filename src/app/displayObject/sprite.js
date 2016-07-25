@@ -2,14 +2,15 @@
 
 let config = require('../config'),
 	cycle = require('../cycle'),
-	resources = require('../resources'),
-	id = require('../id'),
-	socket = require('../socket'),
+	resources = require('../../utils/resources'),
+	id = require('../../utils/id'),
+	socket = require('../../socket'),
 	sprites = new Array(),
 	spritesToUpdate = new Array(),
 	availableSprites = Object.create(null);
 
 function Sprite(label, sheetPath, frameData, frameRate, loops) {
+
 	this.domElement = config.domElement;
 	this.sheetPath = sheetPath;
 	this.sheet = resources.get(sheetPath);

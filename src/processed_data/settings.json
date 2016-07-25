@@ -416,27 +416,15 @@
 						"firearmOffset": {"x":-1,"y":7}
 					},
 					{
-						"label": "$left_walking",
-						"frameRate": "config.frameRate",
-						"loop": true,
-						"firearmOffset": {"x":-1,"y":7}
-					},
-					{
 						"label": "$right_standing",
 						"frameRate": "config.frameRate",
 						"loop": false,
 						"firearmOffset": {"x":-1,"y":7}
-					},
-					{
-						"label": "$right_walking",
-						"frameRate": "config.frameRate",
-						"loop": true,
-						"firearmOffset": {"x":-1,"y":7}
 					}
 				],
 				"speed": 1,
-				"actionSpeed": 50,
-				"ai": "grunt",
+				"walkFrameDelay": 50,
+				"fireFrameDelay": 24,
 				"interacts": true,
 				"health": 1,
 				"hostiles": [
@@ -446,8 +434,7 @@
 				"hitbox": {
 					"x": 0, "y": 0, "width": 70, "height": 170
 				},
-				"firearmType": "pistol",
-				"fireSpeed": 1
+				"firearmType": "pistol"
 			},
 			{
 				"id": "devil",

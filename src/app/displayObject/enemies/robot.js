@@ -3,7 +3,7 @@
 let Enemy = require('./enemy'),
 	Character = require('../character'),
 	cycle = require('../../cycle'),
-	geom = require('../../geom'),
+	geom = require('../../../utils/geom'),
 	config = require('../../config');
 
 function Robot() {

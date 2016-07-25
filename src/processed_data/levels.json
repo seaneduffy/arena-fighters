@@ -26,7 +26,7 @@
 			"properties": {
 				"x": 0,
 				"y": "config.stageCenterY",
-				"display": "$down_standing",
+				"display": "$right_standing",
 				"direction": "config.RIGHT"
 			}
 		}

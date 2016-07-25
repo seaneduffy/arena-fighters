@@ -1,6 +1,6 @@
 let Sprite = require('./sprite'),
 	config = require('../config'),
-	geom = require('../geom'),
+	geom = require('../../utils/geom'),
 	cycle = require('../cycle'),
 	displayObjects = [];
 

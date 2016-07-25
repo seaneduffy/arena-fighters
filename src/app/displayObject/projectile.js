@@ -2,7 +2,7 @@ let Sprite = require('./sprite'),
 	config = require('../config'),
 	DisplayObject = require('./displayObject'),
 	cycle = require('../cycle'),
-	geom = require('../geom');
+	geom = require('../../utils/geom');
 	
 function Projectile() {
 	DisplayObject.call(this);

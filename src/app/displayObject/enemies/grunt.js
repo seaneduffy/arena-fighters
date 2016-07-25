@@ -3,56 +3,54 @@
 let Enemy = require('./enemy'),
 	Character = require('../character'),
 	cycle = require('../../cycle'),
-	geom = require('../../geom'),
+	geom = require('../../../utils/geom'),
 	config = require('../../config');
 
 function Grunt() {
 	Enemy.call(this);
-	this.fireCounter = 0;
+	this.cycleWalk = this.walk.bind(this);
+	this.cycleFire = this.fire.bind(this);
 }
 
 Grunt.prototype = Object.create(Enemy.prototype, {
-	'movement': {
-		value: function() {
-			let velocity = this.velocity;
-			if(!!this.closestPlayer) {
-				let direction = geom.getAngle(this.x, this.y, this.closestPlayer.x, this.closestPlayer.y);
-				this.walk(direction);
-			} else if(velocity.dX !== 0 || velocity.dY !== 0) {
-				this.stop();
-			}
-		}
-	},
-	'actions': {
-		value: function() {
-			if(this.actionsCounter > this.actionSpeed + Math.ceil(Math.random() * 5)) {
-				this.actionsCounter = 0;
-				this.distancePlayer1 = this.getDistanceToPlayer(this.player1);
-				this.distancePlayer2 = this.getDistanceToPlayer(this.player2);
-				this.closestPlayer = this.getClosestPlayer();
-				this.movement();
-				if(this.fireCounter > this.fireSpeed + Math.ceil(Math.random() * 5)) {
-					this.fire();
-					this.fireCounter = 0;
-				} else {
-					this.fireCounter++;
-				}
-			} else {
-				this.actionsCounter++;
-			}
-		}
-	},
 	'fire': {
 		value: function() {
-			if(!!this.closestPlayer) {
-				//let direction = geom.getAngle(this.x, this.y, this.closestPlayer.x, this.closestPlayer.y);
-				this.firearm.fire(this);
-			}
+			this.distancePlayer1 = this.getDistanceToPlayer(this.player1);
+			this.distancePlayer2 = this.getDistanceToPlayer(this.player2);
+			this.closestPlayer = this.getClosestPlayer();
+			if(!this.closestPlayer)
+				return;
+				
+			this.firearm.fire(this);
+		}
+	},
+	'walkFrameDelay': {
+		set: function(delay) {
+			this._walkFrameDelay = delay;
+			cycle.addUpdate(this.cycleWalk, config.frameRate * this._walkFrameDelay);
+		},
+		get: function() {
+			return this._walkFrameDelay;
+		}
+	},
+	'fireFrameDelay': {
+		set: function(delay) {
+			this._fireFrameDelay = delay;
+			cycle.addUpdate(this.cycleFire, config.frameRate * this._fireFrameDelay);
+		},
+		get: function() {
+			return this._fireFrameDelay;
 		}
 	},
 	'walk': {
-		value: function(direction) {
-			this.direction = direction;
+		value: function() {
+			if(!this.closestPlayer) {
+				cycle.removeUpdate(this.cycleWalk);
+				this.stop();
+				return;
+			}	
+
+			this.direction = geom.getAngle(this.x, this.y, this.closestPlayer.x, this.closestPlayer.y);
 
 			let directionLabel = this.directionLabel;
 
@@ -74,18 +72,26 @@ Grunt.prototype = Object.create(Enemy.prototype, {
 				this.display = '$right_standing';
 			}
 			
-			this.applyForce({
-				direction: direction,
+			this.velocity = {
+				direction: this.direction,
 				speed: this.speed
-			});
+			};
 		}
 	},
 	'stop': {
 		value: function() {
 			this.display = this.display.replace('standing', 'standing');
-			this.velocity.speed = 0;
-			this.velocity.dX = 0;
-			this.velocity.dY = 0;
+			this.velocity = {
+				speed: 0,
+				direction: 0
+			};
+		}
+	},
+	'destroy': {
+		value: function() {
+			cycle.removeUpdate(this.cycleWalk);
+			cycle.removeUpdate(this.cycleFire);
+			Character.prototype.destroy.call(this);
 		}
 	},
 	'onCollision': {

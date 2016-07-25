@@ -1,7 +1,5 @@
 'use strict';
 
-//let React = require('react'),
-
 let _handleStartTwoPlayerGame = null,
 _handleConfirmPlayerName = null,
 _handleCreateGame = null,

@@ -3,7 +3,6 @@
 let config = require('../config'),
 	Character = require('./character'),
 	DisplayObject = require('./displayObject'),
-	aiFunctions = require('../ai'),
 	cycle = require('../cycle');
 
 function Player() {

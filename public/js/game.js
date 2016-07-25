@@ -1,176 +1,6 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 'use strict';
 
-var config = require('./config'),
-    geom = require('./geom'),
-    cycle = require('./cycle');
-
-function Ai(character) {
-	this._character = character;
-	this._player1 = config.player1;
-	this._player2 = config.player2;
-	this._counter = 0;
-	this.cycleActions = this.actions.bind(this);
-	cycle.addUpdate(this.cycleActions);
-}
-Object.defineProperties(Ai.prototype, {
-	'actions': {
-		value: function value() {
-			if (this._counter > this._character.actionSpeed) {
-				this._counter = 0;
-				this._distancePlayer1 = this.getDistanceToPlayer(this._player1);
-				this._distancePlayer2 = this.getDistanceToPlayer(this._player2);
-				this._closestPlayer = this.getClosestPlayer();
-				if (!!this.move) {
-					this.move();
-				} else if (!!this.fire && !!this._character.firearm) {
-					this.fire();
-				}
-			} else {
-				this._counter++;
-			}
-		}
-	},
-	'getDistanceToPlayer': {
-		value: function value(player) {
-			if (!!player && player.stage) {
-				return geom.getDistance(this._character._x, this._character._y, player.x, player.y);
-			} else {
-				return false;
-			}
-		}
-	},
-	'getClosestPlayer': {
-		value: function value() {
-			if (!this._distancePlayer1 && !this._distancePlayer2) {
-				return false;
-			} else if (this._distancePlayer1 && !this._distancePlayer2) {
-				return this._player1;
-			} else if (!this._distancePlayer1 && this._distancePlayer2) {
-				return this._player2;
-			} else {
-				return this._distancePlayer2 < this._distancePlayer1 ? this._player2 : this._player1;
-			}
-		}
-	},
-	'onCollision': {
-		value: function value() {
-			return;
-		}
-	},
-	'destroy': {
-		value: function value() {
-			cycle.removeUpdate(this.cycleActions);
-		}
-	}
-});
-
-function Grunt(character) {
-	Ai.prototype.constructor.call(this, character);
-}
-Grunt.prototype = Object.create(Ai.prototype, {
-	'move': {
-		value: function value() {
-			var v = this._character.velocity,
-			    direction = geom.getAngle(this._character.x, this._character.y, this._closestPlayer.x, this._closestPlayer.y);
-			if (!!this._closestPlayer) {
-				this._character.walk(1, direction);
-			} else {
-				if (v.dX !== 0 || v.dY !== 0) this._character.walk(0, direction);
-			}
-		}
-	},
-	'onCollision': {
-		value: function value() {
-			var v = this._character.velocity,
-			    ran = 0,
-			    angle = 0;
-			if (v.dX === 0 && v.dY !== 0) {
-				if (Math.round(Math.random()) === 0) angle = Math.PI;else angle = 0;
-			} else if (v.dY === 0 && v.dX !== 0) {
-				if (Math.round(Math.random()) === 0) angle = 3 * Math.PI / 2;else angle = Math.PI / 2;
-			} else {
-				var _ran = Math.round(Math.random() * 3);
-				if (_ran === 0) {
-					angle = 0;
-				} else if (_ran === 1) {
-					angle = Math.PI / 2;
-				} else if (_ran === 2) {
-					angle = Math.PI;
-				} else {
-					angle = 3 * Math.PI / 2;
-				}
-			}
-			this._character.walk(1, angle);
-		}
-	}
-});
-
-function Devil(character) {
-	this.jump = true;
-	Ai.prototype.constructor.call(this, character);
-}
-Devil.prototype = Object.create(Ai.prototype, {
-	'move': {
-		value: function value() {
-			var counter = cycle.getCounter();
-			this.counter = this.counter || 0;
-			if (this.counter >= this._character.moveTime) {
-				var direction = geom.getAngle(this._character.x, this._character.y, this._closestPlayer.x, this._closestPlayer.y);
-				if (this.jump) {
-					var v = this._character.velocity;
-					if (!!this._closestPlayer) {
-						this._character.walk(1, direction);
-					} else {
-						if (v.dX !== 0 || v.dY !== 0) this._character.walk(0, direction);
-					}
-					this.jump = false;
-				} else {
-					this._character.walk(0, direction);
-					this.jump = true;
-				}
-				this.counter = 0;
-			} else {
-				this.counter++;
-			}
-		}
-	},
-	'onCollision': {
-		value: function value() {
-			var v = this._character.velocity,
-			    ran = 0,
-			    angle = 0;
-			if (v.dX === 0 && v.dY !== 0) {
-				if (Math.round(Math.random()) === 0) angle = Math.PI;else angle = 0;
-			} else if (v.dY === 0 && v.dX !== 0) {
-				if (Math.round(Math.random()) === 0) angle = 3 * Math.PI / 2;else angle = Math.PI / 2;
-			} else {
-				var _ran2 = Math.round(Math.random() * 3);
-				if (_ran2 === 0) {
-					angle = 0;
-				} else if (_ran2 === 1) {
-					angle = Math.PI / 2;
-				} else if (_ran2 === 2) {
-					angle = Math.PI;
-				} else {
-					angle = 3 * Math.PI / 2;
-				}
-			}
-			this._character.walk(1, angle);
-		}
-	}
-});
-
-module.exports = {
-	grunt: Grunt,
-	devil: Devil
-};
-
-},{"./config":4,"./cycle":6,"./geom":19}],2:[function(require,module,exports){
-'use strict';
-
-//let React = require('react'),
-
 var _handleStartTwoPlayerGame2 = null,
     _handleConfirmPlayerName2 = null,
     _handleCreateGame2 = null,
@@ -469,11 +299,8 @@ module.exports = {
 	}
 };
 
-},{}],3:[function(require,module,exports){
+},{}],2:[function(require,module,exports){
 'use strict';
-
-//let React = require('react'),
-//ReactDOM = require('react-dom'),
 
 var components = require('./components'),
     dataLoader = require('../data'),
@@ -484,6 +311,7 @@ var components = require('./components'),
     Sprite = require('../displayObject/sprite'),
     DisplayObject = require('../displayObject/displayObject'),
     id = require('../id'),
+    socketAvailable = null,
     controls = null,
     gameComponent = ReactDOM.render(React.createElement(components.Game), document.getElementById('game'), function () {
 
@@ -491,7 +319,7 @@ var components = require('./components'),
 	config.domElement.style.position = 'relative';
 	config.domElement.style.overflow = 'hidden';
 
-	initSocket();
+	socketAvailable = initSocket();
 
 	dataLoader.load(function () {
 		resources.onReady(function () {
@@ -569,6 +397,7 @@ function onFire() {
 }
 
 function initSocket() {
+	if (!socket.init()) return false;
 	socket.on('games list', function (games) {
 		gameComponent.setState({ games: games });
 		if (config.dev2) {
@@ -616,6 +445,7 @@ function initSocket() {
 		config.player2.fire();
 	});
 	socket.on('end game', function () {});
+	return true;
 }
 
 function handleJoinGame() {
@@ -682,7 +512,7 @@ function handleGuestReady() {
 	startGame();
 }
 
-},{"../config":4,"../controls":5,"../cycle":6,"../data":7,"../displayObject/displayObject":10,"../displayObject/sprite":18,"../id":20,"../resources":23,"../socket":24,"./components":2}],4:[function(require,module,exports){
+},{"../config":3,"../controls":4,"../cycle":5,"../data":6,"../displayObject/displayObject":9,"../displayObject/sprite":17,"../id":19,"../resources":22,"../socket":23,"./components":1}],3:[function(require,module,exports){
 'use strict';
 
 var config = {
@@ -729,7 +559,7 @@ if (config.dev) {
 	};
 }
 
-},{}],5:[function(require,module,exports){
+},{}],4:[function(require,module,exports){
 'use strict';
 
 var config = require('./config'),
@@ -790,7 +620,7 @@ module.exports = function (_joystickCallback, _fireCallback) {
 	fireCallback = _fireCallback;
 };
 
-},{"./config":4,"./cycle":6,"./joystick":22}],6:[function(require,module,exports){
+},{"./config":3,"./cycle":5,"./joystick":21}],5:[function(require,module,exports){
 'use strict';
 
 var config = require('./config'),
@@ -960,7 +790,7 @@ if (config.dev) {
 	};
 }
 
-},{"./config":4}],7:[function(require,module,exports){
+},{"./config":3}],6:[function(require,module,exports){
 'use strict';
 
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj; };
@@ -1174,7 +1004,7 @@ module.exports = {
 	}
 };
 
-},{"./config":4,"./cycle":6,"./displayObject/ammunition":8,"./displayObject/displayObject":10,"./displayObject/enemies/devil":11,"./displayObject/enemies/grunt":13,"./displayObject/enemies/robot":14,"./displayObject/firearm":15,"./displayObject/player":16}],8:[function(require,module,exports){
+},{"./config":3,"./cycle":5,"./displayObject/ammunition":7,"./displayObject/displayObject":9,"./displayObject/enemies/devil":10,"./displayObject/enemies/grunt":12,"./displayObject/enemies/robot":13,"./displayObject/firearm":14,"./displayObject/player":15}],7:[function(require,module,exports){
 'use strict';
 
 var Projectile = require('./projectile');
@@ -1204,7 +1034,7 @@ Ammunition.prototype = Object.create(Projectile.prototype, {
 
 module.exports = Ammunition;
 
-},{"./projectile":17}],9:[function(require,module,exports){
+},{"./projectile":16}],8:[function(require,module,exports){
 'use strict';
 
 var config = require('../config'),
@@ -1370,7 +1200,7 @@ function onCollision(collidedObject) {
 
 module.exports = Character;
 
-},{"../config":4,"../cycle":6,"./displayObject":10,"./firearm":15}],10:[function(require,module,exports){
+},{"../config":3,"../cycle":5,"./displayObject":9,"./firearm":14}],9:[function(require,module,exports){
 'use strict';
 
 var Sprite = require('./sprite'),
@@ -1836,7 +1666,7 @@ if (config.dev) {
 
 module.exports = DisplayObject;
 
-},{"../config":4,"../cycle":6,"../geom":19,"./sprite":18}],11:[function(require,module,exports){
+},{"../config":3,"../cycle":5,"../geom":18,"./sprite":17}],10:[function(require,module,exports){
 'use strict';
 
 var Enemy = require('./enemy'),
@@ -1969,7 +1799,7 @@ Devil.prototype = Object.create(Enemy.prototype, {
 
 module.exports = Devil;
 
-},{"../../config":4,"../../cycle":6,"../../geom":19,"../character":9,"./enemy":12}],12:[function(require,module,exports){
+},{"../../config":3,"../../cycle":5,"../../geom":18,"../character":8,"./enemy":11}],11:[function(require,module,exports){
 'use strict';
 
 var Character = require('../character'),
@@ -2026,7 +1856,7 @@ Enemy.prototype = Object.create(Character.prototype, {
 
 module.exports = Enemy;
 
-},{"../../config":4,"../../cycle":6,"../../geom":19,"../character":9}],13:[function(require,module,exports){
+},{"../../config":3,"../../cycle":5,"../../geom":18,"../character":8}],12:[function(require,module,exports){
 'use strict';
 
 var Enemy = require('./enemy'),
@@ -2037,51 +1867,48 @@ var Enemy = require('./enemy'),
 
 function Grunt() {
 	Enemy.call(this);
-	this.fireCounter = 0;
+	this.cycleWalk = this.walk.bind(this);
+	this.cycleFire = this.fire.bind(this);
 }
 
 Grunt.prototype = Object.create(Enemy.prototype, {
-	'movement': {
-		value: function value() {
-			var velocity = this.velocity;
-			if (!!this.closestPlayer) {
-				var direction = geom.getAngle(this.x, this.y, this.closestPlayer.x, this.closestPlayer.y);
-				this.walk(direction);
-			} else if (velocity.dX !== 0 || velocity.dY !== 0) {
-				this.stop();
-			}
-		}
-	},
-	'actions': {
-		value: function value() {
-			if (this.actionsCounter > this.actionSpeed + Math.ceil(Math.random() * 5)) {
-				this.actionsCounter = 0;
-				this.distancePlayer1 = this.getDistanceToPlayer(this.player1);
-				this.distancePlayer2 = this.getDistanceToPlayer(this.player2);
-				this.closestPlayer = this.getClosestPlayer();
-				this.movement();
-				if (this.fireCounter > this.fireSpeed + Math.ceil(Math.random() * 5)) {
-					this.fire();
-					this.fireCounter = 0;
-				} else {
-					this.fireCounter++;
-				}
-			} else {
-				this.actionsCounter++;
-			}
-		}
-	},
 	'fire': {
 		value: function value() {
-			if (!!this.closestPlayer) {
-				//let direction = geom.getAngle(this.x, this.y, this.closestPlayer.x, this.closestPlayer.y);
-				this.firearm.fire(this);
-			}
+			this.distancePlayer1 = this.getDistanceToPlayer(this.player1);
+			this.distancePlayer2 = this.getDistanceToPlayer(this.player2);
+			this.closestPlayer = this.getClosestPlayer();
+			if (!this.closestPlayer) return;
+
+			this.firearm.fire(this);
+		}
+	},
+	'walkFrameDelay': {
+		set: function set(delay) {
+			this._walkFrameDelay = delay;
+			cycle.addUpdate(this.cycleWalk, config.frameRate * this._walkFrameDelay);
+		},
+		get: function get() {
+			return this._walkFrameDelay;
+		}
+	},
+	'fireFrameDelay': {
+		set: function set(delay) {
+			this._fireFrameDelay = delay;
+			cycle.addUpdate(this.cycleFire, config.frameRate * this._fireFrameDelay);
+		},
+		get: function get() {
+			return this._fireFrameDelay;
 		}
 	},
 	'walk': {
-		value: function value(direction) {
-			this.direction = direction;
+		value: function value() {
+			if (!this.closestPlayer) {
+				cycle.removeUpdate(this.cycleWalk);
+				this.stop();
+				return;
+			}
+
+			this.direction = geom.getAngle(this.x, this.y, this.closestPlayer.x, this.closestPlayer.y);
 
 			var directionLabel = this.directionLabel;
 
@@ -2103,18 +1930,26 @@ Grunt.prototype = Object.create(Enemy.prototype, {
 				this.display = '$right_standing';
 			}
 
-			this.applyForce({
-				direction: direction,
+			this.velocity = {
+				direction: this.direction,
 				speed: this.speed
-			});
+			};
 		}
 	},
 	'stop': {
 		value: function value() {
 			this.display = this.display.replace('standing', 'standing');
-			this.velocity.speed = 0;
-			this.velocity.dX = 0;
-			this.velocity.dY = 0;
+			this.velocity = {
+				speed: 0,
+				direction: 0
+			};
+		}
+	},
+	'destroy': {
+		value: function value() {
+			cycle.removeUpdate(this.cycleWalk);
+			cycle.removeUpdate(this.cycleFire);
+			Character.prototype.destroy.call(this);
 		}
 	},
 	'onCollision': {
@@ -2152,7 +1987,7 @@ Grunt.prototype = Object.create(Enemy.prototype, {
 
 module.exports = Grunt;
 
-},{"../../config":4,"../../cycle":6,"../../geom":19,"../character":9,"./enemy":12}],14:[function(require,module,exports){
+},{"../../config":3,"../../cycle":5,"../../geom":18,"../character":8,"./enemy":11}],13:[function(require,module,exports){
 'use strict';
 
 var Enemy = require('./enemy'),
@@ -2312,7 +2147,7 @@ Robot.prototype = Object.create(Enemy.prototype, {
 
 module.exports = Robot;
 
-},{"../../config":4,"../../cycle":6,"../../geom":19,"../character":9,"./enemy":12}],15:[function(require,module,exports){
+},{"../../config":3,"../../cycle":5,"../../geom":18,"../character":8,"./enemy":11}],14:[function(require,module,exports){
 'use strict';
 
 var DisplayObject = require('./displayObject'),
@@ -2388,13 +2223,12 @@ function endBlastAnimation() {
 
 module.exports = Firearm;
 
-},{"../config":4,"../cycle":6,"./ammunition":8,"./displayObject":10}],16:[function(require,module,exports){
+},{"../config":3,"../cycle":5,"./ammunition":7,"./displayObject":9}],15:[function(require,module,exports){
 'use strict';
 
 var config = require('../config'),
     Character = require('./character'),
     DisplayObject = require('./displayObject'),
-    aiFunctions = require('../ai'),
     cycle = require('../cycle');
 
 function Player() {
@@ -2512,7 +2346,7 @@ function slide() {
 
 module.exports = Player;
 
-},{"../ai":1,"../config":4,"../cycle":6,"./character":9,"./displayObject":10}],17:[function(require,module,exports){
+},{"../config":3,"../cycle":5,"./character":8,"./displayObject":9}],16:[function(require,module,exports){
 'use strict';
 
 var Sprite = require('./sprite'),
@@ -2586,7 +2420,7 @@ Projectile.prototype = Object.create(DisplayObject.prototype, {
 
 module.exports = Projectile;
 
-},{"../config":4,"../cycle":6,"../geom":19,"./displayObject":10,"./sprite":18}],18:[function(require,module,exports){
+},{"../config":3,"../cycle":5,"../geom":18,"./displayObject":9,"./sprite":17}],17:[function(require,module,exports){
 'use strict';
 
 var config = require('../config'),
@@ -2599,6 +2433,7 @@ var config = require('../config'),
     availableSprites = Object.create(null);
 
 function Sprite(label, sheetPath, frameData, frameRate, loops) {
+
 	this.domElement = config.domElement;
 	this.sheetPath = sheetPath;
 	this.sheet = resources.get(sheetPath);
@@ -2925,7 +2760,7 @@ var decodedState = new Float64Array( decodeBuffer );
 
 module.exports = Sprite;
 
-},{"../config":4,"../cycle":6,"../id":20,"../resources":23,"../socket":24}],19:[function(require,module,exports){
+},{"../config":3,"../cycle":5,"../id":19,"../resources":22,"../socket":23}],18:[function(require,module,exports){
 'use strict';
 
 var pi = Math.PI,
@@ -3070,7 +2905,7 @@ module.exports = {
 	}
 };
 
-},{}],20:[function(require,module,exports){
+},{}],19:[function(require,module,exports){
 "use strict";
 
 var S4 = function S4() {
@@ -3086,15 +2921,16 @@ module.exports = {
 	}
 };
 
-},{}],21:[function(require,module,exports){
+},{}],20:[function(require,module,exports){
 'use strict';
 
 (function () {
-
-	require('./app');
+	window.init = function () {
+		require('./app');
+	};
 })();
 
-},{"./app":3}],22:[function(require,module,exports){
+},{"./app":2}],21:[function(require,module,exports){
 'use strict';
 
 var config = require('./config'),
@@ -3222,7 +3058,7 @@ module.exports = {
 	}
 };
 
-},{"./config":4,"./geom":19}],23:[function(require,module,exports){
+},{"./config":3,"./geom":18}],22:[function(require,module,exports){
 "use strict";
 
 var resourceCache = {};
@@ -3284,21 +3120,24 @@ module.exports = {
 	isReady: isReady
 };
 
-},{}],24:[function(require,module,exports){
+},{}],23:[function(require,module,exports){
 "use strict";
 
-var socket = io(),
-    room = null;
+var socket = null;
 
 module.exports = {
 	emit: function emit(label, data) {
-		socket.emit(label, data);
+		if (!!socket) socket.emit(label, data);
 	},
 	on: function on(label, callback) {
-		socket.on(label, function (data) {
+		if (!!socket) socket.on(label, function (data) {
 			callback(data);
 		});
+	},
+	init: function init() {
+		socket = socket || !!io ? io() : false;
+		return !!socket;
 	}
 };
 
-},{}]},{},[21]);
+},{}]},{},[20]);

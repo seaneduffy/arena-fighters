@@ -1,13 +1,18 @@
-let socket = io(),
-	room = null;
-
+let socket = null;
+	
 module.exports = {
 	emit: function(label, data) {
-		socket.emit(label, data);
+		if(!!socket)
+			socket.emit(label, data);
 	},
 	on: function(label, callback) {
-		socket.on(label, (data)=>{
-			callback(data);
-		});
+		if(!!socket)
+			socket.on(label, (data)=>{
+				callback(data);
+			});
+	},
+	init: function() {
+		socket = socket || !!io ? io() : false;
+		return !!socket;
 	}
 }

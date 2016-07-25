@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html manifest="cache.manifest">
+<html manifest="cache.manifest" type="text/cache-manifest">
 <head>
 	<title>Arena Fighters</title>
 	<meta http-equiv="content-type" content="text/html; charset=utf-8">
@@ -7,12 +7,12 @@
 	<meta name="apple-mobile-web-app-capable" content="yes">
 	<meta name="mobile-web-app-capable" content="yes">
 	<link type="text/css" rel="stylesheet" href="/css/game.css">
+	<script src="/js/react.js"></script>
+	<script src="/js/react-dom.js"></script>
+	<script src="/js/game.js"></script>
+	<script src="/socket.io/socket.io.js"></script>
 </head>
-<body>
+<body onload="init();">
 <div id="game"></div>
-<script src="/socket.io/socket.io.js"></script>
-<script src="/js/react.min.js"></script>
-<script src="/js/react-dom.min.js"></script>
-<script src="/js/game.js"></script>
 </body>
 </html>
