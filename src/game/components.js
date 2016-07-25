@@ -12,6 +12,30 @@ _handleEndGame = null,
 _handlePauseGame = null,
 _handleRestartGame = null,
 _handleResumeGame = null,
+
+PlayerHUD = React.createClass({
+	render: function(){ 
+		let healthElements = new Array(),
+			counter = 1,
+			totalHealth = this.props.totalHealth,
+			health = this.props.health;
+		while(counter <= totalHealth) {
+			healthElements.push(<span key={counter} className={counter > health ? 'off' : 'on'}></span>);
+			counter++;
+		}
+		return (
+			<div>
+				<div>
+					<div className="name">{this.props.playerName}</div>
+					<div className="health">
+						{healthElements}
+					</div>
+					<div className="weapon"><span>Weapon</span><span>{this.props.weapon}</span></div>
+				</div>
+			</div>
+		)
+	}
+}),
 	
 GamesList = React.createClass({
 	render: function(){ return (
@@ -89,6 +113,19 @@ Game = React.createClass({
 		_handleResumeGame(e);
 	},
 	render: function() {
+		let playerHud = ()=> {
+			if(this.state.gameType === 'two') {
+				return <div id="hud"><PlayerHUD playerName="Player 1" 
+				health={this.state.player1Health} totalHealth={this.state.player1HealthTotal} 
+				weapon={this.state.player1Weapon} />
+			<PlayerHUD
+				playerName="Player 2" health={this.state.player2Health} 
+				totalHealth={this.state.player2HealthTotal} weapon={this.state.player2Weapon} /></div>
+			}
+			return <div id="hud"><PlayerHUD playerName="Player 1" 
+				health={this.state.player1Health} totalHealth={this.state.player1HealthTotal} 
+				weapon={this.state.player1Weapon} /></div>
+		}
 		return (
 		
 <div id="arena-fighters">
@@ -135,6 +172,10 @@ Game = React.createClass({
 	</div>
 	<div id="gameScreen" className={this.state.gameActive ? '' : 'hidden'}>
 		<div id="canvas"></div>
+		{playerHud()}
+		<div className="levelTitle">
+			<span></span>
+		</div>
 		<div id="controls">
 			<span id="joystick" className="center"><span className="ball"></span></span>
 			<span id="fire-btn"></span>

@@ -29,6 +29,15 @@
 				"display": "$right_standing",
 				"direction": "config.RIGHT"
 			}
+		},
+		{
+			"id": "robot",
+			"properties": {
+				"x": "config.stageWidth + 400",
+				"y": "config.stageCenterY",
+				"display": "down_standing",
+				"direction": "config.RIGHT"
+			}
 		}
 	],
 	[

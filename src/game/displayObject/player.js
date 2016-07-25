@@ -23,6 +23,21 @@ Player.prototype = Object.create(Character.prototype, {
 	},
 	'fire': {
 		value: fire
+	},
+	'onHealthChange': {
+		value: function(func) {
+			this.healthChangeCallback = func;
+		}
+	},
+	'health': {
+		set: function(health) {
+			Object.getOwnPropertyDescriptor(Character.prototype, 'health').set.call(this, health);
+			if(!!this.healthChangeCallback)
+				this.healthChangeCallback();
+		},
+		get: function() {
+			return Object.getOwnPropertyDescriptor(Character.prototype, 'health').get.call(this);
+		}
 	}
 });
 

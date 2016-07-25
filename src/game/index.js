@@ -81,6 +81,28 @@ function startLevel(index) {
 			}
 		} );
 	}
+	gameComponent.setState({
+		player1HealthTotal: config.player1.health,
+		player1Health: config.player1.health,
+		player1Weapon: config.player1.firearmType
+	});
+	config.player1.onHealthChange(function(){
+		gameComponent.setState({
+			player1Health: config.player1.health
+		})
+	});
+	if(!!config.player2) {
+		gameComponent.setState({
+			player2HealthTotal: config.player2.health,
+			player2Health: config.player2.health,
+			player2Weapon: config.player2.firearmType
+		});
+		config.player2.onHealthChange(function(){
+			gameComponent.setState({
+				player2Health: config.player2.health
+			})
+		})
+	}
 }
 
 function startGame() {

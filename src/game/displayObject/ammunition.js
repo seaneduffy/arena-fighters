@@ -17,6 +17,7 @@ Ammunition.prototype = Object.create(Projectile.prototype, {
 	},
 	'onCollision': {
 		value: function(collidedObject) {
+
 			if(!!collidedObject.health) {
 				collidedObject.health -= this.impact;
 			}

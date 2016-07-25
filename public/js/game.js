@@ -13,6 +13,52 @@ var _handleStartTwoPlayerGame2 = null,
     _handlePauseGame2 = null,
     _handleRestartGame2 = null,
     _handleResumeGame2 = null,
+    PlayerHUD = React.createClass({
+	displayName: 'PlayerHUD',
+
+	render: function render() {
+		var healthElements = new Array(),
+		    counter = 1,
+		    totalHealth = this.props.totalHealth,
+		    health = this.props.health;
+		while (counter <= totalHealth) {
+			healthElements.push(React.createElement('span', { key: counter, className: counter > health ? 'off' : 'on' }));
+			counter++;
+		}
+		return React.createElement(
+			'div',
+			null,
+			React.createElement(
+				'div',
+				null,
+				React.createElement(
+					'div',
+					{ className: 'name' },
+					this.props.playerName
+				),
+				React.createElement(
+					'div',
+					{ className: 'health' },
+					healthElements
+				),
+				React.createElement(
+					'div',
+					{ className: 'weapon' },
+					React.createElement(
+						'span',
+						null,
+						'Weapon'
+					),
+					React.createElement(
+						'span',
+						null,
+						this.props.weapon
+					)
+				)
+			)
+		);
+	}
+}),
     GamesList = React.createClass({
 	displayName: 'GamesList',
 
@@ -102,6 +148,29 @@ var _handleStartTwoPlayerGame2 = null,
 		_handleResumeGame2(e);
 	},
 	render: function render() {
+		var _this2 = this;
+
+		var playerHud = function playerHud() {
+			if (_this2.state.gameType === 'two') {
+				return React.createElement(
+					'div',
+					{ id: 'hud' },
+					React.createElement(PlayerHUD, { playerName: 'Player 1',
+						health: _this2.state.player1Health, totalHealth: _this2.state.player1HealthTotal,
+						weapon: _this2.state.player1Weapon }),
+					React.createElement(PlayerHUD, {
+						playerName: 'Player 2', health: _this2.state.player2Health,
+						totalHealth: _this2.state.player2HealthTotal, weapon: _this2.state.player2Weapon })
+				);
+			}
+			return React.createElement(
+				'div',
+				{ id: 'hud' },
+				React.createElement(PlayerHUD, { playerName: 'Player 1',
+					health: _this2.state.player1Health, totalHealth: _this2.state.player1HealthTotal,
+					weapon: _this2.state.player1Weapon })
+			);
+		};
 		return React.createElement(
 			'div',
 			{ id: 'arena-fighters' },
@@ -242,6 +311,12 @@ var _handleStartTwoPlayerGame2 = null,
 				'div',
 				{ id: 'gameScreen', className: this.state.gameActive ? '' : 'hidden' },
 				React.createElement('div', { id: 'canvas' }),
+				playerHud(),
+				React.createElement(
+					'div',
+					{ className: 'levelTitle' },
+					React.createElement('span', null)
+				),
 				React.createElement(
 					'div',
 					{ id: 'controls' },
@@ -953,6 +1028,7 @@ Ammunition.prototype = Object.create(Projectile.prototype, {
 	},
 	'onCollision': {
 		value: function value(collidedObject) {
+
 			if (!!collidedObject.health) {
 				collidedObject.health -= this.impact;
 			}
@@ -2178,6 +2254,20 @@ Player.prototype = Object.create(Character.prototype, {
 	},
 	'fire': {
 		value: fire
+	},
+	'onHealthChange': {
+		value: function value(func) {
+			this.healthChangeCallback = func;
+		}
+	},
+	'health': {
+		set: function set(health) {
+			Object.getOwnPropertyDescriptor(Character.prototype, 'health').set.call(this, health);
+			if (!!this.healthChangeCallback) this.healthChangeCallback();
+		},
+		get: function get() {
+			return Object.getOwnPropertyDescriptor(Character.prototype, 'health').get.call(this);
+		}
 	}
 });
 
@@ -2757,6 +2847,28 @@ function startLevel(index) {
 			});
 		})();
 	}
+	gameComponent.setState({
+		player1HealthTotal: config.player1.health,
+		player1Health: config.player1.health,
+		player1Weapon: config.player1.firearmType
+	});
+	config.player1.onHealthChange(function () {
+		gameComponent.setState({
+			player1Health: config.player1.health
+		});
+	});
+	if (!!config.player2) {
+		gameComponent.setState({
+			player2HealthTotal: config.player2.health,
+			player2Health: config.player2.health,
+			player2Weapon: config.player2.firearmType
+		});
+		config.player2.onHealthChange(function () {
+			gameComponent.setState({
+				player2Health: config.player2.health
+			});
+		});
+	}
 }
 
 function startGame() {
@@ -2907,11 +3019,11 @@ function handleGuestReady() {
 
 (function () {
 	window.init = function () {
-		require('./app');
+		require('./game');
 	};
 })();
 
-},{"./app":19}],21:[function(require,module,exports){
+},{"./game":19}],21:[function(require,module,exports){
 "use strict";
 
 var socket = null;
