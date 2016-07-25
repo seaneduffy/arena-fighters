@@ -2,6 +2,6 @@
 
 (function(){
 	window.init = function() {
-		require('./app');
+		require('./game');
 	};
 }());
