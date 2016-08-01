@@ -680,7 +680,7 @@
 						},
 						{
 							"label": "$down_attacking",
-							"frameRate": "config.frameRate * 10",
+							"frameRate": "config.frameRate * 20",
 							"loop": false
 						}
 					],

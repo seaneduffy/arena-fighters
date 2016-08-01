@@ -81,27 +81,36 @@ function startLevel(index) {
 			}
 		} );
 	}
-	gameComponent.setState({
-		player1HealthTotal: config.player1.health,
-		player1Health: config.player1.health,
-		player1Weapon: config.player1.firearmType
-	});
-	config.player1.onHealthChange(function(){
-		gameComponent.setState({
-			player1Health: config.player1.health
-		})
-	});
-	if(!!config.player2) {
-		gameComponent.setState({
+	if(config.gameType === 'single' || config.hosting) {
+		setHud({
+			player1HealthTotal: config.player1.health,
+			player1Health: config.player1.health,
+			player1Weapon: config.player1.firearmType
+		});
+		config.player1.onHealthChange(function(){
+			setHud({
+				player1Health: config.player1.health
+			});
+		});
+	}
+	if(config.gameType === 'two' && config.hosting) {
+		setHud({
 			player2HealthTotal: config.player2.health,
 			player2Health: config.player2.health,
 			player2Weapon: config.player2.firearmType
 		});
 		config.player2.onHealthChange(function(){
-			gameComponent.setState({
+			setHud({
 				player2Health: config.player2.health
-			})
-		})
+			});
+		});
+	}
+}
+
+function setHud(state) {
+	gameComponent.setState(state);
+	if(config.gameType === 'two' && config.hosting) {
+		socket.emit('hud', state);
 	}
 }
 
@@ -118,7 +127,7 @@ function startGame() {
 
 function onJoystick(angle, percentage) {
 	if(config.gameType === 'two' && !config.hosting) {
-		socket.emit('joystick', {angle:angle, amount:amount});
+		socket.emit('joystick', {angle:angle, amount:percentage});
 	} else {
 		config.player1.joystick(percentage, angle);
 	}
@@ -150,6 +159,9 @@ function initSocket() {
 				handleCreateGame();
 			}
 		}
+	});
+	socket.on('hud', function(state) {
+		setHud(state);
 	});
 	socket.on('game created', id=>{
 		gameComponent.setState({

@@ -15,7 +15,7 @@ let config = {
 	"dev": true,
 	"console": true,
 	"dev1": false,
-	"dev2": false
+	"dev2": true
 }
 
 module.exports = config

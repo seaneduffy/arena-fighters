@@ -33,7 +33,7 @@ Robot.prototype = Object.create(Enemy.prototype, {
 			if(typeof this._endAttackDelay !== 'undefined')
 				return this._endAttackDelay;
 			let sprite = this.sprites['$down_attacking'];
-			return this._endAttackDelay = sprite.frameRate;
+			return this._endAttackDelay = sprite.frameRate * 3;
 		}
 	},
 	'walk': {
@@ -92,6 +92,7 @@ Robot.prototype = Object.create(Enemy.prototype, {
 			
 			if(!!this.cycleMeleeAttack)
 				cycle.endWait(this.cycleMeleeAttack);
+			
 			cycle.wait(this.cycleMeleeAttack = this.meleeAttack.bind(this, target), this.attackDelay);
 			
 		}
@@ -119,6 +120,7 @@ Robot.prototype = Object.create(Enemy.prototype, {
 			}
 			if(!!this.cycleEndAttack)
 				cycle.endWait(this.cycleEndAttack);
+			
 			cycle.wait(this.cycleEndAttack = this.endAttack.bind(this), this.endAttackDelay);
 		}
 	},

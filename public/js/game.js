@@ -392,7 +392,7 @@ var config = {
 	"dev": true,
 	"console": true,
 	"dev1": false,
-	"dev2": false
+	"dev2": true
 };
 
 module.exports = config;
@@ -468,7 +468,7 @@ var config = require('../config'),
     joystickAmount = 0,
     joystickFrameRate = config.joystickFrameRate;
 
-document.querySelector('#controls').addEventListener('touchstart', function (e) {
+document.querySelector('#controls').addEventListener('touchmove', function (e) {
 	e.preventDefault();
 });
 
@@ -2025,7 +2025,7 @@ Robot.prototype = Object.create(Enemy.prototype, {
 		get: function get() {
 			if (typeof this._endAttackDelay !== 'undefined') return this._endAttackDelay;
 			var sprite = this.sprites['$down_attacking'];
-			return this._endAttackDelay = sprite.frameRate;
+			return this._endAttackDelay = sprite.frameRate * 3;
 		}
 	},
 	'walk': {
@@ -2080,6 +2080,7 @@ Robot.prototype = Object.create(Enemy.prototype, {
 			var sprite = this.sprites[this.display];
 
 			if (!!this.cycleMeleeAttack) cycle.endWait(this.cycleMeleeAttack);
+
 			cycle.wait(this.cycleMeleeAttack = this.meleeAttack.bind(this, target), this.attackDelay);
 		}
 	},
@@ -2105,6 +2106,7 @@ Robot.prototype = Object.create(Enemy.prototype, {
 				//target.health -= this.meleeDamage;
 			}
 			if (!!this.cycleEndAttack) cycle.endWait(this.cycleEndAttack);
+
 			cycle.wait(this.cycleEndAttack = this.endAttack.bind(this), this.endAttackDelay);
 		}
 	},
@@ -2847,27 +2849,36 @@ function startLevel(index) {
 			});
 		})();
 	}
-	gameComponent.setState({
-		player1HealthTotal: config.player1.health,
-		player1Health: config.player1.health,
-		player1Weapon: config.player1.firearmType
-	});
-	config.player1.onHealthChange(function () {
-		gameComponent.setState({
-			player1Health: config.player1.health
+	if (config.gameType === 'single' || config.hosting) {
+		setHud({
+			player1HealthTotal: config.player1.health,
+			player1Health: config.player1.health,
+			player1Weapon: config.player1.firearmType
 		});
-	});
-	if (!!config.player2) {
-		gameComponent.setState({
+		config.player1.onHealthChange(function () {
+			setHud({
+				player1Health: config.player1.health
+			});
+		});
+	}
+	if (config.gameType === 'two' && config.hosting) {
+		setHud({
 			player2HealthTotal: config.player2.health,
 			player2Health: config.player2.health,
 			player2Weapon: config.player2.firearmType
 		});
 		config.player2.onHealthChange(function () {
-			gameComponent.setState({
+			setHud({
 				player2Health: config.player2.health
 			});
 		});
+	}
+}
+
+function setHud(state) {
+	gameComponent.setState(state);
+	if (config.gameType === 'two' && config.hosting) {
+		socket.emit('hud', state);
 	}
 }
 
@@ -2884,7 +2895,7 @@ function startGame() {
 
 function onJoystick(angle, percentage) {
 	if (config.gameType === 'two' && !config.hosting) {
-		socket.emit('joystick', { angle: angle, amount: amount });
+		socket.emit('joystick', { angle: angle, amount: percentage });
 	} else {
 		config.player1.joystick(percentage, angle);
 	}
@@ -2915,6 +2926,9 @@ function initSocket() {
 				handleCreateGame();
 			}
 		}
+	});
+	socket.on('hud', function (state) {
+		setHud(state);
 	});
 	socket.on('game created', function (id) {
 		gameComponent.setState({

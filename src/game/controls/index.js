@@ -11,7 +11,7 @@ let config = require('../config'),
 	joystickAmount = 0,
 	joystickFrameRate = config.joystickFrameRate;
 
-document.querySelector('#controls').addEventListener('touchstart', (e)=>{e.preventDefault()});
+document.querySelector('#controls').addEventListener('touchmove', (e)=>{e.preventDefault()});
 
 joystick.init(document.getElementById('joystick'), config.joystickMax, config.joystickMin, controlsJson, function(angle, amount){
 	joystickAngle = angle;
