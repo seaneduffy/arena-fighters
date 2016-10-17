@@ -18,7 +18,7 @@ let config = {
 	"dev2": true
 }
 
-module.exports = config
+module.exports = config;
 
 if(config.dev) {
 	window.getConfig = function(properties) {
