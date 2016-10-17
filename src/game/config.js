@@ -12,10 +12,10 @@ let config = {
 	"DOWN_LEFT": 5 * Math.PI / 4,
 	"DOWN_RIGHT": 3 * Math.PI / 4,
 	"CENTER": -1,
-	"dev": true,
+	"dev": false,
 	"console": true,
 	"dev1": false,
-	"dev2": true
+	"dev2": false
 }
 
 module.exports = config;
